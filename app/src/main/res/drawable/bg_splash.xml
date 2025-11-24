@@ -1,9 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Diagonal gradient background -->
-    <gradient
-        android:type="linear"
-        android:startColor="#0E5AA6"
-    android:endColor="#1DBD76"
-    android:angle="135"/>
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Base vertical gradient using your palette -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="@color/colorPrimaryLight"
+            android:endColor="@color/colorPrimaryMedium" /> <!-- #B6CEB4 -->
+        </shape>
+    </item>
+
+    <!-- Soft big circle top-right (same color, low opacity) -->
+    <item
+        android:gravity="top|end"
+        android:right="-90dp"
+        android:top="-120dp">
+        <shape android:shape="oval">
+            <size
+                android:width="260dp"
+                android:height="260dp" />
+            <!-- #96A78D with ~35% opacity -->
+            <solid android:color="#5996A78D" />
+        </shape>
+    </item>
+
+    <!-- Soft big circle bottom-left (medium shade, low opacity) -->
+    <item
+        android:gravity="bottom|start"
+        android:left="-110dp"
+        android:bottom="-130dp">
+        <shape android:shape="oval">
+            <size
+                android:width="320dp"
+                android:height="320dp" />
+            <!-- #B6CEB4 with ~30% opacity -->
+            <solid android:color="#4DB6CEB4" />
+        </shape>
+    </item>
+
+    <!-- Subtle horizontal band behind logo area -->
+    <item
+        android:gravity="center_vertical"
+        android:top="80dp"
+        android:bottom="140dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="32dp" />
+            <gradient
+                android:type="linear"
+                android:angle="0"
+                android:startColor="#00D9E9CF"
+            android:centerColor="#40D9E9CF"
+            android:endColor="#00D9E9CF" />
+        </shape>
+    </item>
+
+</layer-list>

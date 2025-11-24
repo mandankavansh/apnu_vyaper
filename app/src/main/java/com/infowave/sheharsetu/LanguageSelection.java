@@ -34,7 +34,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Language list ab server se aata hai: GET ApiRoutes.GET_LANGUAGES
+ * Language list server se aata hai: GET ApiRoutes.GET_LANGUAGES
+ *
  * JSON format:
  * {
  *   "ok": true,
@@ -61,13 +62,13 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Status bar black + light icons off (i.e., white icons)
+        // Status bar: black background, white icons
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(Color.BLACK);
         new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView())
                 .setAppearanceLightStatusBars(false);
 
-        // already chosen? go next
+        // If language already chosen, skip this screen
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
         String saved = sp.getString(KEY_LANG_CODE, null);
         if (saved != null) {
@@ -82,6 +83,7 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         rv = findViewById(R.id.rvLanguages);
         progress = findViewById(R.id.progressLanguages);
 
+        // 3 languages per row
         rv.setLayoutManager(new GridLayoutManager(this, 3));
         rv.setHasFixedSize(true);
 
@@ -92,7 +94,9 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         fetchLanguages();
     }
 
-    /** API call to load languages dynamically */
+    /**
+     * API call to load languages dynamically
+     */
     private void fetchLanguages() {
         showLoading(true);
 
@@ -112,6 +116,7 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                             showLoading(false);
                             return;
                         }
+
                         JSONArray arr = resp.optJSONArray("data");
                         if (arr == null || arr.length() == 0) {
                             Toast.makeText(this, "No languages found (empty data)", Toast.LENGTH_SHORT).show();
@@ -124,17 +129,21 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                         for (int i = 0; i < arr.length(); i++) {
                             JSONObject o = arr.optJSONObject(i);
                             if (o == null) continue;
+
                             int enabled = o.optInt("enabled", 1);
                             if (enabled != 1) continue;
 
                             String code = o.optString("code", "").trim();
                             String nativeName = o.optString("native_name", "").trim();
                             String englishName = o.optString("english_name", "").trim();
+
                             if (code.isEmpty() || nativeName.isEmpty()) continue;
 
                             languages.add(new String[]{code, nativeName, englishName});
 
-                            if ("en".equalsIgnoreCase(code)) englishIndex = languages.size() - 1;
+                            if ("en".equalsIgnoreCase(code)) {
+                                englishIndex = languages.size() - 1;
+                            }
                         }
 
                         if (languages.isEmpty()) {
@@ -143,6 +152,7 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                             return;
                         }
 
+                        // Move English to top if present and not already at index 0
                         if (englishIndex > 0) {
                             String[] en = languages.remove(englishIndex);
                             languages.add(0, en);
@@ -178,9 +188,10 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> h = new HashMap<>();
                 h.put("Content-Type", "application/json; charset=utf-8");
-                String current = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_LANG_CODE, "en");
+                String current = getSharedPreferences(PREFS, MODE_PRIVATE)
+                        .getString(KEY_LANG_CODE, "en");
                 h.put("Accept-Language", current == null ? "en" : current);
-                Log.d(TAG, "Request headers: " + h.toString());
+                Log.d(TAG, "Request headers: " + h);
                 return h;
             }
         };
@@ -190,8 +201,12 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
     }
 
     private void showLoading(boolean show) {
-        if (progress != null) progress.setVisibility(show ? View.VISIBLE : View.GONE);
-        if (rv != null) rv.setVisibility(show ? View.INVISIBLE : View.VISIBLE);
+        if (progress != null) {
+            progress.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+        if (rv != null) {
+            rv.setVisibility(show ? View.INVISIBLE : View.VISIBLE);
+        }
     }
 
     @Override

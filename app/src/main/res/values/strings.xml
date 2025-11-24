@@ -70,4 +70,21 @@
 
 
 
+
+
+
+<!--    <string name="badge_language">Language</string>-->
+<!--    <string name="title_login">Login</string>-->
+
+    <!-- Subtitle under main title -->
+    <string name="login_subtitle">Enter your mobile number to receive an OTP and continue.</string>
+
+    <!-- Section title inside the card -->
+    <string name="login_section_title">Mobile verification</string>
+
+    <!-- Mobile field -->
+<!--    <string name="hint_mobile">Mobile number</string>-->
+    <string name="login_mobile_helper">You will receive a one-time password (OTP) on this number.</string>
+
+
 </resources>

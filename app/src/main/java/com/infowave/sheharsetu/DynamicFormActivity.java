@@ -118,6 +118,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         String category = intent.getStringExtra(EXTRA_CATEGORY);
         if (category == null) category = "General";
         categoryName = category;
+        // Title + subtitle styling
         tvTitle.setText("Dynamic Form (" + categoryName + ")");
 
         // --------- READ category_id / subcategory_id safely (String or Long) ----------
@@ -157,7 +158,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
         rvForm.setLayoutManager(new LinearLayoutManager(this));
 
-        // Load schema from server (DB-based) ONLY. Fallback is disabled for debugging.
+        // Load schema from server
         loadSchemaFromServer(categoryId, subcategoryId);
 
         btnSubmit.setOnClickListener(v -> {
@@ -177,13 +178,14 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             submitListing(result);
         });
 
+        // Status bar dark background + light icons
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(android.graphics.Color.BLACK);
-
         WindowInsetsControllerCompat wic =
                 new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
         wic.setAppearanceLightStatusBars(false);
 
+        // Apply top inset padding to root
         View root = findViewById(R.id.root);
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.statusBars());
@@ -209,7 +211,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     /**
      * Load form schema from backend (get_form_schema.php) using categoryId + subcategoryId.
-     * Fallback to static schema is DISABLED to debug dynamic Transport issue.
      */
     private void loadSchemaFromServer(long categoryId, long subcategoryId) {
         Log.d(TAG, "loadSchemaFromServer() called with categoryId=" + categoryId +
@@ -219,7 +220,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             String msg = "Category info missing (categoryId<=0). Cannot load dynamic schema.";
             Log.e(TAG, msg);
             toast(msg);
-            return; // NO fallback
+            return;
         }
 
         StringBuilder urlBuilder = new StringBuilder(ApiRoutes.GET_FORM_SCHEMA);
@@ -247,7 +248,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                         if (!success) {
                             toast(TextUtils.isEmpty(msg) ? "Failed to load form schema" : msg);
                             Log.e(TAG, "Backend returned success=false for schema, aborting.");
-                            return; // NO fallback
+                            return;
                         }
 
                         JSONObject data = response.optJSONObject("data");
@@ -563,10 +564,10 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             getWindow().getDecorView().setSystemUiVisibility(0);
         } catch (Exception ignored) { }
 
+        // DO NOT override root background here so that bg_splash + glass card remain visible
         View root = findViewById(R.id.root);
         if (root != null) {
-            root.setBackgroundColor(
-                    ContextCompat.getColor(this, R.color.ss_surface));
+            // keep XML-defined background (bg_splash)
         }
 
         try {
@@ -586,8 +587,8 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         try {
             Button btn = findViewById(R.id.btnSubmit);
             if (btn != null) {
-                btn.setBackground(
-                        ContextCompat.getDrawable(this, R.drawable.bg_btn_primary));
+                // optional: if you use drawable for button background
+                // btn.setBackground(ContextCompat.getDrawable(this, R.drawable.bg_btn_primary));
                 btn.setTextColor(
                         ContextCompat.getColor(this, android.R.color.white));
             }
@@ -599,7 +600,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
     }
 
     /* NOTE:
-       Static buildSchema / fallback completely removed.
-       Ab sirf DB se dynamic schema hi chalega.
+       Static buildSchema / fallback is removed.
+       Only DB-based dynamic schema is used.
     */
 }

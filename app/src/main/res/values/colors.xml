@@ -65,5 +65,33 @@
 
 
 
+
+
+    <color name="colorPrimary">#96A78D</color>      <!-- base green -->
+    <color name="colorPrimaryMedium">#B6CEB4</color>
+    <color name="colorPrimaryLight">#D9E9CF</color>
+    <color name="colorBackgroundSoft">#F0F0F0</color>
+
+    <!-- Neutral text / surface (simple, not colorful) -->
+    <color name="colorTextPrimary">#1F2933</color>      <!-- dark grey text -->
+    <color name="colorTextSecondary">#4B5563</color>
+    <color name="colorSurface">#FFFFFFFF</color>        <!-- white card -->
+    <color name="colorDivider">#E5E7EB</color>
+
+    <!-- Status bar color for splash -->
+    <color name="splashStatusBar">#B6CEB4</color>
+
+
+    <!-- Brand primary button color -->
+<!--    <color name="brand_green">#00B894</color> &lt;!&ndash; adjust to your theme &ndash;&gt;-->
+
+<!--    &lt;!&ndash; Surface text color used inside card &ndash;&gt;-->
+<!--    <color name="ss_on_surface">#1F2933</color>-->
+
+<!--    &lt;!&ndash; Hint / secondary text color &ndash;&gt;-->
+<!--    <color name="ss_hint">#8895A7</color>-->
+
+    <!-- Ripple for light buttons -->
+    <color name="ss_ripple_light">#33FFFFFF</color>
 </resources>
 
