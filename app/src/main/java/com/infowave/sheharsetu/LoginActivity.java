@@ -56,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
     private boolean isSendingOtp = false;
     private String btnIdleText; // original button label
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -292,7 +293,7 @@ public class LoginActivity extends AppCompatActivity {
                             saveAuthToPrefs(expiresIn);
 
                             // 🔴 IMPORTANT: yahan se DynamicFormActivity ko user_id milega
-                            SharedPreferences userPrefs = getSharedPreferences("user", MODE_PRIVATE);
+                            SharedPreferences userPrefs = getSharedPreferences(SplashScreen.PREFS, MODE_PRIVATE);
                             userPrefs.edit()
                                     .putLong("user_id", userId)
                                     .apply();

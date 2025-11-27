@@ -1,5 +1,6 @@
 package com.infowave.sheharsetu;
 
+import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -160,6 +161,7 @@ public class ProductDetail extends AppCompatActivity {
         pdpViewLocation = findViewById(R.id.pdpViewLocation);
     }
 
+    @SuppressLint("SetTextI18n")
     private void setupStaticUi() {
         // Header icon tint switch on collapse/expand
         if (appBar != null) {
@@ -304,6 +306,7 @@ public class ProductDetail extends AppCompatActivity {
 
     /* -------------------- UI helpers -------------------- */
 
+    @SuppressLint("NotifyDataSetChanged")
     private void setGallery(List<Object> sources) {
         imageSources.clear();
         imageSources.addAll(sources);
