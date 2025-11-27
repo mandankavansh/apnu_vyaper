@@ -4,11 +4,15 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -40,6 +44,8 @@ import com.infowave.sheharsetu.net.VolleySingleton;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -76,7 +82,12 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 Log.d(TAG, "coverPicker result: " + uri + " for fieldKey=" + currentPhotoFieldKey);
                 if (uri != null && currentPhotoFieldKey != null && adapter != null) {
-                    adapter.setCoverPhoto(currentPhotoFieldKey, uri);
+                    String base64 = encodeImageToBase64(uri);
+                    if (base64 != null) {
+                        adapter.setCoverPhoto(currentPhotoFieldKey, base64);
+                    } else {
+                        toast("Failed to read selected image");
+                    }
                 }
             });
 
@@ -85,7 +96,19 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                 Log.d(TAG, "morePicker result size=" + (uris == null ? 0 : uris.size()) +
                         " for fieldKey=" + currentPhotoFieldKey);
                 if (uris != null && currentPhotoFieldKey != null && adapter != null) {
-                    adapter.addMorePhotos(currentPhotoFieldKey, uris);
+                    java.util.ArrayList<String> base64List = new java.util.ArrayList<>();
+                    for (Uri u : uris) {
+                        if (u == null) continue;
+                        String b64 = encodeImageToBase64(u);
+                        if (b64 != null) {
+                            base64List.add(b64);
+                        }
+                    }
+                    if (!base64List.isEmpty()) {
+                        adapter.addMorePhotos(currentPhotoFieldKey, base64List);
+                    } else {
+                        toast("Failed to read selected images");
+                    }
                 }
             });
 
@@ -149,8 +172,9 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             }
         }
 
-        // user_id from SharedPreferences (set after login/OTP verify)
-        SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+        // ✅ user_id from SharedPreferences (set after login/OTP verify)
+        //    Same prefs file as SplashScreen / LoginActivity
+        SharedPreferences prefs = getSharedPreferences(SplashScreen.PREFS, MODE_PRIVATE);
         userId = prefs.getLong("user_id", 0L);
 
         Log.d(TAG, "onCreate: categoryName=" + categoryName +
@@ -569,6 +593,53 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             });
         } catch (SecurityException e) {
             Log.e(TAG, "SecurityException in fillMyLocation", e);
+        }
+    }
+
+    /**
+     * Convert selected image URI into Base64 (JPEG, resized if very large).
+     */
+    private String encodeImageToBase64(Uri uri) {
+        try {
+            InputStream is = getContentResolver().openInputStream(uri);
+            if (is == null) {
+                Log.e(TAG, "encodeImageToBase64: openInputStream returned null for uri=" + uri);
+                return null;
+            }
+
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            is.close();
+
+            if (bitmap == null) {
+                Log.e(TAG, "encodeImageToBase64: bitmap is null for uri=" + uri);
+                return null;
+            }
+
+            // Optional: resize if too large
+            int maxSize = 1280;
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            if (width > maxSize || height > maxSize) {
+                float scale = Math.min(
+                        (float) maxSize / width,
+                        (float) maxSize / height
+                );
+                int newW = Math.round(width * scale);
+                int newH = Math.round(height * scale);
+                bitmap = Bitmap.createScaledBitmap(bitmap, newW, newH, true);
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+            byte[] bytes = baos.toByteArray();
+            String base64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
+
+            Log.d(TAG, "encodeImageToBase64: size=" + bytes.length + " bytes for uri=" + uri);
+            return base64;
+
+        } catch (Exception e) {
+            Log.e(TAG, "encodeImageToBase64 failed for uri=" + uri, e);
+            return null;
         }
     }
 
