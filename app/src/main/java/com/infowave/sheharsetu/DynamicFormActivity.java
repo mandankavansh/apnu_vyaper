@@ -351,7 +351,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                                 Log.d(TAG, "Field[" + i + "] key=" + key + " type=" + type +
                                         " required=" + required + " optionsCount=0");
                             }
-
                             schema.add(m);
                         }
 
@@ -452,6 +451,32 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             String title = buildTitleFromForm(formResult);
             payload.put("title", title);
             payload.put("form_data", formResult);
+
+            // 🔥 NEW/USED handling: read from dynamic form (boolean SWITCH field "is_new")
+            int isNewValue = 0; // default = used
+            try {
+                if (formResult.has("is_new")) {
+                    Object v = formResult.get("is_new");
+                    if (v instanceof Boolean) {
+                        isNewValue = ((Boolean) v) ? 1 : 0;
+                    } else {
+                        String s = String.valueOf(v).trim();
+                        if ("1".equals(s) ||
+                                "true".equalsIgnoreCase(s) ||
+                                "yes".equalsIgnoreCase(s) ||
+                                "new".equalsIgnoreCase(s)) {
+                            isNewValue = 1;
+                        } else {
+                            isNewValue = 0;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Error parsing is_new from formResult, defaulting to 0", e);
+                isNewValue = 0;
+            }
+            payload.put("is_new", isNewValue);
+            Log.d(TAG, "submitListing: resolved is_new=" + isNewValue);
 
             Log.d(TAG, "submitListing payload: " + payload.toString());
 

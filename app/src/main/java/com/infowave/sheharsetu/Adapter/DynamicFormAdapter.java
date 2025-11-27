@@ -1,6 +1,5 @@
 package com.infowave.sheharsetu.Adapter;
 
-
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.content.Context;
@@ -94,9 +93,14 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             String type = s(f.get("type")).toUpperCase(Locale.ROOT);
             switch (type) {
                 case "CHECKBOX":
-                case "SWITCH":
                     answers.put(key, false);
                     break;
+                case "SWITCH": {
+                    // 🔥 Default: if this is "is_new", start as true (new ON), otherwise false
+                    boolean defaultVal = "is_new".equalsIgnoreCase(key);
+                    answers.put(key, defaultVal);
+                    break;
+                }
                 case "PHOTOS": {
                     Map<String, Object> ph = new HashMap<>();
                     ph.put("cover", "");                       // Base64 string
@@ -314,7 +318,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         } else if (h instanceof VHSwitch) {
             VHSwitch vh = (VHSwitch) h;
-            vh.tvLabel.setText(label);
+            // show * when required
+            vh.tvLabel.setText(label + (req(f) ? " *" : ""));
             boolean on = answers.get(key) instanceof Boolean && (Boolean) answers.get(key);
             vh.sw.setChecked(on);
             vh.sw.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -539,10 +544,10 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         " required=" + required + " value=" + sval);
 
                 if (required) {
-                    if ("CHECKBOX".equalsIgnoreCase(type)) {
+                    if ("CHECKBOX".equalsIgnoreCase(type) || "SWITCH".equalsIgnoreCase(type)) {
                         if (!(val instanceof Boolean) || !((Boolean) val)) {
-                            toast("Please accept: " + label);
-                            Log.e(TAG, "Validation failed: checkbox not accepted for " + key);
+                            toast("Please enable: " + label);
+                            Log.e(TAG, "Validation failed: checkbox/switch not enabled for " + key);
                             return null;
                         }
                     } else if ("DROPDOWN".equalsIgnoreCase(type)) {

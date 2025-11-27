@@ -597,7 +597,13 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 m.put("imageUrl", imageUrl);
 
-                                m.put("isNew", o.optInt("is_new", 0) == 1);
+                                // ✅ Only 1 = NEW, everything else (0 / null / missing) = OLD
+                                int rawIsNew = o.isNull("is_new")
+                                        ? -1
+                                        : o.optInt("is_new", -1);
+                                boolean isNew = (rawIsNew == 1);
+                                m.put("isNew", isNew);
+
                                 currentProducts.add(m);
                             }
                         }
@@ -616,6 +622,7 @@ public class MainActivity extends AppCompatActivity {
         req.setRetryPolicy(new DefaultRetryPolicy(8000, 1, 1));
         queue.add(req);
     }
+
 
     // ================= Back navigation =================
 
