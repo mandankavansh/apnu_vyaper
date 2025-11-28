@@ -21,6 +21,11 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.SheharSetu"
         tools:targetApi="35">
+
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+
         <activity
             android:name=".LoginActivity"
             android:exported="false"
