@@ -1,5 +1,7 @@
 package com.infowave.sheharsetu;
 
+import static android.widget.Toast.makeText;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -104,6 +106,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int PAGE = 1;
     private static final int LIMIT = 50;
 
+    // ✅ Optimization: remember last products URL to avoid duplicate calls
+    private String lastProductsUrl = null;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,6 +141,13 @@ public class MainActivity extends AppCompatActivity {
         rvProducts       = findViewById(R.id.rvProducts);
         toggleNewOld     = findViewById(R.id.toggleNewOld);
         tvSectionTitle   = findViewById(R.id.tvSectionTitle);
+
+        // Initial state of New/Old toggle
+        if (toggleNewOld != null) {
+            toggleNewOld.setVisibility(View.GONE);
+            toggleNewOld.clearChecked();
+            showNew = null;
+        }
 
         btnPost   = findViewById(R.id.btnPost);
         btnHelp   = findViewById(R.id.btnHelp);
@@ -224,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             speechLauncher.launch(i);
         } catch (Exception e) {
-            Toast.makeText(this, I18n.t(this, "Voice search not available"), Toast.LENGTH_SHORT).show();
+            makeText(this, I18n.t(this, "Voice search not available"), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -261,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
                     .apply();
 
             LanguageManager.apply(this, next);
-            Toast.makeText(
+            makeText(
                     this,
                     I18n.t(this, "Language") + ": " + nextName,
                     Toast.LENGTH_SHORT
@@ -284,25 +296,31 @@ public class MainActivity extends AppCompatActivity {
         drawerLayout.addDrawerListener(drawerToggle);
         drawerToggle.syncState();
 
-        // Setup header view (design only; you can later bind dynamic data here)
+        // Setup header view
         View header = navigationView.getHeaderView(0);
         if (header != null) {
-            ImageView ivProfile = header.findViewById(R.id.ivProfile);
-            TextView tvUserName = header.findViewById(R.id.tvUserName);
-            TextView tvUserPhone = header.findViewById(R.id.tvUserPhone);
-            ImageView ivEdit = header.findViewById(R.id.ivEdit);
+            ImageView ivProfile   = header.findViewById(R.id.ivProfile);
+            TextView tvUserName   = header.findViewById(R.id.tvUserName);
+            TextView tvUserPhone  = header.findViewById(R.id.tvUserPhone);
+            ImageView ivEdit      = header.findViewById(R.id.ivEdit);
 
-            // You can set user data here if needed:
-            // tvUserName.setText(session.getUserName());
-            // tvUserPhone.setText(session.getUserPhone());
-
-            if (ivEdit != null) {
-                ivEdit.setOnClickListener(v -> {
-                    // TODO: open profile screen when ready
-                    Toast.makeText(MainActivity.this,
-                            I18n.t(this, "Profile coming soon"), Toast.LENGTH_SHORT).show();
-                });
+            // Static demo data – later you can bind from DB/Session
+            if (tvUserName != null) {
+                tvUserName.setText("Vansh Mandanka");
             }
+            if (tvUserPhone != null) {
+                tvUserPhone.setText("+91 63543 55617");
+            }
+
+            View.OnClickListener openProfileClick = v -> {
+                Intent i = new Intent(MainActivity.this, ProfileActivity.class);
+                startActivity(i);
+            };
+
+            // क्लिक पूरा header, avatar और edit icon पर काम करेगा
+            header.setOnClickListener(openProfileClick);
+            if (ivProfile != null) ivProfile.setOnClickListener(openProfileClick);
+            if (ivEdit != null)    ivEdit.setOnClickListener(openProfileClick);
         }
 
         navigationView.setNavigationItemSelectedListener(item -> {
@@ -345,13 +363,12 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Contact us", Toast.LENGTH_SHORT).show();
 
             } else if (id == R.id.nav_terms) {
-                Toast.makeText(MainActivity.this, "Terms & Conditions", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Terms and Condition", Toast.LENGTH_SHORT).show();
 
             } else if (id == R.id.nav_about) {
                 Toast.makeText(MainActivity.this, "About", Toast.LENGTH_SHORT).show();
 
             } else if (id == R.id.nav_logout) {
-                // NEW: Logout handling
                 doLogout();
             } else {
                 Toast.makeText(MainActivity.this, I18n.t(this, "Coming soon"), Toast.LENGTH_SHORT).show();
@@ -360,13 +377,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
     private void doLogout() {
-        // Clear user-related data
         getSharedPreferences("user", MODE_PRIVATE).edit().clear().apply();
+        makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
 
-        Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show();
-
-        // Go back to language selection or login screen
         Intent i = new Intent(this, LanguageSelection.class);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(i);
@@ -423,14 +438,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupAdapters() {
         catAdapter = new CategoryAdapter(categories, cat -> {
-            selectedCategoryId = toInt(cat.get("id"), -1);
+            selectedCategoryId  = toInt(cat.get("id"), -1);
             selectedSubFilterId = -1;
-            showNew = null;
+            showNew             = null;
             clearSearch();
 
-            boolean hasNewOld = toBool(cat.get("hasNewOld"), false);
-            toggleNewOld.setVisibility(hasNewOld ? View.VISIBLE : View.GONE);
-            toggleNewOld.clearChecked();
+            // Category change → always hide & reset New/Old toggle
+            if (toggleNewOld != null) {
+                toggleNewOld.setVisibility(View.GONE);
+                toggleNewOld.clearChecked();
+            }
 
             fetchSubFilters(selectedCategoryId);
         });
@@ -502,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
                 resp -> {
                     try {
                         if (!"success".equalsIgnoreCase(resp.optString("status"))) {
-                            Toast.makeText(this, I18n.t(this, "Categories error"), Toast.LENGTH_SHORT).show();
+                            makeText(this, I18n.t(this, "Categories error"), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         JSONArray arr = resp.optJSONArray("data");
@@ -523,7 +540,10 @@ public class MainActivity extends AppCompatActivity {
                                     iconUrl = o.optString("icon_url", "");
                                 }
                                 m.put("iconUrl", iconUrl);
+
+                                // Category-level hasNewOld (if your API sends it) – harmless to keep
                                 m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
+
                                 categories.add(m);
 
                                 if (!TextUtils.isEmpty(nameEn)) {
@@ -547,10 +567,10 @@ public class MainActivity extends AppCompatActivity {
                         });
 
                     } catch (Exception e) {
-                        Toast.makeText(this, I18n.t(this, "Parse categories failed"), Toast.LENGTH_SHORT).show();
+                        makeText(this, I18n.t(this, "Parse categories failed"), Toast.LENGTH_SHORT).show();
                     }
                 },
-                err -> Toast.makeText(this, I18n.t(this, "Network error (categories)"), Toast.LENGTH_SHORT).show()
+                err -> makeText(this, I18n.t(this, "Network error (categories)"), Toast.LENGTH_SHORT).show()
         );
         req.setRetryPolicy(new DefaultRetryPolicy(8000, 1, 1));
         queue.add(req);
@@ -564,16 +584,18 @@ public class MainActivity extends AppCompatActivity {
                 resp -> {
                     try {
                         if (!"success".equalsIgnoreCase(resp.optString("status"))) {
-                            Toast.makeText(this, I18n.t(this, "Subcategories error"), Toast.LENGTH_SHORT).show();
+                            makeText(this, I18n.t(this, "Subcategories error"), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         JSONArray arr = resp.optJSONArray("data");
                         List<Map<String, Object>> subs = new ArrayList<>();
 
+                        // "All" pseudo-subcategory – no New/Old filter
                         Map<String, Object> all = new HashMap<>();
                         all.put("id", 0);
                         all.put("name", getString(R.string.sub_all));
                         all.put("iconRes", R.drawable.ic_placeholder_circle);
+                        all.put("hasNewOld", false);
                         subs.add(all);
 
                         if (arr != null) {
@@ -590,6 +612,9 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 m.put("iconUrl", iconUrl);
 
+                                // New: hasNewOld from API (0/1)
+                                m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
+
                                 subs.add(m);
                             }
                         }
@@ -599,29 +624,58 @@ public class MainActivity extends AppCompatActivity {
                             selectedSubFilterId = toInt(sub.get("id"), 0);
                             clearSearch();
                             showProducts();
+
+                            if (selectedSubFilterId > 0) {
+                                // Real subcategory: decide toggle based on its own hasNewOld
+                                boolean hasNewOld = toBool(sub.get("hasNewOld"), false);
+                                if (hasNewOld && toggleNewOld != null) {
+                                    toggleNewOld.setVisibility(View.VISIBLE);
+                                } else if (toggleNewOld != null) {
+                                    toggleNewOld.setVisibility(View.GONE);
+                                    showNew = null;
+                                    toggleNewOld.clearChecked();
+                                }
+                            } else {
+                                // "All" – no filter
+                                if (toggleNewOld != null) {
+                                    toggleNewOld.setVisibility(View.GONE);
+                                    showNew = null;
+                                    toggleNewOld.clearChecked();
+                                }
+                            }
+
                             fetchProducts();
                         }));
                         showSubFilters();
                         catAdapter.setSelectedId(selectedCategoryId);
                     } catch (Exception e) {
-                        Toast.makeText(this, I18n.t(this, "Parse subcategories failed"), Toast.LENGTH_SHORT).show();
+                        makeText(this, I18n.t(this, "Parse subcategories failed"), Toast.LENGTH_SHORT).show();
                     }
                 },
-                err -> Toast.makeText(this, I18n.t(this, "Network error (subcategories)"), Toast.LENGTH_SHORT).show()
+                err -> makeText(this, I18n.t(this, "Network error (subcategories)"), Toast.LENGTH_SHORT).show()
         );
         req.setRetryPolicy(new DefaultRetryPolicy(8000, 1, 1));
         queue.add(req);
     }
 
     private void fetchProducts() {
+        // ✅ Build URL with current filters
+        final String url = urlProducts();
+
+        // ✅ If URL same as last time, skip network call
+        if (lastProductsUrl != null && lastProductsUrl.equals(url)) {
+            return;
+        }
+        lastProductsUrl = url;
+
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.GET,
-                urlProducts(),
+                url,
                 null,
                 resp -> {
                     try {
                         if (!"success".equalsIgnoreCase(resp.optString("status"))) {
-                            Toast.makeText(this, I18n.t(this, "Products error"), Toast.LENGTH_SHORT).show();
+                            makeText(this, I18n.t(this, "Products error"), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         JSONArray arr = resp.optJSONArray("data");
@@ -650,7 +704,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 m.put("imageUrl", imageUrl);
 
-                                // ✅ Only 1 = NEW, everything else (0 / null / missing) = OLD
+                                // Only 1 = NEW, everything else (0 / null / missing) = OLD
                                 int rawIsNew = o.isNull("is_new")
                                         ? -1
                                         : o.optInt("is_new", -1);
@@ -667,15 +721,14 @@ public class MainActivity extends AppCompatActivity {
                             );
                         }
                     } catch (Exception e) {
-                        Toast.makeText(this, I18n.t(this, "Parse products failed"), Toast.LENGTH_SHORT).show();
+                        makeText(this, I18n.t(this, "Parse products failed"), Toast.LENGTH_SHORT).show();
                     }
                 },
-                err -> Toast.makeText(this, I18n.t(this, "Network error (products)"), Toast.LENGTH_SHORT).show()
+                err -> makeText(this, I18n.t(this, "Network error (products)"), Toast.LENGTH_SHORT).show()
         );
         req.setRetryPolicy(new DefaultRetryPolicy(8000, 1, 1));
         queue.add(req);
     }
-
 
     // ================= Back navigation =================
 
@@ -695,7 +748,9 @@ public class MainActivity extends AppCompatActivity {
             selectedCategoryId = -1;
             selectedSubFilterId = -1;
             showNew = null;
-            toggleNewOld.setVisibility(View.GONE);
+            if (toggleNewOld != null) {
+                toggleNewOld.setVisibility(View.GONE);
+            }
             if (catAdapter != null) catAdapter.setSelectedId(-1);
             showProducts();
             clearSearch();
@@ -729,7 +784,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             startActivity(Intent.createChooser(i, I18n.t(this, "Share via")));
         } catch (Exception e) {
-            Toast.makeText(this, I18n.t(this, "No app found to share"), Toast.LENGTH_SHORT).show();
+            makeText(this, I18n.t(this, "No app found to share"), Toast.LENGTH_SHORT).show();
         }
     }
 
