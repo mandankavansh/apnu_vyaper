@@ -2,11 +2,10 @@ package com.infowave.sheharsetu;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageButton;
-import android.widget.TextView;
+import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -14,30 +13,26 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
+
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    // View mode widgets
+    // View mode widgets (main screen)
     private TextView tvAvatarLetter, tvFullName, tvPhone, tvPlaceTypeChip;
     private TextView tvSurnameValue, tvContactPhone;
     private TextView tvAddressLine, tvVillage, tvDistrict, tvState, tvPincode;
 
-    // Edit mode widgets
-    private TextInputEditText etFullName, etPhone;
-    private AutoCompleteTextView etPlaceType;
-    private TextInputEditText etSurname, etAddress, etVillage, etDistrict, etState, etPincode;
-    private MaterialButton btnSaveProfile;
-
-    // Sections for toggling
-    private View sectionViewHeader, sectionEditHeader;
-    private View sectionViewDetails, sectionEditDetails;
-
-    private ImageButton btnBack, btnEditToggle;
+    private ImageButton btnBack;
     private TextView tvToolbarTitle;
 
-    private boolean isEditMode = false;
+    // Bottom-right FAB for edit
+    private FloatingActionButton btnEditToggle;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,15 +50,13 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         bindViews();
-        setupPlaceTypeDropdown();
         bindStaticData();
         setupToolbar();
-        setupEditLogic();
+        setupEditFab();
     }
 
     private void bindViews() {
         btnBack        = findViewById(R.id.btnBack);
-        btnEditToggle  = findViewById(R.id.btnEditToggle);
         tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
 
         tvAvatarLetter   = findViewById(R.id.tvAvatarLetter);
@@ -78,33 +71,8 @@ public class ProfileActivity extends AppCompatActivity {
         tvState          = findViewById(R.id.tvState);
         tvPincode        = findViewById(R.id.tvPincode);
 
-        sectionViewHeader   = findViewById(R.id.sectionViewHeader);
-        sectionEditHeader   = findViewById(R.id.sectionEditHeader);
-        sectionViewDetails  = findViewById(R.id.sectionViewDetails);
-        sectionEditDetails  = findViewById(R.id.sectionEditDetails);
-
-        etFullName = findViewById(R.id.etFullName);
-        etPhone    = findViewById(R.id.etPhone);
-        etPlaceType = findViewById(R.id.etPlaceType);
-
-        etSurname  = findViewById(R.id.etSurname);
-        etAddress  = findViewById(R.id.etAddress);
-        etVillage  = findViewById(R.id.etVillage);
-        etDistrict = findViewById(R.id.etDistrict);
-        etState    = findViewById(R.id.etState);
-        etPincode  = findViewById(R.id.etPincode);
-
-        btnSaveProfile = findViewById(R.id.btnSaveProfile);
-    }
-
-    private void setupPlaceTypeDropdown() {
-        String[] placeTypes = new String[] { "Village", "City" };
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_list_item_1,
-                placeTypes
-        );
-        etPlaceType.setAdapter(adapter);
+        // FAB (bottom-right)
+        btnEditToggle = findViewById(R.id.btnEditToggle);
     }
 
     /**
@@ -113,7 +81,7 @@ public class ProfileActivity extends AppCompatActivity {
     private void bindStaticData() {
         String fullName   = "Vansh Mandanka";
         String surname    = "Mandanka";
-        String phone      = "+91 63543 55617";
+        String phoneFull  = "+91 63543 55617";   // Display format
         String placeType  = "Village";
         String address    = "Nana Sakhpur";
         String village    = "Nana Sakhpur";
@@ -123,8 +91,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         // View mode
         tvFullName.setText(fullName);
-        tvPhone.setText(phone);
-        tvContactPhone.setText(phone);
+        tvPhone.setText(phoneFull);
+        tvContactPhone.setText(phoneFull);
         tvSurnameValue.setText(surname);
         tvPlaceTypeChip.setText(placeType);
         tvAddressLine.setText(address);
@@ -138,114 +106,157 @@ public class ProfileActivity extends AppCompatActivity {
             char first = Character.toUpperCase(fullName.trim().charAt(0));
             tvAvatarLetter.setText(String.valueOf(first));
         }
-
-        // Prefill edit fields
-        etFullName.setText(fullName);
-        // remove +91 space if you want only number
-        etPhone.setText(phone.replace("+91 ", "").replace("+91", ""));
-        etPlaceType.setText(placeType, false);
-
-        etSurname.setText(surname);
-        etAddress.setText(address);
-        etVillage.setText(village);
-        etDistrict.setText(district);
-        etState.setText(state);
-        etPincode.setText(pincode);
     }
 
     private void setupToolbar() {
+        tvToolbarTitle.setText("Profile");
         btnBack.setOnClickListener(v -> onBackPressed());
     }
 
-    private void setupEditLogic() {
-        btnEditToggle.setOnClickListener(v -> toggleEditMode());
-
-        btnSaveProfile.setOnClickListener(v -> {
-            String fullName = safeText(tvFullName, etFullName);
-            String phone    = safeText(tvPhone, etPhone);
-            String address  = safeText(tvAddressLine, etAddress);
-
-            if (fullName.isEmpty()) {
-                etFullName.setError("Enter full name");
-                return;
-            }
-            if (phone.isEmpty()) {
-                etPhone.setError("Enter phone");
-                return;
-            }
-
-            String surname   = safeText(tvSurnameValue, etSurname);
-            String village   = safeText(tvVillage, etVillage);
-            String district  = safeText(tvDistrict, etDistrict);
-            String state     = safeText(tvState, etState);
-            String pincode   = safeText(tvPincode, etPincode);
-            String placeType = safeText(tvPlaceTypeChip, etPlaceType);
-
-            // Update view mode
-            tvFullName.setText(fullName);
-            tvPhone.setText("+91 " + phone);
-            tvContactPhone.setText("+91 " + phone);
-            tvSurnameValue.setText(surname);
-            tvAddressLine.setText(address);
-            tvVillage.setText(village);
-            tvDistrict.setText(district);
-            tvState.setText(state);
-            tvPincode.setText(pincode);
-            tvPlaceTypeChip.setText(placeType);
-
-            if (!fullName.trim().isEmpty()) {
-                char first = Character.toUpperCase(fullName.trim().charAt(0));
-                tvAvatarLetter.setText(String.valueOf(first));
-            }
-
-            // यहां future में API call लगा सकते हो (update profile to server)
-
-            Toast.makeText(this, "Profile updated (local)", Toast.LENGTH_SHORT).show();
-            setViewMode();
-        });
-    }
-
-    private void toggleEditMode() {
-        if (isEditMode) {
-            setViewMode();
-        } else {
-            setEditMode();
-        }
-    }
-
-    private void setEditMode() {
-        isEditMode = true;
-        sectionViewHeader.setVisibility(View.GONE);
-        sectionViewDetails.setVisibility(View.GONE);
-        sectionEditHeader.setVisibility(View.VISIBLE);
-        sectionEditDetails.setVisibility(View.VISIBLE);
-
-        tvToolbarTitle.setText("Edit Profile");
-        btnEditToggle.setImageResource(R.drawable.ic_close_24);
-    }
-
-    private void setViewMode() {
-        isEditMode = false;
-        sectionViewHeader.setVisibility(View.VISIBLE);
-        sectionViewDetails.setVisibility(View.VISIBLE);
-        sectionEditHeader.setVisibility(View.GONE);
-        sectionEditDetails.setVisibility(View.GONE);
-
-        tvToolbarTitle.setText("Profile");
-        btnEditToggle.setImageResource(R.drawable.ic_edit_24);
+    private void setupEditFab() {
+        btnEditToggle.setOnClickListener(v -> showEditProfileBottomSheet());
     }
 
     /**
-     * Helper: अगर editText खाली हो तो पुरानी value से fallback कर सकता है।
+     * Professional bottom sheet for editing profile.
      */
-    private String safeText(TextView viewValue, TextView editValue) {
-        if (editValue != null && editValue.getText() != null) {
-            String t = editValue.getText().toString().trim();
-            if (!t.isEmpty()) return t;
+    private void showEditProfileBottomSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(
+                this,
+                com.google.android.material.R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog
+        );
+
+        View view = LayoutInflater.from(this)
+                .inflate(R.layout.layout_profile_edit_bottom_sheet, null, false);
+
+        dialog.setContentView(view);
+
+        // --- Bottom sheet fields ---
+        TextInputEditText etFullNameBottom   = view.findViewById(R.id.etFullNameBottom);
+        TextInputEditText etSurnameBottom    = view.findViewById(R.id.etSurnameBottom);
+        TextInputEditText etPhoneBottom      = view.findViewById(R.id.etPhoneBottom);
+        AutoCompleteTextView etPlaceTypeBottom = view.findViewById(R.id.etPlaceTypeBottom);
+        TextInputEditText etAddressBottom    = view.findViewById(R.id.etAddressBottom);
+        TextInputEditText etVillageBottom    = view.findViewById(R.id.etVillageBottom);
+        TextInputEditText etDistrictBottom   = view.findViewById(R.id.etDistrictBottom);
+        TextInputEditText etStateBottom      = view.findViewById(R.id.etStateBottom);
+        TextInputEditText etPincodeBottom    = view.findViewById(R.id.etPincodeBottom);
+
+        MaterialButton btnCancelBottom       = view.findViewById(R.id.btnCancelBottom);
+        MaterialButton btnSaveProfileBottom  = view.findViewById(R.id.btnSaveProfileBottom);
+
+        // --- Prefill current values from view mode ---
+        String currentFullName   = tvFullName.getText() != null ? tvFullName.getText().toString().trim() : "";
+        String currentSurname    = tvSurnameValue.getText() != null ? tvSurnameValue.getText().toString().trim() : "";
+        String currentPhoneFull  = tvContactPhone.getText() != null ? tvContactPhone.getText().toString().trim() : "";
+        String currentPlaceType  = tvPlaceTypeChip.getText() != null ? tvPlaceTypeChip.getText().toString().trim() : "";
+        String currentAddress    = tvAddressLine.getText() != null ? tvAddressLine.getText().toString().trim() : "";
+        String currentVillage    = tvVillage.getText() != null ? tvVillage.getText().toString().trim() : "";
+        String currentDistrict   = tvDistrict.getText() != null ? tvDistrict.getText().toString().trim() : "";
+        String currentState      = tvState.getText() != null ? tvState.getText().toString().trim() : "";
+        String currentPincode    = tvPincode.getText() != null ? tvPincode.getText().toString().trim() : "";
+
+        // Strip +91 from phone for edit box (only digits)
+        String phoneDigits = currentPhoneFull
+                .replace("+91", "")
+                .replace(" ", "")
+                .trim();
+
+        if (etFullNameBottom != null)  etFullNameBottom.setText(currentFullName);
+        if (etSurnameBottom != null)   etSurnameBottom.setText(currentSurname);
+        if (etPhoneBottom != null)     etPhoneBottom.setText(phoneDigits);
+        if (etAddressBottom != null)   etAddressBottom.setText(currentAddress);
+        if (etVillageBottom != null)   etVillageBottom.setText(currentVillage);
+        if (etDistrictBottom != null)  etDistrictBottom.setText(currentDistrict);
+        if (etStateBottom != null)     etStateBottom.setText(currentState);
+        if (etPincodeBottom != null)   etPincodeBottom.setText(currentPincode);
+        if (etPlaceTypeBottom != null) etPlaceTypeBottom.setText(currentPlaceType, false);
+
+        // --- Setup dropdown for Place Type (Village / City) ---
+        if (etPlaceTypeBottom != null) {
+            String[] placeTypes = new String[] { "Village", "City" };
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    this,
+                    android.R.layout.simple_list_item_1,
+                    placeTypes
+            );
+            etPlaceTypeBottom.setAdapter(adapter);
         }
-        if (viewValue != null && viewValue.getText() != null) {
-            return viewValue.getText().toString().trim();
+
+        // Cancel
+        if (btnCancelBottom != null) {
+            btnCancelBottom.setOnClickListener(v -> dialog.dismiss());
         }
-        return "";
+
+        // Save
+        if (btnSaveProfileBottom != null) {
+            btnSaveProfileBottom.setOnClickListener(v -> {
+
+                String newFullName  = etFullNameBottom != null && etFullNameBottom.getText() != null
+                        ? etFullNameBottom.getText().toString().trim() : "";
+                String newSurname   = etSurnameBottom != null && etSurnameBottom.getText() != null
+                        ? etSurnameBottom.getText().toString().trim() : "";
+                String newPhone     = etPhoneBottom != null && etPhoneBottom.getText() != null
+                        ? etPhoneBottom.getText().toString().trim() : "";
+                String newPlaceType = etPlaceTypeBottom != null && etPlaceTypeBottom.getText() != null
+                        ? etPlaceTypeBottom.getText().toString().trim() : "";
+                String newAddress   = etAddressBottom != null && etAddressBottom.getText() != null
+                        ? etAddressBottom.getText().toString().trim() : "";
+                String newVillage   = etVillageBottom != null && etVillageBottom.getText() != null
+                        ? etVillageBottom.getText().toString().trim() : "";
+                String newDistrict  = etDistrictBottom != null && etDistrictBottom.getText() != null
+                        ? etDistrictBottom.getText().toString().trim() : "";
+                String newState     = etStateBottom != null && etStateBottom.getText() != null
+                        ? etStateBottom.getText().toString().trim() : "";
+                String newPincode   = etPincodeBottom != null && etPincodeBottom.getText() != null
+                        ? etPincodeBottom.getText().toString().trim() : "";
+
+                // ---- Basic validation (professional but simple) ----
+                if (newFullName.isEmpty()) {
+                    if (etFullNameBottom != null) etFullNameBottom.setError("Enter full name");
+                    return;
+                }
+                if (newPhone.isEmpty()) {
+                    if (etPhoneBottom != null) etPhoneBottom.setError("Enter phone");
+                    return;
+                }
+                if (newPhone.length() < 10) {
+                    if (etPhoneBottom != null) etPhoneBottom.setError("Enter valid 10-digit phone");
+                    return;
+                }
+                if (newPincode.isEmpty()) {
+                    if (etPincodeBottom != null) etPincodeBottom.setError("Enter pincode");
+                    return;
+                }
+
+                // ---- Update main view values ----
+                String displayPhone = "+91 " + newPhone;
+
+                tvFullName.setText(newFullName);
+                tvSurnameValue.setText(newSurname.isEmpty() ? newSurname : newSurname);
+                tvContactPhone.setText(displayPhone);
+                tvPhone.setText(displayPhone);
+                tvPlaceTypeChip.setText(newPlaceType.isEmpty() ? "Village" : newPlaceType);
+                tvAddressLine.setText(newAddress);
+                tvVillage.setText(newVillage);
+                tvDistrict.setText(newDistrict);
+                tvState.setText(newState);
+                tvPincode.setText(newPincode);
+
+                // Avatar update
+                if (!newFullName.trim().isEmpty()) {
+                    char first = Character.toUpperCase(newFullName.trim().charAt(0));
+                    tvAvatarLetter.setText(String.valueOf(first));
+                }
+
+                // TODO: यहां future में API call लगा सकते हो (update profile to server)
+
+                Toast.makeText(this, "Profile updated", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            });
+        }
+
+        dialog.show();
     }
+
 }

@@ -12,7 +12,7 @@
     <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="12dp"
@@ -41,26 +41,27 @@
             android:text="Profile"
             android:textColor="@android:color/white"
             android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <!-- Edit icon (toggles edit mode) -->
-        <ImageButton
-            android:id="@+id/btnEditToggle"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@android:color/transparent"
-            android:padding="4dp"
-            android:src="@drawable/ic_edit_24"
-            android:contentDescription="Edit profile"
-            app:tint="@android:color/white" />
+            android:textStyle="bold"
+            android:letterSpacing="0.04"
+            android:maxLines="1" />
     </LinearLayout>
+
+    <!-- Small divider under toolbar for better separation -->
+    <View
+        android:id="@+id/toolbarShadow"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/colorDivider"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <ScrollView
         android:id="@+id/scroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintTop_toBottomOf="@id/toolbarShadow"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -69,41 +70,45 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:gravity="top">
 
             <!-- Header card: Avatar + basic info (View + Edit) -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardProfileMain"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
+                android:layout_marginBottom="18dp"
                 app:cardBackgroundColor="@color/colorSurface"
-                app:cardCornerRadius="20dp"
+                app:cardCornerRadius="22dp"
                 app:cardUseCompatPadding="true"
-                app:cardElevation="4dp">
+                app:cardElevation="6dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp"
+                    android:padding="18dp"
                     android:gravity="center_vertical">
 
+                    <!-- Avatar circle -->
                     <TextView
                         android:id="@+id/tvAvatarLetter"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
                         android:background="@drawable/bg_avatar_circle"
                         android:gravity="center"
                         android:text="V"
+                        android:textAllCaps="true"
                         android:textColor="@android:color/white"
-                        android:textSize="28sp"
-                        android:textStyle="bold" />
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.08" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
+                        android:layout_marginStart="18dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -121,7 +126,8 @@
                                 android:text="Vansh Mandanka"
                                 android:textColor="@color/colorTextPrimary"
                                 android:textSize="20sp"
-                                android:textStyle="bold" />
+                                android:textStyle="bold"
+                                android:letterSpacing="0.03" />
 
                             <TextView
                                 android:id="@+id/tvPhone"
@@ -136,15 +142,16 @@
                                 android:id="@+id/tvPlaceTypeChip"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:paddingStart="10dp"
-                                android:paddingEnd="10dp"
-                                android:paddingTop="4dp"
-                                android:paddingBottom="4dp"
+                                android:layout_marginTop="10dp"
+                                android:paddingStart="12dp"
+                                android:paddingEnd="12dp"
+                                android:paddingTop="5dp"
+                                android:paddingBottom="5dp"
                                 android:background="@drawable/bg_chip_place_type"
                                 android:text="Village"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textSize="12sp" />
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
 
                         <!-- EDIT HEADER -->
@@ -153,7 +160,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:visibility="gone">
+                            android:visibility="gone"
+                            android:layout_marginTop="2dp">
 
                             <!-- Full name -->
                             <com.google.android.material.textfield.TextInputLayout
@@ -172,7 +180,7 @@
                                     android:layout_height="wrap_content"
                                     android:inputType="textPersonName"
                                     android:textColor="@color/colorTextPrimary"
-                                    android:textColorHint="@color/colorTextPrimary" />
+                                    android:textColorHint="@color/colorTextSecondary" />
                             </com.google.android.material.textfield.TextInputLayout>
 
                             <!-- Phone -->
@@ -192,8 +200,9 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:inputType="phone"
+                                    android:maxLength="10"
                                     android:textColor="@color/colorTextPrimary"
-                                    android:textColorHint="@color/colorTextPrimary" />
+                                    android:textColorHint="@color/colorTextSecondary" />
                             </com.google.android.material.textfield.TextInputLayout>
 
                             <!-- Place type DROPDOWN (Village / City) -->
@@ -217,13 +226,24 @@
                                     android:focusable="false"
                                     android:clickable="true"
                                     android:textColor="@color/colorTextPrimary"
-                                    android:textColorHint="@color/colorTextPrimary" />
+                                    android:textColorHint="@color/colorTextSecondary" />
                             </com.google.android.material.textfield.TextInputLayout>
                         </LinearLayout>
 
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <!-- Section title for details (VIEW mode) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profile details"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextSecondary"
+                android:letterSpacing="0.04"
+                android:layout_marginBottom="8dp" />
 
             <!-- VIEW MODE DETAILS (2 separate cards) -->
             <LinearLayout
@@ -455,6 +475,20 @@
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
+            <!-- EDIT section title -->
+            <TextView
+                android:id="@+id/tvEditSectionTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit details"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextSecondary"
+                android:letterSpacing="0.04"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
+
             <!-- EDIT MODE DETAILS (2 separate cards, same palette) -->
             <LinearLayout
                 android:id="@+id/sectionEditDetails"
@@ -511,7 +545,7 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="textPersonName"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textColorHint="@color/colorTextPrimary" />
+                                android:textColorHint="@color/colorTextSecondary" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                     </LinearLayout>
@@ -565,7 +599,7 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="textPostalAddress"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textColorHint="@color/colorTextPrimary" />
+                                android:textColorHint="@color/colorTextSecondary" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Village -->
@@ -586,7 +620,7 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="textCapWords"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textColorHint="@color/colorTextPrimary" />
+                                android:textColorHint="@color/colorTextSecondary" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- District -->
@@ -607,7 +641,7 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="textCapWords"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textColorHint="@color/colorTextPrimary" />
+                                android:textColorHint="@color/colorTextSecondary" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- State -->
@@ -628,7 +662,7 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="textCapWords"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textColorHint="@color/colorTextPrimary" />
+                                android:textColorHint="@color/colorTextSecondary" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Pincode -->
@@ -649,7 +683,7 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="number"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textColorHint="@color/colorTextPrimary" />
+                                android:textColorHint="@color/colorTextSecondary" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <!-- Save button -->
@@ -657,7 +691,7 @@
                             android:id="@+id/btnSaveProfile"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
+                            android:layout_marginTop="18dp"
                             android:text="Save changes"
                             android:textAllCaps="false"
                             android:textStyle="bold"
@@ -670,5 +704,19 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- Floating Edit button at bottom-right -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btnEditToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:contentDescription="Edit profile"
+        android:src="@drawable/ic_edit_24"
+        app:tint="@android:color/white"
+        app:backgroundTint="@color/colorPrimary"
+        app:useCompatPadding="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
