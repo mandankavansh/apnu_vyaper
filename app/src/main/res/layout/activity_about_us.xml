@@ -23,12 +23,12 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="@android:color/transparent"
+            android:paddingHorizontal="12dp"
+            app:navigationIcon="@drawable/ic_arrows_24"
+            app:navigationIconTint="@color/colorPrimary"
             app:title="About Shehar Setu"
             app:titleCentered="true"
-            app:navigationIconTint="@color/colorPrimary"
-            app:titleTextColor="@color/colorPrimary"
-            app:navigationIcon="@drawable/ic_arrows_24"
-            android:paddingHorizontal="12dp"/>
+            app:titleTextColor="@color/colorPrimary"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- Scroll content -->
@@ -148,6 +148,7 @@
                         android:layout_marginTop="10dp">
 
                         <TextView
+                            android:id="@+id/tvChipMarketplace"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:background="@drawable/bg_about_chip"
@@ -158,6 +159,7 @@
                             android:textColor="@color/colorPrimary"/>
 
                         <TextView
+                            android:id="@+id/tvChipMultiCategory"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -169,6 +171,7 @@
                             android:textColor="@color/colorPrimary"/>
 
                         <TextView
+                            android:id="@+id/tvChipDynamicForms"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
@@ -213,6 +216,7 @@
                             app:tint="@color/colorPrimary" />
 
                         <TextView
+                            android:id="@+id/tvBuyersTitle"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
@@ -224,6 +228,7 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tvBuyersPoints"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
@@ -253,6 +258,7 @@
                             app:tint="@color/colorPrimary"/>
 
                         <TextView
+                            android:id="@+id/tvSellersTitle"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
@@ -264,6 +270,7 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tvSellersPoints"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
@@ -292,6 +299,7 @@
                     android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/tvVisionTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Our Vision"
@@ -300,6 +308,7 @@
                         android:textColor="@color/colorPrimary"/>
 
                     <TextView
+                        android:id="@+id/tvVisionDesc"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
@@ -329,6 +338,7 @@
                                 app:tint="@color/colorPrimary" />
 
                             <TextView
+                                android:id="@+id/tvValueStructured"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
@@ -351,6 +361,7 @@
                                 app:tint="@color/colorPrimary" />
 
                             <TextView
+                                android:id="@+id/tvValueLocalFirst"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
@@ -373,6 +384,7 @@
                                 app:tint="@color/colorPrimary" />
 
                             <TextView
+                                android:id="@+id/tvValueSupportive"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
@@ -402,6 +414,7 @@
                     android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/tvSupportTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Support and Feedback"
@@ -410,6 +423,7 @@
                         android:textColor="@color/colorPrimary"/>
 
                     <TextView
+                        android:id="@+id/tvSupportDesc"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
