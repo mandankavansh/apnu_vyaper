@@ -360,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Facebook", Toast.LENGTH_SHORT).show();
 
             } else if (id == R.id.nav_contact) {
-                Toast.makeText(MainActivity.this, "Contact us", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, ContactUsActivity.class));
 
             } else if (id == R.id.nav_terms) {
                 Toast.makeText(MainActivity.this, "Terms and Condition", Toast.LENGTH_SHORT).show();
