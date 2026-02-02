@@ -204,6 +204,43 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // ================= ✅ NEW HELPER METHODS FOR IMAGE FIXES =================
+
+    /**
+     * ✅ NEW: Helper to remove leading slashes from string
+     */
+    private static String ltrim(String str, char ch) {
+        if (str == null || str.isEmpty()) return str;
+        while (str.length() > 0 && str.charAt(0) == ch) {
+            str = str.substring(1);
+        }
+        return str;
+    }
+
+    /**
+     * ✅ NEW: Convert relative image path to absolute URL
+     * Handles both relative paths and already-absolute URLs
+     *
+     * Examples:
+     * - "icons/scrap.png" → "https://magenta-owl-444153.hostingersite.com/api/icons/scrap.png"
+     * - "/uploads/listings/..." → "https://magenta-owl-444153.hostingersite.com/api/uploads/listings/..."
+     * - "https://..." → "https://..." (unchanged)
+     */
+    private String makeAbsoluteImageUrl(String imagePath) {
+        if (TextUtils.isEmpty(imagePath)) {
+            return "";
+        }
+
+        // Already absolute URL - return as-is
+        if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+            return imagePath;
+        }
+
+        // Relative path - convert to absolute
+        String cleanPath = ltrim(imagePath, '/');
+        return ApiRoutes.BASE_URL + "/" + cleanPath;
+    }
+
     // ================= Header/Search/Voice =================
 
     private void bindHeader() {
@@ -575,15 +612,19 @@ public class MainActivity extends AppCompatActivity {
                                 String nameEn = o.optString("name", "");
                                 m.put("name", nameEn);
 
+                                // ✅ FIXED: Proper icon URL handling with makeAbsoluteImageUrl
                                 String iconUrl = o.optString("icon", "");
                                 if (TextUtils.isEmpty(iconUrl))
                                     iconUrl = o.optString("icon_url", "");
+
+                                // ✅ Convert relative path to absolute URL
+                                iconUrl = makeAbsoluteImageUrl(iconUrl);
                                 m.put("iconUrl", iconUrl);
 
                                 Log.d(TAG, "Category[" + i + "] id=" + catId + " name=" + nameEn);
                                 Log.d(TAG, "Category[" + i + "] icon=" + o.optString("icon", "<empty>"));
                                 Log.d(TAG, "Category[" + i + "] icon_url=" + o.optString("icon_url", "<empty>"));
-                                Log.d(TAG, "Category[" + i + "] FINAL iconUrl=" + iconUrl);
+                                Log.d(TAG, "Category[" + i + "] ✅ FINAL iconUrl=" + iconUrl);
 
                                 m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
 
@@ -680,15 +721,19 @@ public class MainActivity extends AppCompatActivity {
                                 String subName = o.optString("name", "");
                                 m.put("name", subName);
 
+                                // ✅ FIXED: Proper icon URL handling with makeAbsoluteImageUrl
                                 String iconUrl = o.optString("icon", "");
                                 if (TextUtils.isEmpty(iconUrl))
                                     iconUrl = o.optString("icon_url", "");
+
+                                // ✅ Convert relative path to absolute URL
+                                iconUrl = makeAbsoluteImageUrl(iconUrl);
                                 m.put("iconUrl", iconUrl);
 
                                 Log.d(TAG, "Subcategory[" + i + "] id=" + subId + " name=" + subName);
                                 Log.d(TAG, "Subcategory[" + i + "] icon=" + o.optString("icon", "<empty>"));
                                 Log.d(TAG, "Subcategory[" + i + "] icon_url=" + o.optString("icon_url", "<empty>"));
-                                Log.d(TAG, "Subcategory[" + i + "] FINAL iconUrl=" + iconUrl);
+                                Log.d(TAG, "Subcategory[" + i + "] ✅ FINAL iconUrl=" + iconUrl);
 
                                 m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
 
@@ -829,24 +874,26 @@ public class MainActivity extends AppCompatActivity {
 
                                 m.put("city", o.optString("city", ""));
 
-                                // ✅ FIX: Check cover_image field first (from logs)
+                                // ✅ FIXED: Comprehensive image URL handling with multiple fallbacks
                                 String imageUrl = "";
+
+                                // Priority 1: cover_image (from listing_media join)
                                 if (!o.isNull("cover_image")) {
                                     imageUrl = o.optString("cover_image", "");
-                                } else if (!o.isNull("image_url")) {
+                                }
+
+                                // Priority 2: image_url (fallback)
+                                if (TextUtils.isEmpty(imageUrl) && !o.isNull("image_url")) {
                                     imageUrl = o.optString("image_url", "");
-                                } else if (!o.isNull("image")) {
+                                }
+
+                                // Priority 3: image (fallback)
+                                if (TextUtils.isEmpty(imageUrl) && !o.isNull("image")) {
                                     imageUrl = o.optString("image", "");
                                 }
 
-                                // ✅ FIX: Prepend base URL if path is relative
-                                if (!TextUtils.isEmpty(imageUrl) && !imageUrl.startsWith("http")) {
-                                    // Remove leading slash if present
-                                    if (imageUrl.startsWith("/")) {
-                                        imageUrl = imageUrl.substring(1);
-                                    }
-                                    imageUrl = "https://magenta-owl-444153.hostingersite.com/" + imageUrl;
-                                }
+                                // ✅ Convert relative path to absolute URL
+                                imageUrl = makeAbsoluteImageUrl(imageUrl);
                                 m.put("imageUrl", imageUrl);
 
                                 if (i < 3) {
@@ -855,7 +902,7 @@ public class MainActivity extends AppCompatActivity {
                                             "Product[" + i + "] cover_image=" + o.optString("cover_image", "<empty>"));
                                     Log.d(TAG, "Product[" + i + "] image_url=" + o.optString("image_url", "<empty>"));
                                     Log.d(TAG, "Product[" + i + "] image=" + o.optString("image", "<empty>"));
-                                    Log.d(TAG, "Product[" + i + "] FINAL imageUrl=" + imageUrl);
+                                    Log.d(TAG, "Product[" + i + "] ✅ FINAL imageUrl=" + imageUrl);
                                     Log.d(TAG, "Product[" + i + "] imageUrl.length=" + imageUrl.length());
                                     Log.d(TAG, "Product[" + i + "] imageUrl.startsWith('http')="
                                             + imageUrl.startsWith("http"));
@@ -1043,7 +1090,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Fetch logged-in user profile from API and update UI
+     * ✅ KEPT: Original method - Fetch logged-in user profile from API and update UI
      * Network optimized with caching and proper error handling
      */
     private void fetchUserProfile(TextView tvUserName, TextView tvUserPhone) {
@@ -1148,7 +1195,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Fetch user profile on app startup and cache the data
+     * ✅ KEPT: Original method - Fetch user profile on app startup and cache the data
      * This runs in background when MainActivity loads
      */
     private void fetchUserProfileOnStartup() {
