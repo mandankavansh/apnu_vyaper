@@ -79,20 +79,24 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         String title = getString(p, "title", "");
         String price = getString(p, "price", "");
         String city = getString(p, "city", "");
+        int id = getInt(p, "id", 0); // Try 'id' first
+        if (id == 0)
+            id = getInt(p, "listing_id", 0); // Try 'listing_id' fallback
 
         h.title.setText(title);
         h.price.setText(price);
         h.city.setText(city);
 
         // Item click -> PDP
-        h.itemView.setOnClickListener(v -> openPdp(title, price, city, imgRes));
+        int finalId = id;
+        h.itemView.setOnClickListener(v -> openPdp(finalId, title, price, city, imgRes));
 
         // Contact button
         h.btn.setOnClickListener(v -> {
             if (contactClickListener != null) {
                 contactClickListener.onContactClick(p);
             } else {
-                openPdp(title, price, city, imgRes);
+                openPdp(finalId, title, price, city, imgRes);
             }
         });
     }
@@ -119,8 +123,9 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     }
 
     /* ===================== Helpers ===================== */
-    private void openPdp(String title, String price, String city, int imgRes) {
+    private void openPdp(int id, String title, String price, String city, int imgRes) {
         Intent i = new Intent(ctx, ProductDetail.class);
+        i.putExtra("listing_id", id); // ✅ Pass the ID!
         i.putExtra("title", title);
         i.putExtra("price", price);
         i.putExtra("city", city);

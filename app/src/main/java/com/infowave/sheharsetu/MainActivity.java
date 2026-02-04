@@ -210,7 +210,8 @@ public class MainActivity extends AppCompatActivity {
      * ✅ NEW: Helper to remove leading slashes from string
      */
     private static String ltrim(String str, char ch) {
-        if (str == null || str.isEmpty()) return str;
+        if (str == null || str.isEmpty())
+            return str;
         while (str.length() > 0 && str.charAt(0) == ch) {
             str = str.substring(1);
         }
@@ -222,8 +223,10 @@ public class MainActivity extends AppCompatActivity {
      * Handles both relative paths and already-absolute URLs
      *
      * Examples:
-     * - "icons/scrap.png" → "https://magenta-owl-444153.hostingersite.com/api/icons/scrap.png"
-     * - "/uploads/listings/..." → "https://magenta-owl-444153.hostingersite.com/api/uploads/listings/..."
+     * - "icons/scrap.png" →
+     * "https://magenta-owl-444153.hostingersite.com/api/icons/scrap.png"
+     * - "/uploads/listings/..." →
+     * "https://magenta-owl-444153.hostingersite.com/api/uploads/listings/..."
      * - "https://..." → "https://..." (unchanged)
      */
     private String makeAbsoluteImageUrl(String imagePath) {
@@ -574,9 +577,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchCategories() {
         final String url = urlCategories();
-        Log.d(TAG, "========== FETCH CATEGORIES START ==========");
-        Log.d(TAG, "fetchCategories(): url=" + url);
-        Log.d(TAG, "fetchCategories(): timestamp=" + System.currentTimeMillis());
+        Log.e(TAG, "========== FETCH CATEGORIES START =========="); // Changed to Log.e for visibility
+        Log.e(TAG, "URL: " + url);
 
         @SuppressLint("NotifyDataSetChanged")
         JsonObjectRequest req = new JsonObjectRequest(
@@ -584,18 +586,17 @@ public class MainActivity extends AppCompatActivity {
                 url,
                 null,
                 resp -> {
-                    Log.d(TAG, "========== FETCH CATEGORIES RESPONSE ==========");
-                    Log.d(TAG, "fetchCategories() response=" + safeJsonSnippet(resp));
-                    Log.d(TAG, "fetchCategories() response.status=" + resp.optString("status"));
-                    Log.d(TAG, "fetchCategories() response.has('data')=" + resp.has("data"));
+                    Log.e(TAG, "✅ Categories Response: " + resp.toString());
                     try {
                         if (!"success".equalsIgnoreCase(resp.optString("status"))) {
-                            Log.e(TAG, "fetchCategories(): status != success, status=" + resp.optString("status"));
+                            Log.e(TAG, "❌ Status is not success: " + resp.optString("status"));
                             makeText(this, I18n.t(this, "Categories error"), Toast.LENGTH_SHORT).show();
                             return;
                         }
 
                         JSONArray arr = resp.optJSONArray("data");
+                        Log.e(TAG, "Categories count: " + (arr != null ? arr.length() : 0));
+
                         categories.clear();
 
                         List<String> catNameKeys = new ArrayList<>();
@@ -659,7 +660,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                 },
                 err -> {
-                    Log.e(TAG, "fetchCategories() error=" + buildVolleyError(err), err);
+                    Log.e(TAG, "❌ Categories Fetch Error: " + err.toString());
+                    if (err.networkResponse != null) {
+                        Log.e(TAG, "Status Code: " + err.networkResponse.statusCode);
+                        Log.e(TAG, "Body: " + new String(err.networkResponse.data));
+                    }
                     makeText(this, I18n.t(this, "Network error (categories)"), Toast.LENGTH_SHORT).show();
                 }) {
             @Override
@@ -671,8 +676,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        // Extended Timeout - 15 seconds
+        req.setRetryPolicy(new DefaultRetryPolicy(
+                15000,
+                1,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
         req.setShouldCache(false);
-        req.setRetryPolicy(new DefaultRetryPolicy(15000, 0, 1f));
         VolleySingleton.getInstance(this).add(req);
     }
 
@@ -788,6 +798,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "fetchSubFilters() error=" + buildVolleyError(err), err);
                     makeText(this, I18n.t(this, "Network error (subcategories)"), Toast.LENGTH_SHORT).show();
                 }) {
+
             @Override
             public Map<String, String> getHeaders() {
                 HashMap<String, String> headers = new HashMap<>();
@@ -795,6 +806,7 @@ public class MainActivity extends AppCompatActivity {
                 headers.put("Accept-Language", I18n.lang(MainActivity.this));
                 return headers;
             }
+
         };
         req.setShouldCache(false);
         req.setRetryPolicy(new DefaultRetryPolicy(15000, 0, 1f));
@@ -946,6 +958,7 @@ public class MainActivity extends AppCompatActivity {
                     // allow retry next time
                     // (do NOT set lastProductsUrl on error)
                 }) {
+
             @Override
             public Map<String, String> getHeaders() {
                 HashMap<String, String> headers = new HashMap<>();
@@ -953,6 +966,7 @@ public class MainActivity extends AppCompatActivity {
                 headers.put("Accept-Language", I18n.lang(MainActivity.this));
                 return headers;
             }
+
         };
         req.setShouldCache(false);
         req.setRetryPolicy(new DefaultRetryPolicy(20000, 0, 1f));
@@ -1170,6 +1184,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     Log.e(TAG, "========== USER PROFILE ERROR END ==========");
                 }) {
+
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<>();
@@ -1178,14 +1193,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Request Headers: Authorization=Bearer [TOKEN], Content-Type=application/json");
                 return headers;
             }
+
         };
 
         // Disable caching - user profile should always be fresh
         req.setShouldCache(false);
 
         // Network optimization: shorter timeout, no retries for profile fetch
-        req.setRetryPolicy(new DefaultRetryPolicy(
-                5000, // 5 second timeout
+        req.setRetryPolicy(new DefaultRetryPolicy(5000, // 5 second timeout
                 0, // No retries - fail fast
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
@@ -1195,7 +1210,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * ✅ KEPT: Original method - Fetch user profile on app startup and cache the data
+     * ✅ KEPT: Original method - Fetch user profile on app startup and cache the
+     * data
      * This runs in background when MainActivity loads
      */
     private void fetchUserProfileOnStartup() {
@@ -1276,6 +1292,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Set fallback cached values");
                     Log.e(TAG, "========== USER PROFILE ERROR ON STARTUP END ==========");
                 }) {
+
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<>();
@@ -1290,8 +1307,7 @@ public class MainActivity extends AppCompatActivity {
         req.setShouldCache(false);
 
         // Network optimization: shorter timeout, no retries
-        req.setRetryPolicy(new DefaultRetryPolicy(
-                5000, // 5 second timeout
+        req.setRetryPolicy(new DefaultRetryPolicy(5000, // 5 second timeout
                 0, // No retries - fail fast
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 

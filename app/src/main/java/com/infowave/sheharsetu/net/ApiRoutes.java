@@ -19,6 +19,7 @@ public final class ApiRoutes {
     public static final String GET_PRODUCTS = BASE_URL + "/list_products.php";
 
     public static final String GET_LISTING = BASE_URL + "/get_listing.php";
+    public static final String GET_LISTING_DETAILS = BASE_URL + "/get_listing_details.php";
 
     public static final String GET_FORM_SCHEMA = BASE_URL + "/get_form_schema.php";
 

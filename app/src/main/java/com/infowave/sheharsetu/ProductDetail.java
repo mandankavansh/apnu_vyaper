@@ -7,6 +7,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageView;
@@ -49,6 +50,8 @@ import java.util.List;
  * Product detail page – अब API से डायनेमिक डेटा लोड करता है।
  */
 public class ProductDetail extends AppCompatActivity {
+
+    private static final String TAG = "ProductDetail";
 
     // Top (header)
     private ImageView pdpBack, pdpShare, pdpSave;
@@ -235,7 +238,12 @@ public class ProductDetail extends AppCompatActivity {
     /* -------------------- API -------------------- */
 
     private void fetchListing(int listingId) {
-        String url = ApiRoutes.GET_LISTING + "?listing_id=" + listingId;
+        String url = ApiRoutes.GET_LISTING_DETAILS + "?listing_id=" + listingId;
+
+        // 🔍 DEBUG LOGS
+        Log.e(TAG, "========== FETCH LISTING START ==========");
+        Log.e(TAG, "URL: " + url);
+        Log.e(TAG, "Listing ID: " + listingId);
 
         LoadingDialog.showLoading(this, "Loading listing...");
 
@@ -244,13 +252,23 @@ public class ProductDetail extends AppCompatActivity {
                 url,
                 resp -> {
                     LoadingDialog.hideLoading();
+                    Log.e(TAG, "✅ API RESPONSE RECEIVED");
+                    Log.e(TAG, "Response Body: " + resp);
+
                     try {
                         JSONObject root = new JSONObject(resp);
+
                         if (!"success".equalsIgnoreCase(root.optString("status"))) {
-                            Toast.makeText(this, root.optString("message", "Failed"), Toast.LENGTH_SHORT).show();
+                            // Logic error from server
+                            String msg = root.optString("message", "Failed");
+                            Log.e(TAG, "❌ Server returned error status: " + msg);
+                            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                             return;
                         }
+
+                        // Proceed to parse data...
                         JSONObject d = root.getJSONObject("data");
+                        Log.e(TAG, "Data object found. Parsing title/price...");
 
                         productTitle = d.optString("title", "");
                         productPrice = d.optString("price", "");
@@ -303,19 +321,57 @@ public class ProductDetail extends AppCompatActivity {
                         }
                         setGallery(srcs);
 
-                        // Optional chips (example: year/fuel etc. यदि चाहें तो backend से भेजें)
-                        bindFeatureChips(new String[] { "Verified Seller", "Secure Deal" });
+                        // 🔥 DYNAMIC ATTRIBUTES BINDING (FIXED)
+                        pdpChips.removeAllViews();
+                        JSONArray attrs = d.optJSONArray("attributes");
+                        if (attrs != null && attrs.length() > 0) {
+                            for (int i = 0; i < attrs.length(); i++) {
+                                JSONObject a = attrs.getJSONObject(i);
+                                String label = a.optString("label", "");
+                                String val = a.optString("value", "");
+                                String unit = a.optString("unit", "");
+
+                                if (!label.isEmpty() && !val.isEmpty()) {
+                                    String displayText = label + ": " + val + (unit.isEmpty() ? "" : " " + unit);
+                                    addChip(displayText);
+                                }
+                            }
+                        } else {
+                            // Fallback if no specific attributes found
+                            addChip("Verified Listing");
+                        }
 
                     } catch (Exception e) {
-                        Toast.makeText(this, "Parse error", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "❌ PARSE ERROR: " + e.getMessage());
+                        e.printStackTrace();
+                        Toast.makeText(this, "Parse error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 },
                 err -> {
                     LoadingDialog.hideLoading();
+                    Log.e(TAG, "❌ NETWORK ERROR: " + err.toString());
+                    if (err.networkResponse != null) {
+                        Log.e(TAG, "Status: " + err.networkResponse.statusCode);
+                        try {
+                            Log.e(TAG, "Body: " + new String(err.networkResponse.data, "UTF-8"));
+                        } catch (Exception ignored) {
+                        }
+                    }
                     Toast.makeText(this, "Network error", Toast.LENGTH_SHORT).show();
                 });
 
         Volley.newRequestQueue(this).add(req);
+    }
+
+    private void addChip(String text) {
+        Chip chip = new Chip(this, null, com.google.android.material.R.style.Widget_MaterialComponents_Chip_Filter);
+        chip.setText(text);
+        chip.setCheckable(false);
+        // Soft blue-grey background
+        chip.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#F0F4F8")));
+        chip.setTextColor(Color.BLACK);
+        chip.setChipStrokeWidth(0);
+        pdpChips.addView(chip);
     }
 
     /* -------------------- UI helpers -------------------- */
