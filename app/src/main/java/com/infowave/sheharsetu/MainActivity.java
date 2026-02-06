@@ -241,17 +241,6 @@ public class MainActivity extends AppCompatActivity {
         return str;
     }
 
-    /**
-     * ✅ NEW: Convert relative image path to absolute URL
-     * Handles both relative paths and already-absolute URLs
-     *
-     * Examples:
-     * - "icons/scrap.png" →
-     * "https://magenta-owl-444153.hostingersite.com/api/icons/scrap.png"
-     * - "/uploads/listings/..." →
-     * "https://magenta-owl-444153.hostingersite.com/api/uploads/listings/..."
-     * - "https://..." → "https://..." (unchanged)
-     */
     private String makeAbsoluteImageUrl(String imagePath) {
         if (TextUtils.isEmpty(imagePath)) {
             return "";
@@ -1284,11 +1273,6 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Request added to queue. Waiting for response...");
     }
 
-    /**
-     * ✅ KEPT: Original method - Fetch user profile on app startup and cache the
-     * data
-     * This runs in background when MainActivity loads
-     */
     private void fetchUserProfileOnStartup() {
         Log.d(TAG, "========== FETCH USER PROFILE ON STARTUP ==========");
 
