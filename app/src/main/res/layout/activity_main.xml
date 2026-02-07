@@ -285,7 +285,7 @@
         android:background="@color/colorSurface"
         app:headerLayout="@layout/av_header_main"
         app:menu="@menu/nav_main"
-        app:itemIconTint="@color/colorPrimary"
+        app:itemIconTint="@null"
         app:itemTextColor="@color/colorTextPrimary" />
 
 

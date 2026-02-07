@@ -9,6 +9,10 @@
 
     <!-- White icons on the black status bar -->
     <item name="android:windowLightStatusBar">false</item>
+    
+    <!-- Greenish color variants for consistent theme -->
+    <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+    <item name="colorSurfaceVariant">@color/colorSurfaceVariant</item>
 </style>
 
 <!-- App theme alias -->

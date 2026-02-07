@@ -16,11 +16,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.infowave.sheharsetu.ProductDetail;
 import com.infowave.sheharsetu.R;
-import com.bumptech.glide.Glide;
+import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.MotionEvent;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
 
@@ -63,18 +66,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     public void onBindViewHolder(@NonNull VH h, int pos) {
         Map<String, Object> p = items.get(pos);
 
-        // --- Image: prefer URL then resource ---
-        String imageUrl = getString(p, "imageUrl", getString(p, "image_url", ""));
-        int imgRes = getInt(p, "imageRes", 0);
-
-        if (!TextUtils.isEmpty(imageUrl)) {
-            Glide.with(h.img).load(imageUrl).placeholder(placeholderIcon).error(placeholderIcon).into(h.img);
-        } else if (imgRes != 0) {
-            h.img.setImageResource(imgRes);
-        } else {
-            h.img.setImageResource(placeholderIcon);
-        }
-
         // --- Text fields ---
         String title = getString(p, "title", "");
         String price = getString(p, "price", "");
@@ -87,16 +78,85 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         h.price.setText(price);
         h.city.setText(city);
 
-        // Item click -> PDP
+        // Posted time
+        String posted = getString(p, "posted_when", getString(p, "posted_time", ""));
+
+        // Item click -> PDP (Click on card body, outside slider)
         int finalId = id;
-        h.itemView.setOnClickListener(v -> openPdp(finalId, title, price, city, imgRes));
+        h.itemView.setOnClickListener(v -> openPdp(finalId, title, price, city, posted, 0));
+
+        // --- Image Slider ---
+        List<String> images = (List<String>) p.get("images");
+        if (images == null)
+            images = new ArrayList<>();
+
+        // Fallback for single image key if list is empty
+        if (images.isEmpty()) {
+            String singleObj = getString(p, "imageUrl", getString(p, "image_url", ""));
+            if (!TextUtils.isEmpty(singleObj)) {
+                images.add(singleObj);
+            }
+        }
+
+        // If still empty, add a placeholder or let adapter handle empty list
+        if (images.isEmpty()) {
+            // We can add a null or empty string to show placeholder in adapter
+            images.add("");
+        }
+
+        ImageSliderAdapter sliderAdapter = new ImageSliderAdapter(images, v -> {
+            openPdp(finalId, title, price, city, posted, 0);
+        });
+        h.vpImages.setAdapter(sliderAdapter);
+        h.vpImages.setOrientation(androidx.viewpager2.widget.ViewPager2.ORIENTATION_HORIZONTAL); // Ensure horizontal
+        h.vpImages.setOffscreenPageLimit(1);
+
+        // Auto-slide functionality
+        int imageCount = images.size();
+        if (imageCount > 1) {
+            Handler autoSlideHandler = new Handler(Looper.getMainLooper());
+            final int[] currentPage = { 0 };
+            Runnable autoSlideRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (h.vpImages != null && h.vpImages.getAdapter() != null) {
+                        currentPage[0] = (currentPage[0] + 1) % imageCount;
+                        h.vpImages.setCurrentItem(currentPage[0], true);
+                        autoSlideHandler.postDelayed(this, 3000); // 3 second interval
+                    }
+                }
+            };
+            autoSlideHandler.postDelayed(autoSlideRunnable, 3000);
+
+            // Pause on touch, resume on release
+            h.vpImages.getChildAt(0).setOnTouchListener((v, event) -> {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        autoSlideHandler.removeCallbacks(autoSlideRunnable);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        autoSlideHandler.postDelayed(autoSlideRunnable, 3000);
+                        break;
+                }
+                return false;
+            });
+
+            // Update current page when user swipes
+            h.vpImages.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    currentPage[0] = position;
+                }
+            });
+        }
 
         // Contact button
         h.btn.setOnClickListener(v -> {
             if (contactClickListener != null) {
                 contactClickListener.onContactClick(p);
             } else {
-                openPdp(finalId, title, price, city, imgRes);
+                openPdp(finalId, title, price, city, posted, 0);
             }
         });
     }
@@ -108,13 +168,13 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
 
     /* ===================== ViewHolder ===================== */
     static class VH extends RecyclerView.ViewHolder {
-        ImageView img;
+        androidx.viewpager2.widget.ViewPager2 vpImages;
         TextView title, price, city;
         Button btn;
 
         VH(@NonNull View v) {
             super(v);
-            img = v.findViewById(R.id.img);
+            vpImages = v.findViewById(R.id.vpImages);
             title = v.findViewById(R.id.tvTitle);
             price = v.findViewById(R.id.tvPrice);
             city = v.findViewById(R.id.tvCity);
@@ -123,14 +183,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     }
 
     /* ===================== Helpers ===================== */
-    private void openPdp(int id, String title, String price, String city, int imgRes) {
+    private void openPdp(int id, String title, String price, String city, String posted, int imgRes) {
         Intent i = new Intent(ctx, ProductDetail.class);
-        i.putExtra("listing_id", id); // ✅ Pass the ID!
+        i.putExtra("listing_id", id);
         i.putExtra("title", title);
         i.putExtra("price", price);
         i.putExtra("city", city);
-        i.putExtra("posted", "2d ago");
+        i.putExtra("posted", TextUtils.isEmpty(posted) ? "" : posted);
         i.putExtra("desc", buildDescForPdp(title, price, city));
+        // We no longer pass resource IDs for main flow, but keeping compatible for now
         i.putExtra("images", new int[] { imgRes != 0 ? imgRes : placeholderIcon });
         ctx.startActivity(i);
     }

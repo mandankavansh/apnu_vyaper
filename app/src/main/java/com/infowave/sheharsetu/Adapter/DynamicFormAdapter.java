@@ -33,11 +33,12 @@ import java.util.*;
 /**
  * Adapter for dynamic form:
  * Field map keys:
- *  - key, label, hint, type (TEXT, NUMBER, PHONE, EMAIL, DATE, DROPDOWN, CHECKBOX, SWITCH, TEXTAREA, CURRENCY, LOCATION, PHOTOS)
- *  - required (Boolean/Number/String)
- *  - options:
- *      - static mode: List<String>
- *      - backend mode: List<Map<String,Object>> with "value" and "label"
+ * - key, label, hint, type (TEXT, NUMBER, PHONE, EMAIL, DATE, DROPDOWN,
+ * CHECKBOX, SWITCH, TEXTAREA, CURRENCY, LOCATION, PHOTOS)
+ * - required (Boolean/Number/String)
+ * - options:
+ * - static mode: List<String>
+ * - backend mode: List<Map<String,Object>> with "value" and "label"
  */
 public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -46,21 +47,24 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     /* ================= Callbacks to Activity ================= */
     public interface Callbacks {
         void pickCoverPhoto(String fieldKey);
+
         void pickMorePhotos(String fieldKey);
+
         void requestMyLocation(String fieldKey);
+
         void showToast(String msg);
     }
 
     /* ================= View Types ================= */
-    private static final int T_TEXT      = 1;
-    private static final int T_DATE      = 2;
-    private static final int T_DROPDOWN  = 3;
-    private static final int T_CHECKBOX  = 4;
-    private static final int T_SWITCH    = 5;
-    private static final int T_TEXTAREA  = 6;
-    private static final int T_CURRENCY  = 7;
-    private static final int T_LOCATION  = 8;
-    private static final int T_PHOTOS    = 9;
+    private static final int T_TEXT = 1;
+    private static final int T_DATE = 2;
+    private static final int T_DROPDOWN = 3;
+    private static final int T_CHECKBOX = 4;
+    private static final int T_SWITCH = 5;
+    private static final int T_TEXTAREA = 6;
+    private static final int T_CURRENCY = 7;
+    private static final int T_LOCATION = 8;
+    private static final int T_PHOTOS = 9;
 
     private final List<Map<String, Object>> fields;
     private final Map<String, Object> answers = new HashMap<>();
@@ -74,12 +78,13 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         Log.d(TAG, "Adapter init with fields size=" + this.fields.size());
         int idx = 0;
         for (Map<String, Object> f : this.fields) {
-            String key  = s(f.get("key"));
+            String key = s(f.get("key"));
             String type = s(f.get("type"));
             boolean required = req(f);
             Object opts = f.get("options");
             int optsCount = 0;
-            if (opts instanceof List) optsCount = ((List<?>) opts).size();
+            if (opts instanceof List)
+                optsCount = ((List<?>) opts).size();
             Log.d(TAG, "Field[" + idx + "] key=" + key +
                     " type=" + type +
                     " required=" + required +
@@ -98,15 +103,15 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     break;
                 case "SWITCH": {
                     // ✅ All switches default OFF (false).
-                    //    "is_new" bhi yahi se OFF se start karega (Used by default).
+                    // "is_new" bhi yahi se OFF se start karega (Used by default).
                     boolean defaultVal = false;
                     answers.put(key, defaultVal);
                     break;
                 }
                 case "PHOTOS": {
                     Map<String, Object> ph = new HashMap<>();
-                    ph.put("cover", "");                       // Base64 string
-                    ph.put("more", new ArrayList<String>());   // List<Base64>
+                    ph.put("cover", ""); // Base64 string
+                    ph.put("more", new ArrayList<String>()); // List<Base64>
                     answers.put(key, ph);
                     break;
                 }
@@ -121,15 +126,24 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public int getItemViewType(int position) {
         String t = s(fields.get(position).get("type")).toUpperCase(Locale.ROOT);
         switch (t) {
-            case "DATE":     return T_DATE;
-            case "DROPDOWN": return T_DROPDOWN;
-            case "CHECKBOX": return T_CHECKBOX;
-            case "SWITCH":   return T_SWITCH;
-            case "TEXTAREA": return T_TEXTAREA;
-            case "CURRENCY": return T_CURRENCY;
-            case "LOCATION": return T_LOCATION;
-            case "PHOTOS":   return T_PHOTOS;
-            default:         return T_TEXT;
+            case "DATE":
+                return T_DATE;
+            case "DROPDOWN":
+                return T_DROPDOWN;
+            case "CHECKBOX":
+                return T_CHECKBOX;
+            case "SWITCH":
+                return T_SWITCH;
+            case "TEXTAREA":
+                return T_TEXTAREA;
+            case "CURRENCY":
+                return T_CURRENCY;
+            case "LOCATION":
+                return T_LOCATION;
+            case "PHOTOS":
+                return T_PHOTOS;
+            default:
+                return T_TEXT;
         }
     }
 
@@ -137,14 +151,22 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int vt) {
         LayoutInflater inf = LayoutInflater.from(parent.getContext());
-        if (vt == T_DATE)        return new VHDate(inf.inflate(R.layout.item_form_date, parent, false));
-        if (vt == T_DROPDOWN)    return new VHDropdown(inf.inflate(R.layout.item_form_dropdown, parent, false));
-        if (vt == T_CHECKBOX)    return new VHCheckbox(inf.inflate(R.layout.item_form_checkbox, parent, false));
-        if (vt == T_SWITCH)      return new VHSwitch(inf.inflate(R.layout.item_form_switch, parent, false));
-        if (vt == T_TEXTAREA)    return new VHTextArea(inf.inflate(R.layout.item_form_textarea, parent, false));
-        if (vt == T_CURRENCY)    return new VHCurrencies(inf.inflate(R.layout.item_form_currency, parent, false));
-        if (vt == T_LOCATION)    return new VHLocation(inf.inflate(R.layout.item_form_location, parent, false));
-        if (vt == T_PHOTOS)      return new VHPhotos(inf.inflate(R.layout.item_form_photos, parent, false));
+        if (vt == T_DATE)
+            return new VHDate(inf.inflate(R.layout.item_form_date, parent, false));
+        if (vt == T_DROPDOWN)
+            return new VHDropdown(inf.inflate(R.layout.item_form_dropdown, parent, false));
+        if (vt == T_CHECKBOX)
+            return new VHCheckbox(inf.inflate(R.layout.item_form_checkbox, parent, false));
+        if (vt == T_SWITCH)
+            return new VHSwitch(inf.inflate(R.layout.item_form_switch, parent, false));
+        if (vt == T_TEXTAREA)
+            return new VHTextArea(inf.inflate(R.layout.item_form_textarea, parent, false));
+        if (vt == T_CURRENCY)
+            return new VHCurrencies(inf.inflate(R.layout.item_form_currency, parent, false));
+        if (vt == T_LOCATION)
+            return new VHLocation(inf.inflate(R.layout.item_form_location, parent, false));
+        if (vt == T_PHOTOS)
+            return new VHPhotos(inf.inflate(R.layout.item_form_photos, parent, false));
         return new VHText(inf.inflate(R.layout.item_form_text, parent, false));
     }
 
@@ -152,10 +174,10 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder h, int pos) {
         Map<String, Object> f = fields.get(pos);
-        String key   = s(f.get("key"));
+        String key = s(f.get("key"));
         String label = s(f.get("label"));
-        String hint  = s(f.get("hint"));
-        String type  = s(f.get("type"));
+        String hint = s(f.get("hint"));
+        String type = s(f.get("type"));
 
         Log.d(TAG, "onBindViewHolder pos=" + pos + " key=" + key + " type=" + type);
 
@@ -217,7 +239,7 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             Object optObj = f.get("options");
             List<String> displayList = new ArrayList<>();
-            List<String> valueList   = new ArrayList<>();
+            List<String> valueList = new ArrayList<>();
 
             displayList.add("Select...");
             valueList.add("");
@@ -230,7 +252,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         Map<Object, Object> mo = (Map<Object, Object>) o;
                         String val = s(mo.get("value"));
                         String lab = s(mo.get("label"));
-                        if (TextUtils.isEmpty(lab)) lab = val;
+                        if (TextUtils.isEmpty(lab))
+                            lab = val;
                         displayList.add(lab);
                         valueList.add(val);
                     } else {
@@ -244,13 +267,16 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     " valueCount=" + valueList.size());
 
             final List<String> finalDisplay = displayList;
-            final List<String> finalValues  = valueList;
+            final List<String> finalValues = valueList;
 
             ArrayAdapter<String> ad = new ArrayAdapter<String>(ctx, R.layout.spinner_item, finalDisplay) {
-                @Override public boolean isEnabled(int position) {
+                @Override
+                public boolean isEnabled(int position) {
                     return position != 0;
                 }
-                @Override public View getDropDownView(int position, View convertView, ViewGroup parent) {
+
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
                     View v = super.getDropDownView(position, convertView, parent);
                     TextView tv = (TextView) v;
                     int color = (position == 0)
@@ -259,10 +285,13 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     tv.setTextColor(color);
                     return v;
                 }
-                @Override public View getView(int position, View convertView, ViewGroup parent) {
+
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
                     View v = super.getView(position, convertView, parent);
                     TextView tv = v.findViewById(R.id.spinnerText);
-                    if (tv == null && v instanceof TextView) tv = (TextView) v;
+                    if (tv == null && v instanceof TextView)
+                        tv = (TextView) v;
                     if (tv != null) {
                         int color = (position == 0)
                                 ? ContextCompat.getColor(ctx, R.color.ss_hint)
@@ -277,12 +306,14 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             String saved = s(answers.get(key));
             int idxSaved = finalValues.indexOf(saved);
-            if (idxSaved < 0) idxSaved = 0;
+            if (idxSaved < 0)
+                idxSaved = 0;
             vh.spinner.setSelection(idxSaved);
             Log.d(TAG, "Dropdown key=" + key + " savedValue=" + saved + " index=" + idxSaved);
 
             vh.spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     if (position == 0) {
                         answers.put(key, "");
                         Log.d(TAG, "Dropdown key=" + key + " set to empty (position 0)");
@@ -293,18 +324,20 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
                     if (view instanceof TextView) {
                         ((TextView) view).setTextColor(
-                                ContextCompat.getColor(ctx, position == 0 ? R.color.ss_hint : R.color.ss_on_surface)
-                        );
+                                ContextCompat.getColor(ctx, position == 0 ? R.color.ss_hint : R.color.ss_on_surface));
                     } else if (view != null) {
                         TextView tv = view.findViewById(R.id.spinnerText);
                         if (tv != null) {
                             tv.setTextColor(
-                                    ContextCompat.getColor(ctx, position == 0 ? R.color.ss_hint : R.color.ss_on_surface)
-                            );
+                                    ContextCompat.getColor(ctx,
+                                            position == 0 ? R.color.ss_hint : R.color.ss_on_surface));
                         }
                     }
                 }
-                @Override public void onNothingSelected(AdapterView<?> parent) { }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
             });
 
         } else if (h instanceof VHCheckbox) {
@@ -339,7 +372,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             }));
             vh.btnUseMyLocation.setOnClickListener(v -> {
                 Log.d(TAG, "UseMyLocation clicked for key=" + key);
-                if (callbacks != null) callbacks.requestMyLocation(key);
+                if (callbacks != null)
+                    callbacks.requestMyLocation(key);
             });
 
         } else if (h instanceof VHPhotos) {
@@ -347,7 +381,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.tvLabel.setText(label + (req(f) ? " *" : ""));
             vh.tvHelper.setText(TextUtils.isEmpty(hint) ? "Clear, no blur" : hint);
             if (vh.tvTip != null) {
-                vh.tvTip.setText("Tip: The first selected photo becomes the cover. Tap any thumbnail to change or remove.");
+                vh.tvTip.setText(
+                        "Tip: The first selected photo becomes the cover. Tap any thumbnail to change or remove.");
             }
 
             @SuppressWarnings("unchecked")
@@ -355,12 +390,15 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             String cover = ph == null ? "" : s(ph.get("cover")); // Base64
             @SuppressWarnings("unchecked")
             List<String> more = ph == null ? new ArrayList<>() : (List<String>) ph.get("more"); // Base64 list
-            if (more == null) more = new ArrayList<>();
+            if (more == null)
+                more = new ArrayList<>();
 
-            Log.d(TAG, "Photos key=" + key + " coverBase64Empty=" + TextUtils.isEmpty(cover) + " moreCount=" + more.size());
+            Log.d(TAG, "Photos key=" + key + " coverBase64Empty=" + TextUtils.isEmpty(cover) + " moreCount="
+                    + more.size());
 
             if (vh.rv.getLayoutManager() == null) {
-                vh.rv.setLayoutManager(new LinearLayoutManager(vh.itemView.getContext(), RecyclerView.HORIZONTAL, false));
+                vh.rv.setLayoutManager(
+                        new LinearLayoutManager(vh.itemView.getContext(), RecyclerView.HORIZONTAL, false));
             }
             PhotosStripAdapter psa = new PhotosStripAdapter(
                     key,
@@ -370,7 +408,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         @Override
                         public void onAddMore(String fieldKey) {
                             Log.d(TAG, "Photos onAddMore for key=" + fieldKey);
-                            if (callbacks != null) callbacks.pickMorePhotos(fieldKey);
+                            if (callbacks != null)
+                                callbacks.pickMorePhotos(fieldKey);
                         }
 
                         @Override
@@ -381,11 +420,11 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
                         @Override
                         public void onRemove(String fieldKey, int indexInMore, boolean isCover) {
-                            Log.d(TAG, "Photos onRemove key=" + fieldKey + " indexInMore=" + indexInMore + " isCover=" + isCover);
+                            Log.d(TAG, "Photos onRemove key=" + fieldKey + " indexInMore=" + indexInMore + " isCover="
+                                    + isCover);
                             removePhoto(fieldKey, indexInMore, isCover);
                         }
-                    }
-            );
+                    });
 
             vh.rv.setAdapter(psa);
 
@@ -408,11 +447,13 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private void setCoverFromMore(String fieldKey, int indexInMore) {
         @SuppressWarnings("unchecked")
         Map<String, Object> ph = (Map<String, Object>) answers.get(fieldKey);
-        if (ph == null) return;
+        if (ph == null)
+            return;
         String currentCover = s(ph.get("cover"));
         @SuppressWarnings("unchecked")
         List<String> more = (List<String>) ph.get("more");
-        if (more == null || indexInMore < 0 || indexInMore >= more.size()) return;
+        if (more == null || indexInMore < 0 || indexInMore >= more.size())
+            return;
 
         String newCover = more.get(indexInMore);
         more.set(indexInMore, currentCover);
@@ -427,7 +468,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void removePhoto(String fieldKey, int indexInMore, boolean isCover) {
         @SuppressWarnings("unchecked")
         Map<String, Object> ph = (Map<String, Object>) answers.get(fieldKey);
-        if (ph == null) return;
+        if (ph == null)
+            return;
 
         String cover = s(ph.get("cover"));
         @SuppressWarnings("unchecked")
@@ -474,10 +516,12 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @SuppressLint("NotifyDataSetChanged")
     public void setCoverPhoto(String fieldKey, String base64) {
-        if (TextUtils.isEmpty(base64)) return;
+        if (TextUtils.isEmpty(base64))
+            return;
         @SuppressWarnings("unchecked")
         Map<String, Object> ph = (Map<String, Object>) answers.get(fieldKey);
-        if (ph == null) return;
+        if (ph == null)
+            return;
         ph.put("cover", base64);
         Log.d(TAG, "setCoverPhoto key=" + fieldKey + " base64Length=" + base64.length());
         notifyDataSetChanged();
@@ -485,11 +529,13 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @SuppressLint("NotifyDataSetChanged")
     public void addMorePhotos(String fieldKey, List<String> base64List) {
-        if (base64List == null || base64List.isEmpty()) return;
+        if (base64List == null || base64List.isEmpty())
+            return;
 
         @SuppressWarnings("unchecked")
         Map<String, Object> ph = (Map<String, Object>) answers.get(fieldKey);
-        if (ph == null) return;
+        if (ph == null)
+            return;
 
         String cover = s(ph.get("cover"));
         @SuppressWarnings("unchecked")
@@ -505,11 +551,13 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ph.put("cover", base64List.get(0));
             for (int i = 1; i < base64List.size(); i++) {
                 String b64 = base64List.get(i);
-                if (!TextUtils.isEmpty(b64)) more.add(b64);
+                if (!TextUtils.isEmpty(b64))
+                    more.add(b64);
             }
         } else {
             for (String b64 : base64List) {
-                if (!TextUtils.isEmpty(b64)) more.add(b64);
+                if (!TextUtils.isEmpty(b64))
+                    more.add(b64);
             }
         }
 
@@ -547,7 +595,7 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 if (required) {
                     if ("CHECKBOX".equalsIgnoreCase(type) || "SWITCH".equalsIgnoreCase(type)) {
                         // ✅ Special case: "is_new" switch is never forced to ON.
-                        //    Required ka matlab yahan sirf "field exist hai", jo hamare paas hamesha hai.
+                        // Required ka matlab yahan sirf "field exist hai", jo hamare paas hamesha hai.
                         if (!"is_new".equalsIgnoreCase(key)) {
                             if (!(val instanceof Boolean) || !((Boolean) val)) {
                                 toast("Please enable: " + label);
@@ -597,7 +645,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     for (Map.Entry<?, ?> me : m.entrySet()) {
                         if (me.getValue() instanceof List) {
                             JSONArray arr = new JSONArray();
-                            for (Object o : (List<?>) me.getValue()) arr.put(String.valueOf(o));
+                            for (Object o : (List<?>) me.getValue())
+                                arr.put(String.valueOf(o));
                             jo.put(String.valueOf(me.getKey()), arr);
                         } else {
                             jo.put(String.valueOf(me.getKey()), String.valueOf(me.getValue()));
@@ -618,29 +667,34 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
     }
 
-    private void toast(String s) { if (callbacks != null) callbacks.showToast(s); }
+    private void toast(String s) {
+        if (callbacks != null)
+            callbacks.showToast(s);
+    }
 
     /* ================= Photos strip adapter ================= */
 
     static class PhotosStripAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         interface Events {
             void onAddMore(String fieldKey);
+
             void onSetCover(String fieldKey, int indexInList);
+
             void onRemove(String fieldKey, int indexInMore, boolean isCover);
         }
 
         private static final int V_THUMB = 1;
-        private static final int V_ADD   = 2;
+        private static final int V_ADD = 2;
 
         private final String fieldKey;
-        private final String coverBase64;        // base64 string (may be empty)
-        private final List<String> moreBase64;   // base64 strings
+        private final String coverBase64; // base64 string (may be empty)
+        private final List<String> moreBase64; // base64 strings
         private final Events events;
 
         PhotosStripAdapter(String fieldKey, String cover, List<String> more, Events events) {
             this.fieldKey = fieldKey;
             this.coverBase64 = cover == null ? "" : cover;
-            this.moreBase64  = more == null ? new ArrayList<>() : more;
+            this.moreBase64 = more == null ? new ArrayList<>() : more;
             this.events = events;
         }
 
@@ -673,7 +727,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int pos) {
             if (holder instanceof VHAdd) {
                 holder.itemView.setOnClickListener(v -> {
-                    if (events != null) events.onAddMore(fieldKey);
+                    if (events != null)
+                        events.onAddMore(fieldKey);
                 });
                 return;
             }
@@ -728,15 +783,18 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.remove.setVisibility(View.VISIBLE);
             vh.remove.bringToFront();
             vh.remove.setOnClickListener(v -> {
-                if (events != null) events.onRemove(fieldKey, idxInMore, isCover);
+                if (events != null)
+                    events.onRemove(fieldKey, idxInMore, isCover);
             });
 
             if (!isCover) {
                 vh.itemView.setOnClickListener(v -> {
-                    if (events != null) events.onSetCover(fieldKey, idxInMore);
+                    if (events != null)
+                        events.onSetCover(fieldKey, idxInMore);
                 });
                 vh.itemView.setOnLongClickListener(v -> {
-                    if (events != null) events.onSetCover(fieldKey, idxInMore);
+                    if (events != null)
+                        events.onSetCover(fieldKey, idxInMore);
                     return true;
                 });
             } else {
@@ -746,7 +804,12 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
 
         static class VHT extends RecyclerView.ViewHolder {
-            View container; ImageView iv; TextView name; TextView badge; ImageView remove;
+            View container;
+            ImageView iv;
+            TextView name;
+            TextView badge;
+            ImageView remove;
+
             VHT(@NonNull View v) {
                 super(v);
                 container = v.findViewById(R.id.thumbContainer);
@@ -756,8 +819,11 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 remove = v.findViewById(R.id.ivRemove);
             }
         }
+
         static class VHAdd extends RecyclerView.ViewHolder {
-            VHAdd(@NonNull View v) { super(v); }
+            VHAdd(@NonNull View v) {
+                super(v);
+            }
         }
 
         // Kept as-is (no longer used, but retained)
@@ -767,13 +833,16 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 try (Cursor cursor = ctx.getContentResolver().query(uri, null, null, null, null)) {
                     if (cursor != null && cursor.moveToFirst()) {
                         int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                        if (idx >= 0) result = cursor.getString(idx);
+                        if (idx >= 0)
+                            result = cursor.getString(idx);
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
             if (result == null) {
                 result = uri.getLastPathSegment();
-                if (result == null) result = uri.toString();
+                if (result == null)
+                    result = uri.toString();
             }
             return result;
         }
@@ -782,7 +851,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     /* ================= ViewHolders ================= */
 
     static class VHText extends RecyclerView.ViewHolder {
-        TextView tvLabel; EditText etValue;
+        TextView tvLabel;
+        EditText etValue;
+
         VHText(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -791,7 +862,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHTextArea extends RecyclerView.ViewHolder {
-        TextView tvLabel; EditText etValue;
+        TextView tvLabel;
+        EditText etValue;
+
         VHTextArea(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -800,7 +873,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHCurrencies extends RecyclerView.ViewHolder {
-        TextView tvLabel; EditText etValue;
+        TextView tvLabel;
+        EditText etValue;
+
         VHCurrencies(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -809,7 +884,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHDate extends RecyclerView.ViewHolder {
-        TextView tvLabel; EditText etDate;
+        TextView tvLabel;
+        EditText etDate;
+
         VHDate(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -818,7 +895,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHDropdown extends RecyclerView.ViewHolder {
-        TextView tvLabel; Spinner spinner;
+        TextView tvLabel;
+        Spinner spinner;
+
         VHDropdown(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -827,7 +906,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHCheckbox extends RecyclerView.ViewHolder {
-        TextView tvLabel; CheckBox cb;
+        TextView tvLabel;
+        CheckBox cb;
+
         VHCheckbox(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -836,8 +917,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHSwitch extends RecyclerView.ViewHolder {
-        TextView tvLabel; @SuppressLint("UseSwitchCompatOrMaterialCode")
-        Switch sw;
+        TextView tvLabel;
+        com.google.android.material.switchmaterial.SwitchMaterial sw;
+
         VHSwitch(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -846,7 +928,10 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHLocation extends RecyclerView.ViewHolder {
-        TextView tvLabel; EditText etLocation; Button btnUseMyLocation;
+        TextView tvLabel;
+        EditText etLocation;
+        Button btnUseMyLocation;
+
         VHLocation(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -856,7 +941,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     static class VHPhotos extends RecyclerView.ViewHolder {
-        TextView tvLabel, tvHelper, tvTip, tvPhotoStatus; RecyclerView rv;
+        TextView tvLabel, tvHelper, tvTip, tvPhotoStatus;
+        RecyclerView rv;
+
         VHPhotos(@NonNull View v) {
             super(v);
             tvLabel = v.findViewById(R.id.tvLabel);
@@ -868,7 +955,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     /* ================= Utils ================= */
-    private static String s(Object o) { return o == null ? "" : String.valueOf(o); }
+    private static String s(Object o) {
+        return o == null ? "" : String.valueOf(o);
+    }
 
     private static boolean req(Map<String, Object> f) {
         Object r = f.get("required");
@@ -885,14 +974,29 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return false;
     }
 
-    public interface OnText { void on(String s); }
+    public interface OnText {
+        void on(String s);
+    }
+
     static class SimpleTextWatcher implements android.text.TextWatcher {
         private final OnText cb;
-        SimpleTextWatcher(OnText cb){this.cb=cb;}
-        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-            if (cb!=null) cb.on(s.toString());
+
+        SimpleTextWatcher(OnText cb) {
+            this.cb = cb;
         }
-        @Override public void afterTextChanged(android.text.Editable s) {}
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            if (cb != null)
+                cb.on(s.toString());
+        }
+
+        @Override
+        public void afterTextChanged(android.text.Editable s) {
+        }
     }
 }

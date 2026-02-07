@@ -411,6 +411,9 @@ public class MainActivity extends AppCompatActivity {
                 ivEdit.setOnClickListener(openProfileClick);
         }
 
+        // ✅ FIX: Ensure icons always show their original colors (not tinted grey)
+        navigationView.setItemIconTintList(null);
+
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             item.setChecked(true);
@@ -1023,6 +1026,30 @@ public class MainActivity extends AppCompatActivity {
 
                     m.put("imageUrl", makeAbsoluteImageUrl(imageUrl));
                     m.put("isNew", o.optInt("is_new", 0) == 1);
+
+                    // ✅ Parsing posted_when for ProductAdapter compatibility
+                    String posted = o.optString("posted_when", "");
+                    if (TextUtils.isEmpty(posted)) {
+                        posted = o.optString("posted_time", "");
+                    }
+                    m.put("posted_when", posted);
+
+                    // ✅ NEW: Parse images array for slider
+                    List<String> images = new ArrayList<>();
+                    JSONArray imgArr = o.optJSONArray("images");
+                    if (imgArr != null) {
+                        for (int k = 0; k < imgArr.length(); k++) {
+                            String url = imgArr.optString(k, "");
+                            if (!TextUtils.isEmpty(url)) {
+                                images.add(url);
+                            }
+                        }
+                    }
+                    // Fallback to single image if array is empty
+                    if (images.isEmpty() && !TextUtils.isEmpty(m.get("imageUrl").toString())) {
+                        images.add(m.get("imageUrl").toString());
+                    }
+                    m.put("images", images);
 
                     currentProducts.add(m);
                 }

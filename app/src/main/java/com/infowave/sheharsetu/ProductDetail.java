@@ -78,7 +78,7 @@ public class ProductDetail extends AppCompatActivity {
     private final List<Object> imageSources = new ArrayList<>();
 
     // Palette
-    private final int royalBlue = Color.parseColor("#3E7BFA");
+    private final int royalBlue = Color.parseColor("#96A78D"); // Greenish primary theme
     private final int lavender = Color.parseColor("#D8C8FF");
     private final int deepText = Color.parseColor("#111111");
 
@@ -88,6 +88,7 @@ public class ProductDetail extends AppCompatActivity {
     private String postedWhen = "";
     private String productDesc = "";
     private String sellerPhone = "";
+    private int sellerId = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -238,7 +239,13 @@ public class ProductDetail extends AppCompatActivity {
 
         pdpSave.setOnClickListener(v -> Toast.makeText(this, "Saved/Unsaved (demo)", Toast.LENGTH_SHORT).show());
 
-        pdpViewProfile.setOnClickListener(v -> Toast.makeText(this, "Open seller profile", Toast.LENGTH_SHORT).show());
+        pdpViewProfile.setOnClickListener(v -> {
+            if (sellerId > 0) {
+                Intent i = new Intent(ProductDetail.this, SellerProfileActivity.class);
+                i.putExtra("seller_id", sellerId);
+                startActivity(i);
+            }
+        });
 
         pdpCall.setOnClickListener(v -> {
             String phone = sellerPhone == null || sellerPhone.isEmpty() ? "0000000000" : sellerPhone;
@@ -305,9 +312,9 @@ public class ProductDetail extends AppCompatActivity {
                         pdpMeta.setText(meta);
                         pdpDesc.setText(productDesc);
 
-                        // Seller
                         JSONObject seller = d.optJSONObject("seller");
                         if (seller != null) {
+                            sellerId = seller.optInt("id", 0);
                             pdpSellerName.setText(seller.optString("name", "Seller"));
                             String mem = "";
                             if (!seller.optString("member_since", "").isEmpty()) {
@@ -379,7 +386,7 @@ public class ProductDetail extends AppCompatActivity {
                     Toast.makeText(this, "Network error", Toast.LENGTH_SHORT).show();
                 });
 
-        Volley.newRequestQueue(this).add(req);
+        com.infowave.sheharsetu.net.VolleySingleton.queue(this).add(req);
     }
 
     private void addChip(String text) {

@@ -61,6 +61,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
     private TextView tvTitle;
     private RecyclerView rvForm;
     private Button btnSubmit;
+    private androidx.appcompat.widget.Toolbar toolbar;
 
     private DynamicFormAdapter adapter;
 
@@ -137,6 +138,13 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         rvForm = findViewById(R.id.rvForm);
         btnSubmit = findViewById(R.id.btnSubmit);
 
+        // Setup toolbar with back navigation
+        toolbar = findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        }
+
         // XML me agar enabled=false hai to bhi yahan se control lenge
         btnSubmit.setEnabled(false);
 
@@ -149,7 +157,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         if (category == null)
             category = "General";
         categoryName = category;
-        tvTitle.setText("Dynamic Form (" + categoryName + ")");
+        tvTitle.setText("Sell in " + categoryName);
 
         // --------- READ category_id / subcategory_id safely (String or Long)
         // ----------
@@ -195,7 +203,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
         btnSubmit.setOnClickListener(v -> {
             Log.d(TAG, "Submit clicked");
-            toast("Submit clicked"); // sirf debug ke liye, baad me hata sakte ho
 
             if (adapter == null) {
                 toast("Form is not ready yet, please wait...");

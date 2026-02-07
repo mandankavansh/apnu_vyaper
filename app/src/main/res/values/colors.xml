@@ -14,6 +14,12 @@
 
 
     <color name="iw_primary">#6C5CE7</color>      <!-- your purple -->
+    
+    <!-- Theme color variants - greenish to match primary theme -->
+    <color name="colorPrimaryVariant">#7A8D70</color> <!-- Darker greenish -->
+    <color name="colorSurfaceVariant">#E8EDE4</color> <!-- Light greenish surface -->
+    <color name="colorBackgroundSoft">#FAFCF8</color> <!-- Soft off-white for cards -->
+    
     <color name="iw_onPrimary">#FFFFFF</color>
     <color name="iw_secondary">#9F7AEA</color>    <!-- lighter purple -->
     <color name="iw_surface">#111014</color>      <!-- dark surface seen in screenshot -->
@@ -30,8 +36,8 @@
     <color name="greenLight">#C8E6C9</color>
 
 
-    <color name="primary_alpha_40">#664285F4</color> <!-- 40% alpha of primary -->
-    <color name="surface_alpha_07">#114285F4</color> <!-- 7% alpha of primary -->
+    <color name="primary_alpha_40">#6696A78D</color> <!-- 40% alpha of greenish primary -->
+    <color name="surface_alpha_07">#1196A78D</color> <!-- 7% alpha of greenish primary -->
 
 
     <!-- Search icon tints -->
@@ -70,7 +76,6 @@
     <color name="colorPrimary">#96A78D</color>      <!-- base green -->
     <color name="colorPrimaryMedium">#B6CEB4</color>
     <color name="colorPrimaryLight">#D9E9CF</color>
-    <color name="colorBackgroundSoft">#F0F0F0</color>
 
     <!-- Neutral text / surface (simple, not colorful) -->
     <color name="colorTextPrimary">#1F2933</color>      <!-- dark grey text -->
