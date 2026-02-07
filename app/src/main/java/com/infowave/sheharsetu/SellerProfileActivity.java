@@ -94,8 +94,6 @@ public class SellerProfileActivity extends AppCompatActivity {
         LoadingDialog.showLoading(this, "Loading profile...");
 
         String url = ApiRoutes.BASE_URL + "/get_seller_details.php?user_id=" + sellerId;
-        Log.d(TAG, "Fetching: " + url);
-
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, url, null, resp -> {
             LoadingDialog.hideLoading();
             if ("success".equalsIgnoreCase(resp.optString("status"))) {
@@ -146,7 +144,7 @@ public class SellerProfileActivity extends AppCompatActivity {
                     m.put("category", o.optString("category"));
                     m.put("city", o.optString("city"));
                     m.put("posted_when", o.optString("posted_time"));
-                    m.put("is_sold", o.optBoolean("is_sold", false));
+                    m.put("status", o.optString("status", "active"));
 
                     // ✅ NEW: Parse images array for slider
                     List<String> images = new ArrayList<>();

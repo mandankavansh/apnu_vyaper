@@ -89,9 +89,6 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Log.d(TAG, "========== onCreate START ==========");
-
         // Black status + navigation bar
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(Color.BLACK);
@@ -105,8 +102,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Initialize session
         session = new SessionManager(this);
-        Log.d(TAG, "Session initialized. Is logged in: " + session.isLoggedIn());
-
         bindViews();
         setupToolbar();
         setupEditFab();
@@ -117,13 +112,9 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Fetch user listings
         fetchMyListings();
-
-        Log.d(TAG, "========== onCreate END ==========");
     }
 
     private void bindViews() {
-        Log.d(TAG, "bindViews() called");
-
         rootProfile = findViewById(R.id.rootProfile);
         btnBack = findViewById(R.id.btnBack);
         tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
@@ -147,8 +138,6 @@ public class ProfileActivity extends AppCompatActivity {
         rvMyListings = findViewById(R.id.rvMyListings);
         cardEmptyListings = findViewById(R.id.cardEmptyListings);
         btnPostFirstListing = findViewById(R.id.btnPostFirstListing);
-
-        Log.d(TAG, "Views bound successfully");
     }
 
     private void setupToolbar() {
@@ -164,20 +153,13 @@ public class ProfileActivity extends AppCompatActivity {
      * Fetch user profile from API
      */
     private void fetchUserProfile() {
-        Log.d(TAG, "========== FETCH USER PROFILE START ==========");
-
         String accessToken = session.getAccessToken();
-        Log.d(TAG, "Access Token: " + (accessToken != null ? "EXISTS (length=" + accessToken.length() + ")" : "NULL"));
-
         if (TextUtils.isEmpty(accessToken)) {
-            Log.w(TAG, "❌ No access token - showing placeholder data");
             showPlaceholderData();
             return;
         }
 
         String url = ApiRoutes.GET_USER_PROFILE;
-        Log.d(TAG, "API URL: " + url);
-
         // Show loading dialog
         LoadingDialog.showLoading(this, "Loading profile...");
 
@@ -186,18 +168,14 @@ public class ProfileActivity extends AppCompatActivity {
                 url,
                 null,
                 response -> {
-                    Log.d(TAG, "✅ API Response received");
-                    Log.d(TAG, "Response: " + response.toString());
                     LoadingDialog.hideLoading();
 
                     try {
                         if (response.getBoolean("success")) {
                             JSONObject user = response.getJSONObject("user");
                             updateUIWithUserData(user);
-                            Log.d(TAG, "✅ Profile data loaded successfully");
                         } else {
                             String error = response.optString("error", "Unknown error");
-                            Log.w(TAG, "❌ API returned success=false. Error: " + error);
                             showError("Failed to load profile: " + error);
                             showPlaceholderData();
                         }
@@ -207,7 +185,6 @@ public class ProfileActivity extends AppCompatActivity {
                         showError("Error parsing profile data");
                         showPlaceholderData();
                     }
-                    Log.d(TAG, "========== FETCH USER PROFILE COMPLETE ==========");
                 },
                 error -> {
                     Log.e(TAG, "❌ ========== USER PROFILE API ERROR ==========");
@@ -230,7 +207,6 @@ public class ProfileActivity extends AppCompatActivity {
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Authorization", "Bearer " + accessToken);
                 headers.put("Content-Type", "application/json");
-                Log.d(TAG, "Request Headers: Authorization=Bearer [TOKEN], Content-Type=application/json");
                 return headers;
             }
         };
@@ -239,8 +215,6 @@ public class ProfileActivity extends AppCompatActivity {
                 10000, // 10 second timeout
                 1, // 1 retry
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        Log.d(TAG, "Adding request to Volley queue...");
         VolleySingleton.getInstance(this).add(req);
     }
 
@@ -248,8 +222,6 @@ public class ProfileActivity extends AppCompatActivity {
      * Update UI with user data from API response
      */
     private void updateUIWithUserData(JSONObject user) throws JSONException {
-        Log.d(TAG, "Updating UI with user data: " + user.toString());
-
         // Cache data for edit dialog
         cachedFullName = user.optString("full_name", "");
         cachedSurname = user.optString("surname", "");
@@ -286,8 +258,6 @@ public class ProfileActivity extends AppCompatActivity {
             char first = Character.toUpperCase(displayName.trim().charAt(0));
             tvAvatarLetter.setText(String.valueOf(first));
         }
-
-        Log.d(TAG, "✅ UI updated with user data");
     }
 
     /**
@@ -295,7 +265,6 @@ public class ProfileActivity extends AppCompatActivity {
      */
     @SuppressLint("SetTextI18n")
     private void showPlaceholderData() {
-        Log.d(TAG, "Showing placeholder data");
         tvFullName.setText("Guest User");
         tvPhone.setText("-");
         tvContactPhone.setText("-");
@@ -333,8 +302,6 @@ public class ProfileActivity extends AppCompatActivity {
      * Professional bottom sheet for editing profile.
      */
     private void showEditProfileBottomSheet() {
-        Log.d(TAG, "Opening edit profile bottom sheet");
-
         BottomSheetDialog dialog = new BottomSheetDialog(
                 this,
                 com.google.android.material.R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog);
@@ -401,8 +368,6 @@ public class ProfileActivity extends AppCompatActivity {
         // Save button
         if (btnSaveProfileBottom != null) {
             btnSaveProfileBottom.setOnClickListener(v -> {
-                Log.d(TAG, "Save button clicked");
-
                 String newFullName = getTextFromEditText(etFullNameBottom);
                 String newSurname = getTextFromEditText(etSurnameBottom);
                 String newPlaceType = getTextFromEditText(etPlaceTypeBottom);
@@ -455,18 +420,13 @@ public class ProfileActivity extends AppCompatActivity {
             String fullName, String surname, String address, String villageName,
             String district, String placeType, String state, String pincode,
             BottomSheetDialog dialog, MaterialButton btnSave) {
-        Log.d(TAG, "========== UPDATE USER PROFILE START ==========");
-
         String accessToken = session.getAccessToken();
         if (TextUtils.isEmpty(accessToken)) {
-            Log.w(TAG, "❌ No access token for update");
             showError("Not logged in. Please login again.");
             return;
         }
 
         String url = ApiRoutes.UPDATE_USER_PROFILE;
-        Log.d(TAG, "API URL: " + url);
-
         // Build request body
         JSONObject body = new JSONObject();
         try {
@@ -478,7 +438,6 @@ public class ProfileActivity extends AppCompatActivity {
             body.put("place_type", placeType);
             body.put("state", state);
             body.put("pincode", pincode);
-            Log.d(TAG, "Request body: " + body.toString());
         } catch (JSONException e) {
             Log.e(TAG, "Error building request body: " + e.getMessage());
             showError("Error preparing update request");
@@ -494,7 +453,6 @@ public class ProfileActivity extends AppCompatActivity {
                 url,
                 body,
                 response -> {
-                    Log.d(TAG, "✅ Update API Response: " + response.toString());
                     btnSave.setEnabled(true);
                     btnSave.setText("Save changes");
 
@@ -504,17 +462,14 @@ public class ProfileActivity extends AppCompatActivity {
                             updateUIWithUserData(user);
                             Toast.makeText(this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
-                            Log.d(TAG, "✅ Profile updated successfully");
                         } else {
                             String error = response.optString("error", "Update failed");
-                            Log.w(TAG, "❌ Update failed: " + error);
                             showError(error);
                         }
                     } catch (JSONException e) {
                         Log.e(TAG, "❌ Error parsing update response: " + e.getMessage());
                         showError("Error updating profile");
                     }
-                    Log.d(TAG, "========== UPDATE USER PROFILE COMPLETE ==========");
                 },
                 error -> {
                     Log.e(TAG, "❌ ========== UPDATE API ERROR ==========");
@@ -550,8 +505,6 @@ public class ProfileActivity extends AppCompatActivity {
                 15000, // 15 second timeout for update
                 0, // No retries
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        Log.d(TAG, "Adding update request to Volley queue...");
         VolleySingleton.getInstance(this).add(req);
     }
 
@@ -586,11 +539,8 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void fetchMyListings() {
-        Log.d(TAG, "========== FETCH MY LISTINGS START ==========");
-
         String accessToken = session.getAccessToken();
         if (TextUtils.isEmpty(accessToken)) {
-            Log.w(TAG, "No access token - cannot fetch listings");
             showEmptyListingsState();
             return;
         }
@@ -604,7 +554,6 @@ public class ProfileActivity extends AppCompatActivity {
                 Request.Method.GET,
                 ApiRoutes.GET_USER_LISTINGS,
                 response -> {
-                    Log.d(TAG, "✅ Listings API Response: " + response);
                     LoadingDialog.hideLoading();
 
                     try {
@@ -619,20 +568,17 @@ public class ProfileActivity extends AppCompatActivity {
                                 myListingsAdapter.setItems(items);
                                 rvMyListings.setVisibility(View.VISIBLE);
                                 cardEmptyListings.setVisibility(View.GONE);
-                                Log.d(TAG, "✅ Loaded " + items.size() + " listings");
                             } else {
                                 showEmptyListingsState();
                             }
                         } else {
                             String error = json.optString("error", "Failed to load listings");
-                            Log.w(TAG, "API error: " + error);
                             showEmptyListingsState();
                         }
                     } catch (JSONException e) {
                         Log.e(TAG, "JSON parse error: " + e.getMessage());
                         showEmptyListingsState();
                     }
-                    Log.d(TAG, "========== FETCH MY LISTINGS END ==========");
                 },
                 error -> {
                     Log.e(TAG, "❌ Listings API error: " + error.toString());
@@ -672,8 +618,6 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void markListingAsSold(int listingId, boolean markAsSold) {
-        Log.d(TAG, "Marking listing " + listingId + " as " + (markAsSold ? "sold" : "available"));
-
         String accessToken = session.getAccessToken();
         if (TextUtils.isEmpty(accessToken)) {
             Toast.makeText(this, "Please log in again", Toast.LENGTH_SHORT).show();
@@ -686,7 +630,6 @@ public class ProfileActivity extends AppCompatActivity {
                 Request.Method.POST,
                 ApiRoutes.MARK_LISTING_SOLD,
                 response -> {
-                    Log.d(TAG, "✅ Mark sold response: " + response);
                     LoadingDialog.hideLoading();
 
                     try {

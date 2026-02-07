@@ -41,6 +41,22 @@
                 android:textColor="@android:color/white"
                 android:textSize="11sp"
                 android:visibility="gone" />
+
+            <!-- SOLD badge overlay -->
+            <TextView
+                android:id="@+id/tvSoldBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_sold_badge"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="SOLD"
+                android:textColor="#FF5252"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
         </FrameLayout>
 
         <!-- Content Section -->

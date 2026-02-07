@@ -22,13 +22,11 @@ public class VolleySingleton {
                 (appCtx.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
 
         if (isDebuggable) {
-            Log.w(TAG, "DEBUG: Using HostOnlyUnsafeHurlStack for magenta-owl-444153.hostingersite.com");
             queue = Volley.newRequestQueue(
                     appCtx,
                     new HostOnlyUnsafeHurlStack("magenta-owl-444153.hostingersite.com")
             );
         } else {
-            Log.i(TAG, "RELEASE: Using default secure HurlStack");
             queue = Volley.newRequestQueue(appCtx, new HurlStack());
         }
     }

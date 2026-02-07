@@ -82,7 +82,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     private final ActivityResultLauncher<String> coverPicker = registerForActivityResult(
             new ActivityResultContracts.GetContent(), uri -> {
-                Log.d(TAG, "coverPicker result: " + uri + " for fieldKey=" + currentPhotoFieldKey);
                 if (uri != null && currentPhotoFieldKey != null && adapter != null) {
                     String base64 = encodeImageToBase64(uri);
                     if (base64 != null) {
@@ -95,8 +94,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     private final ActivityResultLauncher<String> morePicker = registerForActivityResult(
             new ActivityResultContracts.GetMultipleContents(), uris -> {
-                Log.d(TAG, "morePicker result size=" + (uris == null ? 0 : uris.size()) +
-                        " for fieldKey=" + currentPhotoFieldKey);
                 if (uris != null && currentPhotoFieldKey != null && adapter != null) {
                     java.util.ArrayList<String> base64List = new java.util.ArrayList<>();
                     for (Uri u : uris) {
@@ -119,8 +116,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     private final ActivityResultLauncher<String> locationPerm = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(), granted -> {
-                Log.d(TAG, "Location permission result: " + granted +
-                        " for fieldKey=" + pendingLocationFieldKey);
                 if (granted)
                     fillMyLocation(pendingLocationFieldKey);
                 else
@@ -163,9 +158,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         // ----------
         String catIdStr = intent.getStringExtra("category_id");
         String subIdStr = intent.getStringExtra("subcategory_id");
-
-        Log.d(TAG, "Raw extras: category_id(str)=" + catIdStr + ", subcategory_id(str)=" + subIdStr);
-
         // if coming as String (current case)
         categoryId = parseLongSafe(catIdStr);
         subcategoryId = parseLongSafe(subIdStr);
@@ -174,14 +166,12 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         if (categoryId == 0) {
             long tmp = intent.getLongExtra("category_id", 0L);
             if (tmp != 0L) {
-                Log.d(TAG, "category_id also found as Long extra: " + tmp);
                 categoryId = tmp;
             }
         }
         if (subcategoryId == 0) {
             long tmp = intent.getLongExtra("subcategory_id", 0L);
             if (tmp != 0L) {
-                Log.d(TAG, "subcategory_id also found as Long extra: " + tmp);
                 subcategoryId = tmp;
             }
         }
@@ -190,20 +180,12 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         // Same prefs file as SplashScreen / LoginActivity
         SharedPreferences prefs = getSharedPreferences(SplashScreen.PREFS, MODE_PRIVATE);
         userId = prefs.getLong("user_id", 0L);
-
-        Log.d(TAG, "onCreate: categoryName=" + categoryName +
-                " categoryId=" + categoryId +
-                " subcategoryId=" + subcategoryId +
-                " userId=" + userId);
-
         rvForm.setLayoutManager(new LinearLayoutManager(this));
 
         // Load schema from server (DB-based) ONLY.
         loadSchemaFromServer(categoryId, subcategoryId);
 
         btnSubmit.setOnClickListener(v -> {
-            Log.d(TAG, "Submit clicked");
-
             if (adapter == null) {
                 toast("Form is not ready yet, please wait...");
                 Log.e(TAG, "Submit pressed but adapter is null");
@@ -215,7 +197,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                 Log.e(TAG, "validateAndBuildResult() returned null");
                 return;
             }
-            Log.d(TAG, "validateAndBuildResult() success: " + result.toString());
             submitListing(result);
         });
 
@@ -243,7 +224,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         try {
             return Long.parseLong(s.trim());
         } catch (Exception e) {
-            Log.w(TAG, "parseLongSafe failed for '" + s + "' : " + e.getMessage());
             return 0L;
         }
     }
@@ -254,9 +234,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
      * Yahin par hum decide karenge ki is_new SWITCH dikhana hai ya nahi.
      */
     private void loadSchemaFromServer(long categoryId, long subcategoryId) {
-        Log.d(TAG, "loadSchemaFromServer() called with categoryId=" + categoryId +
-                ", subcategoryId=" + subcategoryId + ", categoryName=" + categoryName);
-
         if (categoryId <= 0) {
             String msg = "Category info missing (categoryId<=0). Cannot load dynamic schema.";
             Log.e(TAG, msg);
@@ -273,8 +250,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         urlBuilder.append("&lang=en");
 
         String url = urlBuilder.toString();
-        Log.d(TAG, "Requesting schema from URL: " + url);
-
         LoadingDialog.showLoading(this, "Loading form...");
 
         JsonObjectRequest req = new JsonObjectRequest(
@@ -283,12 +258,8 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                 null,
                 response -> {
                     try {
-                        Log.d(TAG, "Schema raw response: " + response.toString());
-
                         boolean success = response.optBoolean("success", false);
                         String msg = response.optString("message", "");
-                        Log.d(TAG, "Schema success=" + success + " message=" + msg);
-
                         if (!success) {
                             toast(TextUtils.isEmpty(msg) ? "Failed to load form schema" : msg);
                             Log.e(TAG, "Backend returned success=false for schema, aborting.");
@@ -306,9 +277,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
                         JSONObject catObj = data.optJSONObject("category");
                         JSONObject subObj = data.optJSONObject("subcategory");
-                        Log.d(TAG, "Category from server: " + (catObj == null ? "null" : catObj.toString()));
-                        Log.d(TAG, "Subcategory from server: " + (subObj == null ? "null" : subObj.toString()));
-
                         // 🔥 NEW: decide if this subcategory supports NEW/OLD condition switch
                         boolean supportsCondition = false;
                         if (subObj != null) {
@@ -327,8 +295,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                                 supportsCondition = true;
                             }
                         }
-                        Log.d(TAG, "supportsCondition (NEW/USED switch allowed) = " + supportsCondition);
-
                         JSONArray schemaArr = data.optJSONArray("schema");
                         if (schemaArr == null) {
                             toast("No schema array returned.");
@@ -336,15 +302,11 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                             btnSubmit.setEnabled(false);
                             return;
                         }
-
-                        Log.d(TAG, "Schema array length: " + schemaArr.length());
-
                         java.util.ArrayList<Map<String, Object>> schema = new java.util.ArrayList<>();
 
                         for (int i = 0; i < schemaArr.length(); i++) {
                             JSONObject field = schemaArr.optJSONObject(i);
                             if (field == null) {
-                                Log.w(TAG, "schemaArr[" + i + "] is null, skipping");
                                 continue;
                             }
 
@@ -359,8 +321,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                             // Agar yeh is_new field hai aur supportsCondition = false,
                             // to is field ko UI me show hi nahi karna.
                             if ("is_new".equalsIgnoreCase(key) && !supportsCondition) {
-                                Log.d(TAG,
-                                        "Skipping field 'is_new' because supports_condition = false for this subcategory");
                                 continue;
                             }
 
@@ -378,7 +338,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                                 for (int j = 0; j < optsArr.length(); j++) {
                                     JSONObject opt = optsArr.optJSONObject(j);
                                     if (opt == null) {
-                                        Log.w(TAG, "options[" + j + "] for field " + key + " is null");
                                         continue;
                                     }
                                     Map<String, Object> om = new HashMap<>();
@@ -389,18 +348,10 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                                     opts.add(om);
                                 }
                                 m.put("options", opts);
-                                Log.d(TAG, "Field[" + i + "] key=" + key + " type=" + type +
-                                        " required=" + required +
-                                        " optionsCount=" + opts.size());
                             } else {
-                                Log.d(TAG, "Field[" + i + "] key=" + key + " type=" + type +
-                                        " required=" + required + " optionsCount=0");
                             }
                             schema.add(m);
                         }
-
-                        Log.d(TAG, "Final schema list size after parsing (after is_new filter) = " + schema.size());
-
                         if (schema.isEmpty()) {
                             toast("Empty schema received from server.");
                             Log.e(TAG, "Schema list is empty, not setting adapter");
@@ -408,7 +359,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                         } else {
                             adapter = new DynamicFormAdapter(schema, this);
                             rvForm.setAdapter(adapter);
-                            Log.d(TAG, "Adapter set with itemCount=" + adapter.getItemCount());
                             // Ab form ready hai, button enable karo
                             btnSubmit.setEnabled(true);
                             LoadingDialog.hideLoading();
@@ -452,7 +402,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     @Override
     public void pickCoverPhoto(String fieldKey) {
-        Log.d(TAG, "pickCoverPhoto called for key=" + fieldKey);
         currentPhotoFieldKey = fieldKey;
         requestReadPhotoPermissionIfNeeded();
         coverPicker.launch("image/*");
@@ -460,7 +409,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     @Override
     public void pickMorePhotos(String fieldKey) {
-        Log.d(TAG, "pickMorePhotos called for key=" + fieldKey);
         currentPhotoFieldKey = fieldKey;
         requestReadPhotoPermissionIfNeeded();
         morePicker.launch("image/*");
@@ -468,7 +416,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     @Override
     public void requestMyLocation(String fieldKey) {
-        Log.d(TAG, "requestMyLocation called for key=" + fieldKey);
         pendingLocationFieldKey = fieldKey;
         locationPerm.launch(Manifest.permission.ACCESS_FINE_LOCATION);
     }
@@ -481,9 +428,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
     /* ================== Networking: submit listing ================== */
 
     private void submitListing(JSONObject formResult) {
-        Log.d(TAG, "submitListing() called, userId=" + userId +
-                " categoryId=" + categoryId + " subcategoryId=" + subcategoryId);
-
         long effectiveUserId = userId;
 
         if (effectiveUserId <= 0) {
@@ -528,14 +472,9 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                     }
                 }
             } catch (Exception e) {
-                Log.w(TAG, "Error parsing is_new from formResult, defaulting to 0", e);
                 isNewValue = 0;
             }
             payload.put("is_new", isNewValue);
-            Log.d(TAG, "submitListing: resolved is_new=" + isNewValue);
-
-            Log.d(TAG, "submitListing payload: " + payload.toString());
-
             btnSubmit.setEnabled(false);
             LoadingDialog.showLoading(this, "Submitting listing...");
 
@@ -546,8 +485,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                     response -> {
                         LoadingDialog.hideLoading();
                         btnSubmit.setEnabled(true);
-                        Log.d(TAG, "submitListing response: " + response.toString());
-
                         boolean success = response.optBoolean("success", false);
                         String message = response.optString("message",
                                 success ? "Listing created" : "Failed to create listing");
@@ -555,7 +492,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                         toast(message);
 
                         if (success) {
-                            Log.d(TAG, "Listing created successfully, opening MainActivity");
                             Intent i = new Intent(DynamicFormActivity.this, MainActivity.class);
                             i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(i);
@@ -630,7 +566,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                 sb.append("Listing");
             }
             String title = sb.toString();
-            Log.d(TAG, "buildTitleFromForm => " + title);
             return title;
         } catch (Exception e) {
             Log.e(TAG, "buildTitleFromForm error", e);
@@ -642,16 +577,13 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
     private void requestReadPhotoPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= 33) {
-            Log.d(TAG, "No READ_EXTERNAL_STORAGE permission required (SDK>=33)");
         } else {
-            Log.d(TAG, "Requesting READ_EXTERNAL_STORAGE permission");
             ActivityCompat.requestPermissions(
                     this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 1231);
         }
     }
 
     private void fillMyLocation(String fieldKey) {
-        Log.d(TAG, "fillMyLocation() for fieldKey=" + fieldKey);
         if (fieldKey == null || adapter == null) {
             Log.e(TAG, "fillMyLocation aborted: fieldKey or adapter is null");
             return;
@@ -678,7 +610,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                     } else {
                         addr = loc.getLatitude() + "," + loc.getLongitude();
                     }
-                    Log.d(TAG, "Resolved location: " + addr);
                     adapter.setTextAnswer(fieldKey, addr);
                     toast("Location set");
                 } catch (Exception e) {
@@ -727,8 +658,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
             byte[] bytes = baos.toByteArray();
             String base64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
-
-            Log.d(TAG, "encodeImageToBase64: size=" + bytes.length + " bytes for uri=" + uri);
             return base64;
 
         } catch (Exception e) {

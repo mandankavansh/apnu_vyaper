@@ -46,8 +46,6 @@ public final class UnsafeGlideModule extends AppGlideModule {
 
     @Override
     public void registerComponents(@NonNull Context context, @NonNull Glide glide, @NonNull Registry registry) {
-        Log.d(TAG, "Registering custom OkHttp client for Glide (SSL bypass enabled)");
-
         OkHttpClient unsafeClient = getUnsafeOkHttpClient();
 
         // Replace default HTTP loader with our unsafe OkHttp client
@@ -97,8 +95,6 @@ public final class UnsafeGlideModule extends AppGlideModule {
             builder.connectTimeout(30, TimeUnit.SECONDS);
             builder.readTimeout(30, TimeUnit.SECONDS);
             builder.writeTimeout(30, TimeUnit.SECONDS);
-
-            Log.d(TAG, "Created unsafe OkHttp client successfully");
             return builder.build();
         } catch (Exception e) {
             Log.e(TAG, "Error creating unsafe OkHttp client", e);

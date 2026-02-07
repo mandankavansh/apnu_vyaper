@@ -98,7 +98,6 @@ public class CategoryCache {
                     .putString(KEY_CATEGORIES, arr.toString())
                     .putLong(KEY_CATEGORIES_TIMESTAMP, System.currentTimeMillis())
                     .apply();
-            Log.d(TAG, "Saved " + categories.size() + " categories to cache");
         } catch (JSONException e) {
             Log.e(TAG, "Error saving categories to cache", e);
         }
@@ -113,7 +112,6 @@ public class CategoryCache {
         List<CachedCategory> result = new ArrayList<>();
         String json = prefs.getString(KEY_CATEGORIES, null);
         if (json == null) {
-            Log.d(TAG, "No cached categories found");
             return result;
         }
 
@@ -128,7 +126,6 @@ public class CategoryCache {
                         obj.optBoolean("requiresCondition", false));
                 result.add(cat);
             }
-            Log.d(TAG, "Loaded " + result.size() + " categories from cache");
         } catch (JSONException e) {
             Log.e(TAG, "Error loading categories from cache", e);
         }
@@ -178,7 +175,6 @@ public class CategoryCache {
                     .putString(key, arr.toString())
                     .putLong(key + "_timestamp", System.currentTimeMillis())
                     .apply();
-            Log.d(TAG, "Saved " + subcategories.size() + " subcategories for category " + categoryId);
         } catch (JSONException e) {
             Log.e(TAG, "Error saving subcategories to cache", e);
         }
@@ -194,7 +190,6 @@ public class CategoryCache {
         String key = KEY_SUBCATEGORIES_PREFIX + categoryId;
         String json = prefs.getString(key, null);
         if (json == null) {
-            Log.d(TAG, "No cached subcategories for category " + categoryId);
             return null;
         }
 
@@ -211,7 +206,6 @@ public class CategoryCache {
                         obj.optBoolean("requiresCondition", false));
                 result.add(sub);
             }
-            Log.d(TAG, "Loaded " + result.size() + " subcategories for category " + categoryId);
         } catch (JSONException e) {
             Log.e(TAG, "Error loading subcategories from cache", e);
         }
@@ -235,7 +229,6 @@ public class CategoryCache {
      */
     public void clearAll() {
         prefs.edit().clear().apply();
-        Log.d(TAG, "Cleared all category cache");
     }
 
     /**

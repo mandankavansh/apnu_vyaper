@@ -78,6 +78,13 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         h.price.setText(price);
         h.city.setText(city);
 
+        // --- SOLD badge ---
+        String status = getString(p, "status", "active");
+        boolean isSold = "sold".equalsIgnoreCase(status);
+        if (h.soldBadge != null) {
+            h.soldBadge.setVisibility(isSold ? View.VISIBLE : View.GONE);
+        }
+
         // Posted time
         String posted = getString(p, "posted_when", getString(p, "posted_time", ""));
 
@@ -169,7 +176,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     /* ===================== ViewHolder ===================== */
     static class VH extends RecyclerView.ViewHolder {
         androidx.viewpager2.widget.ViewPager2 vpImages;
-        TextView title, price, city;
+        TextView title, price, city, soldBadge;
         Button btn;
 
         VH(@NonNull View v) {
@@ -179,6 +186,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
             price = v.findViewById(R.id.tvPrice);
             city = v.findViewById(R.id.tvCity);
             btn = v.findViewById(R.id.btnContact);
+            soldBadge = v.findViewById(R.id.tvSoldBadge);
         }
     }
 

@@ -159,6 +159,19 @@
                         android:textSize="20sp"
                         android:textColor="@color/colorTextPrimary"/>
 
+                    <!-- SOLD chip -->
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/pdpSoldChip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="SOLD"
+                        android:textColor="@android:color/white"
+                        app:chipBackgroundColor="#E53935"
+                        app:chipStrokeWidth="0dp"
+                        app:chipMinHeight="28dp"
+                        android:visibility="gone"/>
+
                     <TextView
                         android:id="@+id/pdpPrice"
                         android:layout_width="wrap_content"

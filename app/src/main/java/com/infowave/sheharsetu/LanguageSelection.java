@@ -74,7 +74,6 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
         String saved = sp.getString(KEY_LANG_CODE, null);
         if (saved != null) {
-            Log.d(TAG, "Saved language found: " + saved + " → skipping selection screen");
             LanguageManager.apply(this, saved);
             goNext();
             return;
@@ -126,8 +125,6 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
 
         adapter = new LanguageAdapter(languages, this);
         rv.setAdapter(adapter);
-
-        Log.d(TAG, "onCreate: calling fetchLanguages()");
         fetchLanguages();
     }
 
@@ -176,8 +173,6 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         showLoading(true);
 
         final String url = ApiRoutes.GET_LANGUAGES;
-        Log.d(TAG, "fetchLanguages: URL = " + url);
-
         final String origin = buildOriginFromUrl(url); // e.g. https://domain.com
         final String referer = origin + "/";
 
@@ -188,9 +183,6 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                     String cleaned = response == null ? "" : response.trim();
                     // Handle BOM if present
                     if (cleaned.startsWith("\uFEFF")) cleaned = cleaned.substring(1).trim();
-
-                    Log.d(TAG, "Raw response: " + cleaned);
-
                     // If server/WAF returns HTML instead of JSON
                     if (cleaned.startsWith("<!DOCTYPE") || cleaned.startsWith("<html") || cleaned.startsWith("<")) {
                         Toast.makeText(this, "Blocked/HTML response from server. Check WAF/ModSecurity.", Toast.LENGTH_LONG).show();
@@ -282,8 +274,6 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                         "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
                 h.put("Referer", referer);
                 h.put("Origin", origin);
-
-                Log.d(TAG, "Request headers: " + h);
                 return h;
             }
 

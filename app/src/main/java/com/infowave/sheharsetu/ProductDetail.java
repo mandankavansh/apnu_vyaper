@@ -67,6 +67,7 @@ public class ProductDetail extends AppCompatActivity {
     // Content
     private TextView pdpTitle, pdpPrice, pdpMeta, pdpDesc;
     private ChipGroup pdpChips;
+    private Chip pdpSoldChip;
     private ImageView pdpSellerAvatar;
     private TextView pdpSellerName, pdpSellerMeta;
     private MaterialButton pdpViewProfile;
@@ -155,6 +156,7 @@ public class ProductDetail extends AppCompatActivity {
         pdpMeta = findViewById(R.id.pdpMeta);
         pdpDesc = findViewById(R.id.pdpDesc);
         pdpChips = findViewById(R.id.pdpChips);
+        pdpSoldChip = findViewById(R.id.pdpSoldChip);
 
         pdpSellerAvatar = findViewById(R.id.pdpSellerAvatar);
         pdpSellerName = findViewById(R.id.pdpSellerName);
@@ -301,6 +303,8 @@ public class ProductDetail extends AppCompatActivity {
                         productCity = d.optString("city", "");
                         productDesc = d.optString("description", "");
                         postedWhen = d.optString("posted_when", "");
+                        String listingStatus = d.optString("status", "active");
+                        boolean isSold = "sold".equalsIgnoreCase(listingStatus);
 
                         // Bind text
                         pdpTitle.setText(productTitle);
@@ -311,6 +315,11 @@ public class ProductDetail extends AppCompatActivity {
                             meta += " • Posted " + postedWhen;
                         pdpMeta.setText(meta);
                         pdpDesc.setText(productDesc);
+
+                        // Show SOLD chip if sold
+                        if (pdpSoldChip != null) {
+                            pdpSoldChip.setVisibility(isSold ? View.VISIBLE : View.GONE);
+                        }
 
                         JSONObject seller = d.optJSONObject("seller");
                         if (seller != null) {

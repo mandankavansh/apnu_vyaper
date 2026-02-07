@@ -85,12 +85,7 @@ public class CategorySelectActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_category_select);
-
-        Log.d(TAG, "onCreate() started");
-        Log.d(TAG, "GET_CATEGORIES=" + ApiRoutes.GET_CATEGORIES);
-        Log.d(TAG, "GET_SUBCATEGORIES=" + ApiRoutes.GET_SUBCATEGORIES);
-
-        bindViews();
+bindViews();
         prefetchAndApplyStaticTexts();
         setupLists();
         setupClicks();
@@ -106,8 +101,7 @@ public class CategorySelectActivity extends AppCompatActivity {
     private void applySavedLocale() {
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
         String lang = sp.getString(KEY_LANG, "en");
-        Log.d(TAG, "applySavedLocale lang=" + lang);
-        LanguageManager.apply(this, lang);
+LanguageManager.apply(this, lang);
     }
 
     private void bindViews() {
@@ -126,13 +120,7 @@ public class CategorySelectActivity extends AppCompatActivity {
         chipUsed = findViewById(R.id.chipUsed);
 
         btnContinue = findViewById(R.id.btnContinue);
-
-        Log.d(TAG, "bindViews: rvCategories=" + (rvCategories != null)
-                + " rvSubcategories=" + (rvSubcategories != null)
-                + " conditionRow=" + (conditionRow != null)
-                + " cgCondition=" + (cgCondition != null)
-                + " btnContinue=" + (btnContinue != null));
-    }
+}
 
     private void prefetchAndApplyStaticTexts() {
         List<String> keys = new ArrayList<>();
@@ -183,10 +171,7 @@ public class CategorySelectActivity extends AppCompatActivity {
         addGridSpacing(rvCategories, 12);
 
         categoryAdapter = new CategoryGridAdapter(mapToCategoryItems(categories), (item, pos) -> {
-            Log.d(TAG, "Category clicked: id=" + item.id + " name=" + item.name
-                    + " requiresCondition=" + item.requiresCondition);
-
-            selectedCategory = new Category(item.id, item.name, item.iconUrl, item.requiresCondition);
+selectedCategory = new Category(item.id, item.name, item.iconUrl, item.requiresCondition);
             selectedSub = null;
             selectedCondition = null;
 
@@ -211,10 +196,7 @@ public class CategorySelectActivity extends AppCompatActivity {
         addGridSpacing(rvSubcategories, 12);
 
         subcategoryAdapter = new SubcategoryGridAdapter(new ArrayList<>(), (s, pos) -> {
-            Log.d(TAG, "Subcategory clicked: id=" + s.id + " name=" + s.name
-                    + " requiresCondition=" + s.requiresCondition);
-
-            selectedSub = new Subcategory(s.id, s.parentId, s.name, s.iconUrl, s.requiresCondition);
+selectedSub = new Subcategory(s.id, s.parentId, s.name, s.iconUrl, s.requiresCondition);
 
             boolean needCond = (selectedSub.requiresCondition != null)
                     ? selectedSub.requiresCondition
@@ -241,17 +223,13 @@ public class CategorySelectActivity extends AppCompatActivity {
                     selectedCondition = "used";
                 else
                     selectedCondition = null;
-
-                Log.d(TAG, "Condition selected=" + selectedCondition);
-                updateCtaState();
+updateCtaState();
             });
         }
 
         if (btnContinue != null) {
             btnContinue.setOnClickListener(v -> {
-                Log.d(TAG, "Continue clicked");
-
-                if (selectedCategory == null) {
+if (selectedCategory == null) {
                     toast(I18n.t(this, "Please select a category."));
                     return;
                 }
@@ -278,11 +256,7 @@ public class CategorySelectActivity extends AppCompatActivity {
                 intent.putExtra("subcategory_name", selectedSub.name);
                 if (selectedCondition != null)
                     intent.putExtra("condition", selectedCondition);
-
-                Log.d(TAG, "Starting DynamicFormActivity extras: catId=" + selectedCategory.id
-                        + " subId=" + selectedSub.id + " condition=" + selectedCondition);
-
-                startActivity(intent);
+startActivity(intent);
             });
         }
     }
@@ -291,15 +265,11 @@ public class CategorySelectActivity extends AppCompatActivity {
      * Smart caching: Load from cache first for instant UI, then refresh from API
      */
     private void loadCategoriesWithSmartCache() {
-        Log.d(TAG, "========== SMART CACHE: LOAD CATEGORIES ==========");
-
-        // Step 1: Try to load from cache immediately (instant UI)
+// Step 1: Try to load from cache immediately (instant UI)
         List<CategoryCache.CachedCategory> cachedCategories = categoryCache.loadCategories();
 
         if (!cachedCategories.isEmpty()) {
-            Log.d(TAG, "Found " + cachedCategories.size() + " cached categories, showing immediately");
-
-            // Convert cached data to our Category model
+// Convert cached data to our Category model
             categories.clear();
             List<String> catNameKeys = new ArrayList<>();
             for (CategoryCache.CachedCategory cached : cachedCategories) {
@@ -310,14 +280,12 @@ public class CategorySelectActivity extends AppCompatActivity {
             // Update UI immediately with cached data
             I18n.prefetch(this, catNameKeys, () -> {
                 categoryAdapter.submit(mapToCategoryItems(categories));
-                Log.d(TAG, "Displayed cached categories, now refreshing from API...");
-            });
+});
 
             // Step 2: Refresh from API in background (no loading dialog)
             refreshCategoriesFromApi(false);
         } else {
-            Log.d(TAG, "No cached categories, loading from API with loader");
-            // No cache - show loading and fetch from API
+// No cache - show loading and fetch from API
             refreshCategoriesFromApi(true);
         }
     }
@@ -329,9 +297,6 @@ public class CategorySelectActivity extends AppCompatActivity {
      */
     private void refreshCategoriesFromApi(boolean showLoader) {
         final String url = ApiRoutes.GET_CATEGORIES;
-        Log.d(TAG, "========== REFRESH CATEGORIES FROM API ==========");
-        Log.d(TAG, "refreshCategoriesFromApi URL=" + url + " showLoader=" + showLoader);
-
         if (showLoader) {
             LoadingDialog.showLoading(this, "Loading categories...");
         }
@@ -340,9 +305,6 @@ public class CategorySelectActivity extends AppCompatActivity {
                 Request.Method.GET,
                 url,
                 response -> {
-                    Log.d(TAG, "========== CATEGORIES API RESPONSE ==========");
-                    Log.d(TAG, "Categories raw response len=" + (response == null ? 0 : response.length()));
-
                     try {
                         JSONObject root = new JSONObject(response);
 
@@ -370,8 +332,7 @@ public class CategorySelectActivity extends AppCompatActivity {
                         List<String> catNameKeys = new ArrayList<>();
 
                         if (dataArr != null) {
-                            Log.d(TAG, "Categories dataArr.length=" + dataArr.length());
-                            for (int i = 0; i < dataArr.length(); i++) {
+for (int i = 0; i < dataArr.length(); i++) {
                                 JSONObject obj = dataArr.optJSONObject(i);
                                 if (obj == null)
                                     continue;
@@ -396,26 +357,20 @@ public class CategorySelectActivity extends AppCompatActivity {
                                     freshCategories.add(new Category(id, name, iconUrl, requiresCond));
                                     toCache.add(new CategoryCache.CachedCategory(id, name, iconUrl, requiresCond));
                                     catNameKeys.add(name);
-                                    Log.d(TAG, "Category[" + i + "] ADDED: id=" + id + " name=" + name);
-                                }
+}
                             }
                         }
 
                         // Save fresh data to cache
                         categoryCache.saveCategories(toCache);
-                        Log.d(TAG, "Saved " + toCache.size() + " categories to cache");
-
-                        // Update UI with fresh data
+// Update UI with fresh data
                         categories.clear();
                         categories.addAll(freshCategories);
-                        Log.d(TAG, "Parsed categories count=" + categories.size());
-
-                        I18n.prefetch(this, catNameKeys, () -> {
+I18n.prefetch(this, catNameKeys, () -> {
                             if (showLoader)
                                 LoadingDialog.hideLoading();
                             categoryAdapter.submit(mapToCategoryItems(categories));
-                            Log.d(TAG, "Category adapter submitted fresh items=" + categories.size());
-                        });
+});
 
                     } catch (JSONException e) {
                         Log.e(TAG, "Categories parse error", e);
@@ -460,14 +415,10 @@ public class CategorySelectActivity extends AppCompatActivity {
      * Smart caching for subcategories: load from cache first, then refresh from API
      */
     private void loadSubcategories(String catId) {
-        Log.d(TAG, "========== SMART CACHE: LOAD SUBCATEGORIES ==========");
-        Log.d(TAG, "loadSubcategories catId=" + catId);
-
         // Step 1: Check in-memory cache first (fastest)
         if (subMap.containsKey(catId)) {
             List<Subcategory> cached = subMap.get(catId);
-            Log.d(TAG, "Using in-memory cached subcategories size=" + (cached == null ? 0 : cached.size()));
-            displaySubcategories(cached);
+displaySubcategories(cached);
             // Still refresh in background for freshness
             refreshSubcategoriesFromApi(catId, false);
             return;
@@ -476,9 +427,7 @@ public class CategorySelectActivity extends AppCompatActivity {
         // Step 2: Check persistent cache (SharedPreferences)
         List<CategoryCache.CachedSubcategory> persistentCached = categoryCache.loadSubcategories(catId);
         if (persistentCached != null && !persistentCached.isEmpty()) {
-            Log.d(TAG, "Found " + persistentCached.size() + " subcategories in persistent cache, showing immediately");
-
-            // Convert to Subcategory model
+// Convert to Subcategory model
             List<Subcategory> subs = new ArrayList<>();
             for (CategoryCache.CachedSubcategory cs : persistentCached) {
                 subs.add(new Subcategory(cs.id, cs.parentId, cs.name, cs.iconUrl, cs.requiresCondition));
@@ -496,8 +445,7 @@ public class CategorySelectActivity extends AppCompatActivity {
         }
 
         // Step 3: No cache found - fetch from API with loading dialog
-        Log.d(TAG, "No cached subcategories, loading from API with loader");
-        refreshSubcategoriesFromApi(catId, true);
+refreshSubcategoriesFromApi(catId, true);
     }
 
     /**
@@ -525,8 +473,7 @@ public class CategorySelectActivity extends AppCompatActivity {
                         s.requiresCondition));
             }
             subcategoryAdapter.submit(ui);
-            Log.d(TAG, "Displayed " + ui.size() + " subcategories");
-        });
+});
     }
 
     /**
@@ -537,9 +484,6 @@ public class CategorySelectActivity extends AppCompatActivity {
      */
     private void refreshSubcategoriesFromApi(String catId, boolean showLoader) {
         final String url = ApiRoutes.GET_SUBCATEGORIES + "?category_id=" + catId;
-        Log.d(TAG, "========== REFRESH SUBCATEGORIES FROM API ==========");
-        Log.d(TAG, "refreshSubcategoriesFromApi URL=" + url + " showLoader=" + showLoader);
-
         if (showLoader) {
             LoadingDialog.showLoading(this, "Loading subcategories...");
         }
@@ -548,9 +492,6 @@ public class CategorySelectActivity extends AppCompatActivity {
                 Request.Method.GET,
                 url,
                 response -> {
-                    Log.d(TAG, "========== SUBCATEGORIES API RESPONSE ==========");
-                    Log.d(TAG, "Subcategories raw response len=" + (response == null ? 0 : response.length()));
-
                     try {
                         JSONObject root = new JSONObject(response);
 
@@ -577,8 +518,7 @@ public class CategorySelectActivity extends AppCompatActivity {
                         List<CategoryCache.CachedSubcategory> toCache = new ArrayList<>();
 
                         if (dataArr != null) {
-                            Log.d(TAG, "Subcategories dataArr.length=" + dataArr.length());
-                            for (int i = 0; i < dataArr.length(); i++) {
+for (int i = 0; i < dataArr.length(); i++) {
                                 JSONObject obj = dataArr.optJSONObject(i);
                                 if (obj == null)
                                     continue;
@@ -603,20 +543,15 @@ public class CategorySelectActivity extends AppCompatActivity {
                                     subs.add(new Subcategory(id, catId, name, iconUrl, requiresCond));
                                     toCache.add(new CategoryCache.CachedSubcategory(id, catId, name, iconUrl,
                                             requiresCond));
-                                    Log.d(TAG, "Subcategory[" + i + "] ADDED: id=" + id + " name=" + name);
-                                }
+}
                             }
                         }
 
                         // Save to persistent cache
                         categoryCache.saveSubcategories(catId, toCache);
-                        Log.d(TAG, "Saved " + toCache.size() + " subcategories to persistent cache");
-
-                        // Save to memory cache
+// Save to memory cache
                         subMap.put(catId, subs);
-                        Log.d(TAG, "Saved " + subs.size() + " subcategories to memory cache");
-
-                        // Update UI
+// Update UI
                         if (showLoader)
                             LoadingDialog.hideLoading();
                         displaySubcategories(subs);
@@ -665,11 +600,7 @@ public class CategorySelectActivity extends AppCompatActivity {
         if (btnContinue != null) {
             btnContinue.setEnabled(hasCat && hasSub && condOk);
         }
-
-        Log.d(TAG, "CTA state: hasCat=" + hasCat + " hasSub=" + hasSub
-                + " needCond=" + needCond + " condOk=" + condOk
-                + " selectedCondition=" + selectedCondition);
-    }
+}
 
     private List<CategoryGridAdapter.Item> mapToCategoryItems(List<Category> list) {
         List<CategoryGridAdapter.Item> out = new ArrayList<>();

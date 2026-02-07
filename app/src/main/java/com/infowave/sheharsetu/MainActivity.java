@@ -116,6 +116,12 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvNavUserName; // Reference to nav header TextView
     private TextView tvNavUserPhone; // Reference to nav header TextView
 
+    // Initialize cached values from session on startup
+    private void initCachedUserData() {
+        cachedUserName = session.getCachedUserName();
+        cachedUserPhone = session.getCachedUserPhone();
+    }
+
     // ===== Pagination =====
     private static final int PAGE = 1;
     private static final int LIMIT = 50;
@@ -130,15 +136,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Log.d(TAG, "onCreate() started");
-
         // Apply saved locale first
         applySavedLocale();
         session = new SessionManager(this);
 
         // Cache: 20 responses max
         productCache = new android.util.LruCache<>(20);
+
+        // Initialize cached user data from session immediately
+        initCachedUserData();
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(android.graphics.Color.BLACK);
@@ -210,8 +216,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Load data
         showProducts();
-
-        Log.d(TAG, "Initial fetch: categories + products + user profile");
         LoadingDialog.showLoading(this, "Loading data...");
         fetchCategories();
         fetchProducts(); // featured on first load
@@ -222,7 +226,6 @@ public class MainActivity extends AppCompatActivity {
                 return;
             ensureProductsView();
             showNew = (id == R.id.btnShowNew) ? Boolean.TRUE : Boolean.FALSE;
-            Log.d(TAG, "Toggle New/Old changed: showNew=" + showNew);
             fetchProducts();
         });
     }
@@ -317,7 +320,6 @@ public class MainActivity extends AppCompatActivity {
         searchRunnable = () -> {
             ensureProductsView();
             searchQuery = TextUtils.isEmpty(query) ? "" : query.toLowerCase(Locale.ROOT).trim();
-            Log.d(TAG, "performSearch(): q=" + searchQuery);
             productsInFlight = false;
             fetchProducts();
         };
@@ -328,7 +330,6 @@ public class MainActivity extends AppCompatActivity {
     private void applySavedLocale() {
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
         String lang = sp.getString(KEY_LANG, "en");
-        Log.d(TAG, "applySavedLocale(): " + lang);
         LanguageManager.apply(this, lang);
     }
 
@@ -363,13 +364,9 @@ public class MainActivity extends AppCompatActivity {
     // ================= Drawer =================
 
     private void setupAppDrawer() {
-        Log.d(TAG, "========== SETUP APP DRAWER START ==========");
         drawerLayout = findViewById(R.id.drawerLayout);
         navigationView = findViewById(R.id.navView);
-        Log.d(TAG, "drawerLayout: " + (drawerLayout != null ? "FOUND" : "NULL"));
-        Log.d(TAG, "navigationView: " + (navigationView != null ? "FOUND" : "NULL"));
         if (drawerLayout == null || navigationView == null) {
-            Log.w(TAG, "❌ setupAppDrawer: drawerLayout or navigationView is NULL - RETURNING");
             return;
         }
 
@@ -379,19 +376,12 @@ public class MainActivity extends AppCompatActivity {
         drawerToggle.syncState();
 
         View header = navigationView.getHeaderView(0);
-        Log.d(TAG, "Navigation header view: " + (header != null ? "FOUND" : "NULL"));
         if (header != null) {
             ImageView ivProfile = header.findViewById(R.id.ivProfile);
             tvNavUserName = header.findViewById(R.id.tvUserName);
             tvNavUserPhone = header.findViewById(R.id.tvUserPhone);
             ImageView ivEdit = header.findViewById(R.id.ivEdit);
-
-            Log.d(TAG,
-                    "Header views - tvNavUserName: " + (tvNavUserName != null ? "FOUND" : "NULL") + ", tvNavUserPhone: "
-                            + (tvNavUserPhone != null ? "FOUND" : "NULL"));
-
             // Display cached user data (will be updated when API response arrives)
-            Log.d(TAG, "Setting initial cached user data: name=" + cachedUserName + ", phone=" + cachedUserPhone);
             if (tvNavUserName != null) {
                 tvNavUserName.setText(cachedUserName);
             }
@@ -513,9 +503,6 @@ public class MainActivity extends AppCompatActivity {
             selectedSubFilterId = -1;
             showNew = null;
             clearSearch();
-
-            Log.d(TAG, "Category selected: categoryId=" + selectedCategoryId);
-
             if (toggleNewOld != null) {
                 toggleNewOld.setVisibility(View.GONE);
                 toggleNewOld.clearChecked();
@@ -541,8 +528,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void bindProducts(List<Map<String, Object>> items) {
-        Log.d(TAG, "bindProducts(): items=" + (items == null ? 0 : items.size()));
-
         // Stop refresh animation
         if (swipeRefresh != null)
             swipeRefresh.setRefreshing(false);
@@ -653,11 +638,8 @@ public class MainActivity extends AppCompatActivity {
                         catNameKeys.add("All Listings");
 
                         if (arr != null) {
-                            Log.d(TAG, "fetchCategories(): dataCount=" + arr.length());
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject o = arr.getJSONObject(i);
-                                Log.d(TAG, "--- Category[" + i + "] RAW JSON: " + o.toString());
-
                                 Map<String, Object> m = new HashMap<>();
                                 int catId = o.optInt("id", 0);
                                 m.put("id", catId);
@@ -672,12 +654,6 @@ public class MainActivity extends AppCompatActivity {
                                 // ✅ Convert relative path to absolute URL
                                 iconUrl = makeAbsoluteImageUrl(iconUrl);
                                 m.put("iconUrl", iconUrl);
-
-                                Log.d(TAG, "Category[" + i + "] id=" + catId + " name=" + nameEn);
-                                Log.d(TAG, "Category[" + i + "] icon=" + o.optString("icon", "<empty>"));
-                                Log.d(TAG, "Category[" + i + "] icon_url=" + o.optString("icon_url", "<empty>"));
-                                Log.d(TAG, "Category[" + i + "] ✅ FINAL iconUrl=" + iconUrl);
-
                                 m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
 
                                 categories.add(m);
@@ -688,12 +664,7 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             Log.e(TAG, "fetchCategories(): data array is NULL!");
                         }
-
-                        Log.d(TAG, "fetchCategories(): Total categories parsed=" + categories.size());
-                        Log.d(TAG, "fetchCategories(): Notifying adapter...");
                         catAdapter.notifyDataSetChanged();
-                        Log.d(TAG, "========== FETCH CATEGORIES COMPLETE ==========");
-
                         I18n.prefetch(this, catNameKeys, () -> {
                             for (Map<String, Object> m : categories) {
                                 Object nObj = m.get("name");
@@ -739,13 +710,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchSubFilters(int categoryId) {
         final String url = urlSubcategories(categoryId);
-        Log.d(TAG, "========== FETCH SUBFILTERS START ==========");
-        Log.d(TAG, "fetchSubFilters(): categoryId=" + categoryId + " url=" + url);
-        Log.d(TAG, "fetchSubFilters(): timestamp=" + System.currentTimeMillis());
-
         // ✅ CHECK MEMORY CACHE
         if (mapSubFilters.containsKey(categoryId)) {
-            Log.d(TAG, "fetchSubFilters(): MEMORY HIT for cat=" + categoryId);
             List<Map<String, Object>> subs = mapSubFilters.get(categoryId);
 
             rvSubFiltersGrid.setAdapter(new SubFilterGridAdapter(subs, sub -> {
@@ -784,10 +750,6 @@ public class MainActivity extends AppCompatActivity {
                 url,
                 null,
                 resp -> {
-                    Log.d(TAG, "========== FETCH SUBFILTERS RESPONSE ==========");
-                    Log.d(TAG, "fetchSubFilters() response=" + safeJsonSnippet(resp));
-                    Log.d(TAG, "fetchSubFilters() response.status=" + resp.optString("status"));
-                    Log.d(TAG, "fetchSubFilters() response.has('data')=" + resp.has("data"));
                     try {
                         if (!"success".equalsIgnoreCase(resp.optString("status"))) {
                             Log.e(TAG, "fetchSubFilters(): status != success, status=" + resp.optString("status"));
@@ -806,11 +768,8 @@ public class MainActivity extends AppCompatActivity {
                         subs.add(all);
 
                         if (arr != null) {
-                            Log.d(TAG, "fetchSubFilters(): dataCount=" + arr.length());
                             for (int i = 0; i < arr.length(); i++) {
                                 JSONObject o = arr.getJSONObject(i);
-                                Log.d(TAG, "--- Subcategory[" + i + "] RAW JSON: " + o.toString());
-
                                 Map<String, Object> m = new HashMap<>();
                                 int subId = o.optInt("id", 0);
                                 m.put("id", subId);
@@ -826,12 +785,6 @@ public class MainActivity extends AppCompatActivity {
                                 // ✅ Convert relative path to absolute URL
                                 iconUrl = makeAbsoluteImageUrl(iconUrl);
                                 m.put("iconUrl", iconUrl);
-
-                                Log.d(TAG, "Subcategory[" + i + "] id=" + subId + " name=" + subName);
-                                Log.d(TAG, "Subcategory[" + i + "] icon=" + o.optString("icon", "<empty>"));
-                                Log.d(TAG, "Subcategory[" + i + "] icon_url=" + o.optString("icon_url", "<empty>"));
-                                Log.d(TAG, "Subcategory[" + i + "] ✅ FINAL iconUrl=" + iconUrl);
-
                                 m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
 
                                 subs.add(m);
@@ -839,18 +792,12 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             Log.e(TAG, "fetchSubFilters(): data array is NULL!");
                         }
-
-                        Log.d(TAG, "fetchSubFilters(): Total subcategories parsed=" + subs.size());
                         mapSubFilters.put(categoryId, subs);
 
                         rvSubFiltersGrid.setAdapter(new SubFilterGridAdapter(subs, sub -> {
                             selectedSubFilterId = toInt(sub.get("id"), 0);
                             clearSearch();
                             showProducts();
-
-                            Log.d(TAG, "Subcategory selected: subId=" + selectedSubFilterId
-                                    + " hasNewOld=" + toBool(sub.get("hasNewOld"), false));
-
                             if (selectedSubFilterId > 0) {
                                 boolean hasNewOld = toBool(sub.get("hasNewOld"), false);
                                 if (hasNewOld && toggleNewOld != null) {
@@ -902,12 +849,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchProducts() {
         final String url = urlProducts();
-        Log.d(TAG, "========== FETCH PRODUCTS START ==========");
-        Log.d(TAG, "fetchProducts(): " + url);
-
         // ✅ CANCEL NON-CRITICAL PREVIOUS REQUESTS
         if (productsInFlight) {
-            Log.w(TAG, "fetchProducts(): Cancelling previous in-flight request to prioritize new one.");
             VolleySingleton.getInstance(this).getQueue().cancelAll(TAG_FETCH_PRODUCTS);
         }
         productsInFlight = true;
@@ -915,7 +858,6 @@ public class MainActivity extends AppCompatActivity {
         // ✅ CHECK MEMORY CACHE
         JSONObject cachedResp = productCache.get(url);
         if (cachedResp != null) {
-            Log.d(TAG, "fetchProducts(): CACHE HIT! key=" + url);
             try {
                 productsInFlight = false;
                 // Stop refresh if it was triggered
@@ -938,7 +880,6 @@ public class MainActivity extends AppCompatActivity {
                 url,
                 null,
                 resp -> {
-                    Log.d(TAG, "fetchProducts() SUCCESS");
                     productsInFlight = false;
 
                     // Stop refresh logic
@@ -1003,8 +944,6 @@ public class MainActivity extends AppCompatActivity {
             currentProducts.clear();
 
             if (arr != null) {
-                Log.d(TAG, "parseProductsResponse(): dataCount=" + arr.length());
-
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject o = arr.getJSONObject(i);
                     Map<String, Object> m = new HashMap<>();
@@ -1199,13 +1138,8 @@ public class MainActivity extends AppCompatActivity {
      * Network optimized with caching and proper error handling
      */
     private void fetchUserProfile(TextView tvUserName, TextView tvUserPhone) {
-        Log.d(TAG, "========== FETCH USER PROFILE START ==========");
-
         String accessToken = session.getAccessToken();
-        Log.d(TAG, "Access Token: " + (accessToken != null ? "EXISTS (length=" + accessToken.length() + ")" : "NULL"));
-
         if (TextUtils.isEmpty(accessToken)) {
-            Log.w(TAG, "❌ No access token found - showing Guest User");
             if (tvUserName != null)
                 tvUserName.setText("Guest User");
             if (tvUserPhone != null)
@@ -1214,45 +1148,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String url = ApiRoutes.BASE_URL + "/get_user_profile.php";
-        Log.d(TAG, "API URL: " + url);
-        Log.d(TAG, "Making GET request to fetch user profile...");
-
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
-                    Log.d(TAG, "✅ API Response received");
-                    Log.d(TAG, "Response: " + response.toString());
                     try {
                         if (response.getBoolean("success")) {
                             JSONObject user = response.getJSONObject("user");
                             String name = user.optString("name", "User");
                             String formattedPhone = user.optString("formatted_phone", "");
-
-                            Log.d(TAG, "User Name: " + name);
-                            Log.d(TAG, "User Phone: " + formattedPhone);
-
                             if (tvUserName != null) {
                                 tvUserName.setText(name);
-                                Log.d(TAG, "✅ Updated tvUserName to: " + name);
                             }
                             if (tvUserPhone != null) {
                                 tvUserPhone.setText(formattedPhone);
-                                Log.d(TAG, "✅ Updated tvUserPhone to: " + formattedPhone);
                             }
-
-                            Log.d(TAG, "✅ User profile loaded successfully");
                         } else {
                             String error = response.optString("error", "Unknown error");
-                            Log.w(TAG, "❌ API returned success=false. Error: " + error);
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "❌ Error parsing user profile response");
                         Log.e(TAG, "Exception: " + e.getMessage());
                         e.printStackTrace();
                     }
-                    Log.d(TAG, "========== FETCH USER PROFILE COMPLETE ==========");
                 },
                 error -> {
                     Log.e(TAG, "❌ ========== USER PROFILE API ERROR ==========");
@@ -1267,11 +1186,9 @@ public class MainActivity extends AppCompatActivity {
 
                     if (tvUserName != null) {
                         tvUserName.setText("User");
-                        Log.d(TAG, "Set fallback: User");
                     }
                     if (tvUserPhone != null) {
                         tvUserPhone.setText("");
-                        Log.d(TAG, "Set fallback: empty phone");
                     }
                     Log.e(TAG, "========== USER PROFILE ERROR END ==========");
                 }) {
@@ -1281,7 +1198,6 @@ public class MainActivity extends AppCompatActivity {
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Authorization", "Bearer " + accessToken);
                 headers.put("Content-Type", "application/json");
-                Log.d(TAG, "Request Headers: Authorization=Bearer [TOKEN], Content-Type=application/json");
                 return headers;
             }
 
@@ -1294,61 +1210,41 @@ public class MainActivity extends AppCompatActivity {
         req.setRetryPolicy(new DefaultRetryPolicy(5000, // 5 second timeout
                 0, // No retries - fail fast
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        Log.d(TAG, "Adding request to Volley queue...");
         VolleySingleton.getInstance(this).add(req);
-        Log.d(TAG, "Request added to queue. Waiting for response...");
     }
 
     private void fetchUserProfileOnStartup() {
-        Log.d(TAG, "========== FETCH USER PROFILE ON STARTUP ==========");
-
         String accessToken = session.getAccessToken();
-        Log.d(TAG, "Access Token: " + (accessToken != null ? "EXISTS (length=" + accessToken.length() + ")" : "NULL"));
-
         if (TextUtils.isEmpty(accessToken)) {
-            Log.w(TAG, "❌ No access token found - using default values");
             cachedUserName = "Guest User";
             cachedUserPhone = "";
             return;
         }
 
         String url = ApiRoutes.BASE_URL + "/get_user_profile.php";
-        Log.d(TAG, "API URL: " + url);
-        Log.d(TAG, "Making GET request to fetch user profile on startup...");
-
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.GET,
                 url,
                 null,
                 response -> {
-                    Log.d(TAG, "✅ API Response received on startup");
-                    Log.d(TAG, "Response: " + response.toString());
                     try {
                         if (response.getBoolean("success")) {
                             JSONObject user = response.getJSONObject("user");
                             cachedUserName = user.optString("name", "User");
                             cachedUserPhone = user.optString("formatted_phone", "");
-
-                            Log.d(TAG, "✅ Cached User Name: " + cachedUserName);
-                            Log.d(TAG, "✅ Cached User Phone: " + cachedUserPhone);
-
+                            // Save to session for next startup
+                            session.saveUserProfile(cachedUserName, cachedUserPhone);
                             // Update TextViews immediately on UI thread
                             runOnUiThread(() -> {
                                 if (tvNavUserName != null) {
                                     tvNavUserName.setText(cachedUserName);
-                                    Log.d(TAG, "✅ Updated tvNavUserName to: " + cachedUserName);
                                 }
                                 if (tvNavUserPhone != null) {
                                     tvNavUserPhone.setText(cachedUserPhone);
-                                    Log.d(TAG, "✅ Updated tvNavUserPhone to: " + cachedUserPhone);
                                 }
                             });
-
-                            Log.d(TAG, "✅ User profile cached and displayed successfully");
                         } else {
                             String error = response.optString("error", "Unknown error");
-                            Log.w(TAG, "❌ API returned success=false. Error: " + error);
                             cachedUserName = "User";
                             cachedUserPhone = "";
                         }
@@ -1359,7 +1255,6 @@ public class MainActivity extends AppCompatActivity {
                         cachedUserName = "User";
                         cachedUserPhone = "";
                     }
-                    Log.d(TAG, "========== FETCH USER PROFILE ON STARTUP COMPLETE ==========");
                 },
                 error -> {
                     Log.e(TAG, "❌ ========== USER PROFILE API ERROR ON STARTUP ==========");
@@ -1375,7 +1270,6 @@ public class MainActivity extends AppCompatActivity {
                     // Set fallback values
                     cachedUserName = "User";
                     cachedUserPhone = "";
-                    Log.d(TAG, "Set fallback cached values");
                     Log.e(TAG, "========== USER PROFILE ERROR ON STARTUP END ==========");
                 }) {
 
@@ -1384,7 +1278,6 @@ public class MainActivity extends AppCompatActivity {
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Authorization", "Bearer " + accessToken);
                 headers.put("Content-Type", "application/json");
-                Log.d(TAG, "Request Headers: Authorization=Bearer [TOKEN], Content-Type=application/json");
                 return headers;
             }
         };
@@ -1392,13 +1285,10 @@ public class MainActivity extends AppCompatActivity {
         // Disable caching - user profile should always be fresh
         req.setShouldCache(false);
 
-        // Network optimization: shorter timeout, no retries
-        req.setRetryPolicy(new DefaultRetryPolicy(5000, // 5 second timeout
-                0, // No retries - fail fast
+        // Network optimization: 10 second timeout with 1 retry
+        req.setRetryPolicy(new DefaultRetryPolicy(10000, // 10 second timeout
+                1, // 1 retry
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        Log.d(TAG, "Adding request to Volley queue (background fetch)...");
         VolleySingleton.getInstance(this).add(req);
-        Log.d(TAG, "Background request added to queue");
     }
 }

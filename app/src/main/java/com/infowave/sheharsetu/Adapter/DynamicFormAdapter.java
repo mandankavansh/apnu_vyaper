@@ -74,8 +74,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public DynamicFormAdapter(List<Map<String, Object>> fields, Callbacks callbacks) {
         this.fields = fields != null ? fields : new ArrayList<>();
         this.callbacks = callbacks;
-
-        Log.d(TAG, "Adapter init with fields size=" + this.fields.size());
         int idx = 0;
         for (Map<String, Object> f : this.fields) {
             String key = s(f.get("key"));
@@ -85,10 +83,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             int optsCount = 0;
             if (opts instanceof List)
                 optsCount = ((List<?>) opts).size();
-            Log.d(TAG, "Field[" + idx + "] key=" + key +
-                    " type=" + type +
-                    " required=" + required +
-                    " optionsCount=" + optsCount);
             idx++;
         }
 
@@ -119,7 +113,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     answers.put(key, "");
             }
         }
-        Log.d(TAG, "Answers initialized for all fields");
     }
 
     @Override
@@ -178,9 +171,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         String label = s(f.get("label"));
         String hint = s(f.get("hint"));
         String type = s(f.get("type"));
-
-        Log.d(TAG, "onBindViewHolder pos=" + pos + " key=" + key + " type=" + type);
-
         if (h instanceof VHText) {
             VHText vh = (VHText) h;
             vh.tvLabel.setText(label + (req(f) ? " *" : ""));
@@ -263,9 +253,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     }
                 }
             }
-            Log.d(TAG, "Dropdown key=" + key + " options displayCount=" + displayList.size() +
-                    " valueCount=" + valueList.size());
-
             final List<String> finalDisplay = displayList;
             final List<String> finalValues = valueList;
 
@@ -309,17 +296,13 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             if (idxSaved < 0)
                 idxSaved = 0;
             vh.spinner.setSelection(idxSaved);
-            Log.d(TAG, "Dropdown key=" + key + " savedValue=" + saved + " index=" + idxSaved);
-
             vh.spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     if (position == 0) {
                         answers.put(key, "");
-                        Log.d(TAG, "Dropdown key=" + key + " set to empty (position 0)");
                     } else {
                         answers.put(key, finalValues.get(position));
-                        Log.d(TAG, "Dropdown key=" + key + " set to value=" + finalValues.get(position));
                     }
 
                     if (view instanceof TextView) {
@@ -348,7 +331,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.cb.setChecked(checked);
             vh.cb.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 answers.put(key, isChecked);
-                Log.d(TAG, "Checkbox key=" + key + " changed to " + isChecked);
             });
 
         } else if (h instanceof VHSwitch) {
@@ -358,7 +340,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.sw.setChecked(on);
             vh.sw.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 answers.put(key, isChecked);
-                Log.d(TAG, "Switch key=" + key + " changed to " + isChecked);
             });
 
         } else if (h instanceof VHLocation) {
@@ -368,10 +349,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.etLocation.setText(s(answers.get(key)));
             vh.etLocation.addTextChangedListener(new SimpleTextWatcher(s -> {
                 answers.put(key, s);
-                Log.d(TAG, "Location key=" + key + " text changed to: " + s);
             }));
             vh.btnUseMyLocation.setOnClickListener(v -> {
-                Log.d(TAG, "UseMyLocation clicked for key=" + key);
                 if (callbacks != null)
                     callbacks.requestMyLocation(key);
             });
@@ -392,10 +371,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             List<String> more = ph == null ? new ArrayList<>() : (List<String>) ph.get("more"); // Base64 list
             if (more == null)
                 more = new ArrayList<>();
-
-            Log.d(TAG, "Photos key=" + key + " coverBase64Empty=" + TextUtils.isEmpty(cover) + " moreCount="
-                    + more.size());
-
             if (vh.rv.getLayoutManager() == null) {
                 vh.rv.setLayoutManager(
                         new LinearLayoutManager(vh.itemView.getContext(), RecyclerView.HORIZONTAL, false));
@@ -407,21 +382,17 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     new PhotosStripAdapter.Events() {
                         @Override
                         public void onAddMore(String fieldKey) {
-                            Log.d(TAG, "Photos onAddMore for key=" + fieldKey);
                             if (callbacks != null)
                                 callbacks.pickMorePhotos(fieldKey);
                         }
 
                         @Override
                         public void onSetCover(String fieldKey, int indexInList) {
-                            Log.d(TAG, "Photos onSetCover key=" + fieldKey + " index=" + indexInList);
                             setCoverFromMore(fieldKey, indexInList);
                         }
 
                         @Override
                         public void onRemove(String fieldKey, int indexInMore, boolean isCover) {
-                            Log.d(TAG, "Photos onRemove key=" + fieldKey + " indexInMore=" + indexInMore + " isCover="
-                                    + isCover);
                             removePhoto(fieldKey, indexInMore, isCover);
                         }
                     });
@@ -437,7 +408,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public int getItemCount() {
         int size = fields.size();
-        Log.d(TAG, "getItemCount() = " + size);
         return size;
     }
 
@@ -458,9 +428,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         String newCover = more.get(indexInMore);
         more.set(indexInMore, currentCover);
         ph.put("cover", newCover);
-        Log.d(TAG, "setCoverFromMore key=" + fieldKey +
-                " newCover(set) length=" + (newCover == null ? 0 : newCover.length()) +
-                " oldCoverLength=" + (currentCover == null ? 0 : currentCover.length()));
         notifyDataSetChanged();
     }
 
@@ -498,10 +465,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 ph.put("cover", more.get(0));
                 more.remove(0);
                 toast("Cover removed. Promoted next image as cover.");
-                Log.d(TAG, "removePhoto: cover removed, promoted next as cover");
             } else {
                 toast("Photo removed.");
-                Log.d(TAG, "removePhoto: removed non-cover photo");
             }
             notifyDataSetChanged();
         }
@@ -509,7 +474,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @SuppressLint("NotifyDataSetChanged")
     public void setTextAnswer(String fieldKey, String value) {
-        Log.d(TAG, "setTextAnswer key=" + fieldKey + " value=" + value);
         answers.put(fieldKey, value == null ? "" : value);
         notifyDataSetChanged();
     }
@@ -523,7 +487,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         if (ph == null)
             return;
         ph.put("cover", base64);
-        Log.d(TAG, "setCoverPhoto key=" + fieldKey + " base64Length=" + base64.length());
         notifyDataSetChanged();
     }
 
@@ -560,13 +523,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     more.add(b64);
             }
         }
-
-        Log.d(TAG, "addMorePhotos key=" + fieldKey +
-                " addedCount=" + base64List.size() +
-                " coverWasEmpty=" + coverWasEmpty +
-                " newCoverLength=" + s(ph.get("cover")).length() +
-                " moreCount=" + more.size());
-
         notifyDataSetChanged();
         if (coverWasEmpty) {
             toast("First photo set as cover. Tap any thumbnail to change or remove.");
@@ -579,7 +535,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public JSONObject validateAndBuildResult() {
         try {
-            Log.d(TAG, "validateAndBuildResult() started");
             for (Map<String, Object> f : fields) {
                 String key = s(f.get("key"));
                 String label = s(f.get("label"));
@@ -588,10 +543,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
                 Object val = answers.get(key);
                 String sval = val == null ? "" : String.valueOf(val);
-
-                Log.d(TAG, "Validating key=" + key + " type=" + type +
-                        " required=" + required + " value=" + sval);
-
                 if (required) {
                     if ("CHECKBOX".equalsIgnoreCase(type) || "SWITCH".equalsIgnoreCase(type)) {
                         // ✅ Special case: "is_new" switch is never forced to ON.
@@ -657,7 +608,6 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     result.put(key, v);
                 }
             }
-            Log.d(TAG, "validateAndBuildResult() final JSON: " + result.toString());
             return result;
 
         } catch (Exception e) {
