@@ -199,8 +199,8 @@ public class LoginActivity extends AppCompatActivity {
                         // Handle rate limiting (429) with server message
                         if (err.networkResponse != null && err.networkResponse.statusCode == 429) {
                             try {
-                                String body = new String(err.networkResponse.data, "UTF-8");
-                                JSONObject errObj = new JSONObject(body);
+                                String errBody = new String(err.networkResponse.data, "UTF-8");
+                                JSONObject errObj = new JSONObject(errBody);
                                 String msg = errObj.optString("error", "Too many OTP requests. Please wait.");
                                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
                             } catch (Exception e) {
