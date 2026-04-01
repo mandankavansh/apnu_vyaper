@@ -8,7 +8,7 @@
 
     <stroke
         android:width="2dp"
-        android:color="@color/colorPrimaryLight"/>
+        android:color="@color/colorPrimary"/>
 
     <padding
         android:top="4dp"
