@@ -9,6 +9,7 @@ android {
     defaultConfig {
         applicationId = "com.anvexgroup.sheharsetu"
         minSdk = 23
+        //noinspection OldTargetApi
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"

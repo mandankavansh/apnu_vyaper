@@ -2,11 +2,10 @@ package com.anvexgroup.sheharsetu.net;
 
 public final class ApiRoutes {
     // अपने सर्वर का बेस URL भरो (trailing slash के बिना)
-    public static final String BASE_URL = "https://magenta-owl-444153.hostingersite.com/api";
+    public static final String BASE_URL = "https://highwayhelp24-7.com/shaher_setu_main/";
 
     public static final String SEND_OTP = BASE_URL + "/send_otp.php";
     public static final String VERIFY_OTP = BASE_URL + "/verify_otp.php";
-
     public static final String SAVE_PROFILE = BASE_URL + "/save_profile.php";
 
     public static final String GET_STATES = BASE_URL + "/list_states.php";
