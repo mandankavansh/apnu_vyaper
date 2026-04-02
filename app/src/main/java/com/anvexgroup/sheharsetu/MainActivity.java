@@ -730,7 +730,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_logout) {
                 doLogout();
             } else {
-                Toast.makeText(MainActivity.this, I18n.t(this, "Coming soon"), Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, termsandcondition.class));
             }
             return true;
         });
@@ -1786,16 +1786,6 @@ public class MainActivity extends AppCompatActivity {
             return Boolean.parseBoolean(s);
         } catch (Exception e) {
             return def;
-        }
-    }
-
-    private String safeJsonSnippet(JSONObject obj) {
-        try {
-            String s = obj == null ? "null" : obj.toString();
-            if (s.length() > 500) return s.substring(0, 500) + "...";
-            return s;
-        } catch (Exception e) {
-            return "json_snippet_error";
         }
     }
 
