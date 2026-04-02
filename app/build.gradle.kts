@@ -7,7 +7,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.infowave.sheharsetu"
+        applicationId = "com.Anvexgroup.sheharsetu"
         minSdk = 23
         targetSdk = 35
         versionCode = 1
