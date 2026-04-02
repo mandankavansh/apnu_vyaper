@@ -8,7 +8,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.Rect;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -168,7 +170,7 @@ LanguageManager.apply(this, lang);
         addGridSpacing(rvCategories, 12);
 
         categoryAdapter = new CategoryGridAdapter(mapToCategoryItems(categories), (item, pos) -> {
-selectedCategory = new Category(item.id, item.name, item.iconUrl, item.requiresCondition);
+            selectedCategory = new Category(item.id, item.name, item.iconUrl, item.requiresCondition);
             selectedSub = null;
             selectedCondition = null;
 
@@ -184,6 +186,7 @@ selectedCategory = new Category(item.id, item.name, item.iconUrl, item.requiresC
             if (cgCondition != null)
                 cgCondition.clearCheck();
 
+            clearConditionError();
             updateCtaState();
         });
         rvCategories.setAdapter(categoryAdapter);
@@ -193,7 +196,7 @@ selectedCategory = new Category(item.id, item.name, item.iconUrl, item.requiresC
         addGridSpacing(rvSubcategories, 12);
 
         subcategoryAdapter = new SubcategoryGridAdapter(new ArrayList<>(), (s, pos) -> {
-selectedSub = new Subcategory(s.id, s.parentId, s.name, s.iconUrl, s.requiresCondition);
+            selectedSub = new Subcategory(s.id, s.parentId, s.name, s.iconUrl, s.requiresCondition);
 
             boolean needCond = (selectedSub.requiresCondition != null)
                     ? selectedSub.requiresCondition
@@ -201,11 +204,15 @@ selectedSub = new Subcategory(s.id, s.parentId, s.name, s.iconUrl, s.requiresCon
 
             if (conditionRow != null)
                 conditionRow.setVisibility(needCond ? View.VISIBLE : View.GONE);
-            if (!needCond)
+
+            if (!needCond) {
                 selectedCondition = null;
+            }
+
             if (cgCondition != null)
                 cgCondition.clearCheck();
 
+            clearConditionError();
             updateCtaState();
         });
         rvSubcategories.setAdapter(subcategoryAdapter);
@@ -214,22 +221,27 @@ selectedSub = new Subcategory(s.id, s.parentId, s.name, s.iconUrl, s.requiresCon
     private void setupClicks() {
         if (cgCondition != null) {
             cgCondition.setOnCheckedChangeListener((group, checkedId) -> {
-                if (checkedId == R.id.chipNew)
+                if (checkedId == R.id.chipNew) {
                     selectedCondition = "new";
-                else if (checkedId == R.id.chipUsed)
+                    clearConditionError();
+                } else if (checkedId == R.id.chipUsed) {
                     selectedCondition = "used";
-                else
+                    clearConditionError();
+                } else {
                     selectedCondition = null;
-updateCtaState();
+                }
+
+                updateCtaState();
             });
         }
 
         if (btnContinue != null) {
             btnContinue.setOnClickListener(v -> {
-if (selectedCategory == null) {
+                if (selectedCategory == null) {
                     toast(I18n.t(this, "Please select a category."));
                     return;
                 }
+
                 if (selectedSub == null) {
                     toast(I18n.t(this, "Please select a subcategory."));
                     return;
@@ -240,7 +252,7 @@ if (selectedCategory == null) {
                         : selectedCategory.requiresCondition;
 
                 if (needCond && selectedCondition == null) {
-                    toast(I18n.t(this, "Please select condition (New/Used)."));
+                    showConditionError();
                     return;
                 }
 
@@ -251,13 +263,15 @@ if (selectedCategory == null) {
                 intent.putExtra("category_name", selectedCategory.name);
                 intent.putExtra("subcategory_id", selectedSub.id);
                 intent.putExtra("subcategory_name", selectedSub.name);
-                if (selectedCondition != null)
+
+                if (selectedCondition != null) {
                     intent.putExtra("condition", selectedCondition);
-startActivity(intent);
+                }
+
+                startActivity(intent);
             });
         }
     }
-
     private void loadCategoriesWithSmartCache() {
         List<CategoryCache.CachedCategory> cachedCategories = categoryCache.loadCategories();
 
@@ -561,19 +575,12 @@ for (int i = 0; i < dataArr.length(); i++) {
     private void updateCtaState() {
         boolean hasCat = selectedCategory != null;
         boolean hasSub = selectedSub != null;
-        boolean needCond = false;
-
-        if (hasCat && hasSub) {
-            needCond = (selectedSub.requiresCondition != null)
-                    ? selectedSub.requiresCondition
-                    : selectedCategory.requiresCondition;
-        }
-        boolean condOk = !needCond || (selectedCondition != null);
 
         if (btnContinue != null) {
-            btnContinue.setEnabled(hasCat && hasSub && condOk);
+            btnContinue.setEnabled(hasCat && hasSub);
+            btnContinue.setAlpha((hasCat && hasSub) ? 1f : 0.6f);
         }
-}
+    }
 
     private List<CategoryGridAdapter.Item> mapToCategoryItems(List<Category> list) {
         List<CategoryGridAdapter.Item> out = new ArrayList<>();
@@ -671,5 +678,66 @@ for (int i = 0; i < dataArr.length(); i++) {
             this.iconUrl = iconUrl;
             this.requiresCondition = requiresCondition;
         }
+    }
+    private void showConditionError() {
+        String msg = I18n.t(this, "Please select condition (New/Used).");
+
+        highlightConditionError();
+
+        if (conditionRow != null) {
+            conditionRow.setVisibility(View.VISIBLE);
+            conditionRow.requestFocus();
+
+            conditionRow.post(() -> {
+                Rect rect = new Rect(0, 0, conditionRow.getWidth(), conditionRow.getHeight());
+                conditionRow.requestRectangleOnScreen(rect, true);
+
+                conditionRow.animate().cancel();
+                conditionRow.setTranslationX(0f);
+                conditionRow.animate()
+                        .translationX(dp(8))
+                        .setDuration(60)
+                        .withEndAction(() -> conditionRow.animate()
+                                .translationX(dp(-8))
+                                .setDuration(60)
+                                .withEndAction(() -> conditionRow.animate()
+                                        .translationX(0f)
+                                        .setDuration(60)
+                                        .start()))
+                        .start();
+            });
+        }
+
+        toast(msg);
+    }
+
+    private void highlightConditionError() {
+        int errorColor = Color.parseColor("#D32F2F");
+
+        if (chipNew != null) {
+            chipNew.setChipStrokeWidth(dp(1.5f));
+            chipNew.setChipStrokeColor(ColorStateList.valueOf(errorColor));
+        }
+
+        if (chipUsed != null) {
+            chipUsed.setChipStrokeWidth(dp(1.5f));
+            chipUsed.setChipStrokeColor(ColorStateList.valueOf(errorColor));
+        }
+    }
+
+    private void clearConditionError() {
+        if (chipNew != null) {
+            chipNew.setChipStrokeWidth(0f);
+            chipNew.setChipStrokeColor(ColorStateList.valueOf(Color.TRANSPARENT));
+        }
+
+        if (chipUsed != null) {
+            chipUsed.setChipStrokeWidth(0f);
+            chipUsed.setChipStrokeColor(ColorStateList.valueOf(Color.TRANSPARENT));
+        }
+    }
+
+    private float dp(float value) {
+        return value * getResources().getDisplayMetrics().density;
     }
 }
