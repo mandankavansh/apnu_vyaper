@@ -22,10 +22,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.anvexgroup.sheharsetu" />
+                  <option name="mobileSdkAppId" value="1:151341681257:android:bcfffa01539dfc7ded30f8" />
+                  <option name="projectId" value="shaher-setu" />
+                  <option name="projectNumber" value="151341681257" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

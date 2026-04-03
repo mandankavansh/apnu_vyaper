@@ -13,5 +13,7 @@ public class termsandcondition extends AppCompatActivity {
         startActivity(new Intent(Intent.ACTION_VIEW,
                 Uri.parse("https://anvexgroup.com/Terms_and_condition.php")));
         finish();
+
+
     }
 }

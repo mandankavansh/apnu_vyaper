@@ -16,6 +16,8 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.firebase.messaging.FirebaseMessaging;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
@@ -324,23 +326,37 @@ public class LoginActivity extends AppCompatActivity {
                         int expiresIn = resp.optInt("expires_in", 0); // seconds
 
                         if (access != null && refresh != null && userId > 0 && expiresIn > 0) {
-                            // Session tokens save
                             session.saveTokens(access, refresh, userId);
                             saveAuthToPrefs(expiresIn);
 
-                            // 🔴 IMPORTANT: yahan se DynamicFormActivity ko user_id milega
                             SharedPreferences userPrefs = getSharedPreferences(SplashScreen.PREFS, MODE_PRIVATE);
                             userPrefs.edit()
                                     .putLong("user_id", userId)
                                     .apply();
 
-                            if (resendTimer != null)
-                                resendTimer.cancel();
-                            if (otpDialog != null)
-                                otpDialog.dismiss();
+                            FirebaseMessaging.getInstance().getToken()
+                                    .addOnCompleteListener(task -> {
+                                        if (!task.isSuccessful()) {
+                                            android.util.Log.e("LoginActivity", "FCM token fetch failed after login", task.getException());
+                                            return;
+                                        }
+
+                                        String fcmToken = task.getResult();
+                                        if (!android.text.TextUtils.isEmpty(fcmToken)) {
+                                            getSharedPreferences("fcm_prefs", MODE_PRIVATE)
+                                                    .edit()
+                                                    .putString("fcm_token", fcmToken)
+                                                    .putString("last_uploaded_fcm_token", "")
+                                                    .apply();
+                                        }
+                                    });
+
+                            if (resendTimer != null) resendTimer.cancel();
+                            if (otpDialog != null) otpDialog.dismiss();
                             startActivity(new Intent(this, MainActivity.class));
                             finish();
-                        } else {
+                        }
+                        else {
                             if (errorField != null)
                                 errorField.setText(I18n.t(this, "Login failed"));
                         }
