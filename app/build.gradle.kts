@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.googleServices)
 }
 
 android {
@@ -60,6 +61,9 @@ dependencies {
     // UI
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
+    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+    // ⚡ Cloud Messaging – REQUIRED for push notifications
+    implementation("com.google.firebase:firebase-messaging")
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

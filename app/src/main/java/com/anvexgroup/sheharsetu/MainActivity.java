@@ -1,7 +1,7 @@
 package com.anvexgroup.sheharsetu;
 
 import static android.widget.Toast.makeText;
-
+import com.google.firebase.messaging.FirebaseMessaging;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.text.TextUtils;
@@ -28,6 +29,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -80,6 +82,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final String TAG_FETCH_PRODUCTS = "TAG_FETCH_PRODUCTS";
 
+    private static final String PREFS_FCM = "fcm_prefs";
+    private static final String KEY_FCM_TOKEN = "fcm_token";
+    private static final String KEY_LAST_UPLOADED_FCM_TOKEN = "last_uploaded_fcm_token";
+
     // ===== Views (Header) =====
     private ImageView btnDrawer, btnVoiceSearch;
     private TextInputEditText etSearch;
@@ -99,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private final android.os.Handler searchHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable searchRunnable;
     private boolean ignoreSearchTextChanges = false;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
 
     // ===== Drawer =====
     private DrawerLayout drawerLayout;
@@ -171,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
         productCache = new android.util.LruCache<>(20);
         initCachedUserData();
 
+
         locationSettingsLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartIntentSenderForResult(),
                 result -> {
@@ -192,6 +200,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_main);
+
+        setupNotificationPermissionLauncher();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            askNotificationPermissionIfNeeded();
+        }
+        fetchFcmToken();
 
         View viewStatusBarBackground = findViewById(R.id.viewStatusBarBackground);
         View viewNavBarBackground = findViewById(R.id.viewNavBarBackground);
@@ -348,6 +362,94 @@ public class MainActivity extends AppCompatActivity {
             });
 
         }
+    }
+
+    private void fetchFcmToken() {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.e(TAG, "FCM token fetch failed", task.getException());
+                        return;
+                    }
+
+                    String token = task.getResult();
+                    Log.d(TAG, "FCM TOKEN = " + token);
+
+                    if (TextUtils.isEmpty(token)) {
+                        Log.e(TAG, "FCM token is empty");
+                        return;
+                    }
+
+                    saveFcmTokenLocally(token);
+                    uploadFcmTokenToServer(token);
+                });
+    }
+
+    private void saveFcmTokenLocally(@NonNull String token) {
+        SharedPreferences sp = getSharedPreferences(PREFS_FCM, MODE_PRIVATE);
+        sp.edit().putString(KEY_FCM_TOKEN, token).apply();
+    }
+
+    private String getLastUploadedFcmToken() {
+        SharedPreferences sp = getSharedPreferences(PREFS_FCM, MODE_PRIVATE);
+        return sp.getString(KEY_LAST_UPLOADED_FCM_TOKEN, null);
+    }
+
+    private void setLastUploadedFcmToken(@NonNull String token) {
+        SharedPreferences sp = getSharedPreferences(PREFS_FCM, MODE_PRIVATE);
+        sp.edit().putString(KEY_LAST_UPLOADED_FCM_TOKEN, token).apply();
+    }
+
+    private void uploadFcmTokenToServer(@NonNull String token) {
+        String accessToken = session != null ? session.getAccessToken() : null;
+
+        if (TextUtils.isEmpty(accessToken)) {
+            Log.d(TAG, "Skipping FCM upload: user not logged in");
+            return;
+        }
+
+        String lastUploaded = getLastUploadedFcmToken();
+        if (token.equals(lastUploaded)) {
+            Log.d(TAG, "Skipping FCM upload: same token already uploaded");
+            return;
+        }
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("token", token);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to build FCM JSON body", e);
+            return;
+        }
+
+        JsonObjectRequest req = new JsonObjectRequest(
+                Request.Method.POST,
+                ApiRoutes.FCM_TOKEN,
+                body,
+                response -> {
+                    Log.d(TAG, "FCM token upload success: " + response);
+                    setLastUploadedFcmToken(token);
+                },
+                error -> Log.e(TAG, "FCM token upload failed: " + buildVolleyError(error), error)
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                HashMap<String, String> headers = new HashMap<>();
+                headers.put("Authorization", "Bearer " + accessToken);
+                headers.put("Content-Type", "application/json");
+                headers.put("Accept", "application/json");
+                return headers;
+            }
+        };
+
+        req.setShouldCache(false);
+        req.setRetryPolicy(new DefaultRetryPolicy(
+                10000,
+                1,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+        VolleySingleton.getInstance(this).add(req);
     }
 
     // ================= Helpers =================
@@ -641,6 +743,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
     }
+
     private void applyDrawerWidth60Percent() {
         if (navigationView == null) return;
 
@@ -652,6 +755,7 @@ public class MainActivity extends AppCompatActivity {
         params.width = drawerWidth;
         navigationView.setLayoutParams(params);
     }
+
     private void setupAppDrawer() {
         drawerLayout = findViewById(R.id.drawerLayout);
         navigationView = findViewById(R.id.navView);
@@ -743,6 +847,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void doLogout() {
         getSharedPreferences("user", MODE_PRIVATE).edit().clear().apply();
+        getSharedPreferences(PREFS_FCM, MODE_PRIVATE).edit().clear().apply();
+
         makeText(this, I18n.t(this, "Logged out"), Toast.LENGTH_SHORT).show();
 
         Intent i = new Intent(this, LanguageSelection.class);
@@ -839,7 +945,6 @@ public class MainActivity extends AppCompatActivity {
 
             resetPagination();
 
-            // Important: stop any old product requests so they do not overwrite the subcategory screen
             VolleySingleton.getInstance(this).getQueue().cancelAll(TAG_FETCH_PRODUCTS);
             productsInFlight = false;
             lastProductsUrl = null;
@@ -1882,5 +1987,30 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(Intent.ACTION_VIEW,
                     android.net.Uri.parse("https://play.google.com/store/apps/details?id=" + pkg)));
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void askNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Notification permission already granted");
+            return;
+        }
+
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+    }
+    private void setupNotificationPermissionLauncher() {
+        notificationPermissionLauncher =
+                registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                    if (isGranted) {
+                        Log.d(TAG, "Notification permission granted");
+                    } else {
+                        Log.w(TAG, "Notification permission denied");
+                    }
+                });
     }
 }

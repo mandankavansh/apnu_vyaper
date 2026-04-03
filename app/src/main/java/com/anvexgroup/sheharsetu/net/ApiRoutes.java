@@ -13,6 +13,8 @@ public final class ApiRoutes {
 
     public static final String GET_LANGUAGES = BASE_URL + "/list_languages.php";
 
+    public static final String FCM_TOKEN = BASE_URL + "/save_fcm_token.php";
+
     public static final String GET_CATEGORIES = BASE_URL + "/list_categories.php";
     public static final String GET_SUBCATEGORIES = BASE_URL + "/list_subcategories.php";
     public static final String GET_PRODUCTS = BASE_URL + "/list_products.php";
