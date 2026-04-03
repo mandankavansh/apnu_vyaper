@@ -249,7 +249,7 @@
                             app:boxCornerRadiusBottomEnd="12dp"
                             app:boxCornerRadiusTopStart="12dp"
                             app:boxCornerRadiusTopEnd="12dp"
-                            app:startIconDrawable="@drawable/ic_location_24px"
+                            app:startIconDrawable="@drawable/ic_location_24"
                             app:startIconTint="@color/colorPrimary">
 
                             <AutoCompleteTextView

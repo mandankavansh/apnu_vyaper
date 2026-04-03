@@ -73,9 +73,8 @@
 
                                 <!-- App Name + Subtitle -->
                                 <LinearLayout
-                                    android:layout_width="0dp"
+                                    android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_weight="1"
                                     android:orientation="vertical">
 
                                     <TextView
@@ -99,28 +98,6 @@
                                         android:fontFamily="sans-serif-medium"
                                         android:letterSpacing="0.12" />
                                 </LinearLayout>
-
-                                <!-- Notification Icon -->
-                                <ImageView
-                                    android:id="@+id/topImage"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:layout_marginEnd="8dp"
-                                    android:background="@drawable/bg_icon_circle"
-                                    android:padding="10dp"
-                                    android:src="@drawable/ic_bell_vector"
-                                    app:tint="@color/white" />
-
-                                <!-- Profile Icon -->
-                                <ImageView
-                                    android:id="@+id/headerOverlay"
-                                    android:layout_width="40dp"
-                                    android:layout_height="40dp"
-                                    android:background="@drawable/bg_icon_circle"
-                                    android:padding="10dp"
-                                    android:src="@drawable/ic_person_24px"
-                                    app:tint="@color/white" />
-
                             </LinearLayout>
 
                             <!-- ===== LOCATION ROW ===== -->
@@ -140,7 +117,7 @@
                                 <ImageView
                                     android:layout_width="16dp"
                                     android:layout_height="16dp"
-                                    android:src="@drawable/ic_location_24px"
+                                    android:src="@drawable/ic_location_24"
                                     app:tint="#AAFFFFFF" />
 
                                 <TextView
@@ -418,6 +395,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent">
 
+                                <!-- Hamburger Menu -->
                                 <ImageView
                                     android:id="@+id/btnDrawer"
                                     android:layout_width="48dp"
@@ -442,7 +420,7 @@
                                     app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintStart_toEndOf="@id/btnDrawer"
                                     app:layout_constraintTop_toTopOf="parent"
-                                    app:layout_constraintEnd_toStartOf="@id/btnSearchSmall">
+                                    app:layout_constraintEnd_toStartOf="@id/topImage">
 
                                     <TextView
                                         android:layout_width="wrap_content"
@@ -464,15 +442,29 @@
 
                                 </LinearLayout>
 
+                                <!-- Notification (Always Clickable) -->
                                 <ImageView
-                                    android:id="@+id/btnSearchSmall"
-                                    android:layout_width="48dp"
-                                    android:layout_height="48dp"
+                                    android:id="@+id/topImage"
+                                    android:layout_width="38dp"
+                                    android:layout_height="38dp"
+                                    android:layout_marginEnd="10dp"
+                                    android:background="@drawable/bg_icon_circle"
+                                    android:padding="9dp"
+                                    android:src="@drawable/ic_bell_vector"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintEnd_toStartOf="@id/headerOverlay"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:tint="@color/white" />
+
+                                <!-- Profile (Always Clickable) -->
+                                <ImageView
+                                    android:id="@+id/headerOverlay"
+                                    android:layout_width="38dp"
+                                    android:layout_height="38dp"
                                     android:layout_marginEnd="12dp"
-                                    android:background="?attr/selectableItemBackgroundBorderless"
-                                    android:padding="12dp"
-                                    android:src="@drawable/ic_search_24"
-                                    android:visibility="gone"
+                                    android:background="@drawable/bg_icon_circle"
+                                    android:padding="9dp"
+                                    android:src="@drawable/ic_person_24px"
                                     app:layout_constraintBottom_toBottomOf="parent"
                                     app:layout_constraintEnd_toEndOf="parent"
                                     app:layout_constraintTop_toTopOf="parent"
@@ -606,7 +598,7 @@
                                         app:chipStrokeWidth="1dp"
                                         app:chipStrokeColor="#3316A085"
                                         app:chipCornerRadius="20dp"
-                                        app:chipIcon="@drawable/ic_location_24px"
+                                        app:chipIcon="@drawable/ic_location_24"
                                         app:chipIconTint="@color/teal_premium"
                                         app:chipIconSize="18dp"
                                         app:iconStartPadding="10dp"
@@ -697,7 +689,7 @@
             android:fitsSystemWindows="false"
             app:headerLayout="@layout/av_header_main"
             app:menu="@menu/nav_main"
-            app:itemIconTint="@color/colorTextSecondary"
+            app:itemIconTint="@null"
             app:itemIconSize="22dp"
             app:itemTextColor="@color/colorTextPrimary"
             app:itemHorizontalPadding="20dp"

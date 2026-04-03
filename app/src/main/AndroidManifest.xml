@@ -24,6 +24,9 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="35">
         <activity
+            android:name=".WeatherActivity"
+            android:exported="false" />
+        <activity
             android:name=".termsandcondition"
             android:exported="false" />
         <activity

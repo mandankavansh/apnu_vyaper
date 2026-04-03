@@ -314,11 +314,10 @@ public class MainActivity extends AppCompatActivity {
         fetchUserProfileOnStartup();
 
         AppBarLayout appBarLayout = findViewById(R.id.appBarLayout);
-        ImageView btnSearchSmall = findViewById(R.id.btnSearchSmall);
         View tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
 
-        if (appBarLayout != null && btnSearchSmall != null) {
+        if (appBarLayout != null) {
             appBarLayout.addOnOffsetChangedListener((appBarLayout1, verticalOffset) -> {
                 int scrollRange = appBarLayout1.getTotalScrollRange();
                 if (scrollRange == 0) return;
@@ -327,15 +326,11 @@ public class MainActivity extends AppCompatActivity {
 
                 if (fraction > 0.8f) {
                     float alpha = (fraction - 0.8f) * 5f;
-                    btnSearchSmall.setVisibility(View.VISIBLE);
-                    btnSearchSmall.setAlpha(alpha);
                     if (tvToolbarTitle != null) {
                         tvToolbarTitle.setVisibility(View.VISIBLE);
                         tvToolbarTitle.setAlpha(alpha);
                     }
                 } else {
-                    btnSearchSmall.setVisibility(View.GONE);
-                    btnSearchSmall.setAlpha(0f);
                     if (tvToolbarTitle != null) {
                         tvToolbarTitle.setVisibility(View.GONE);
                         tvToolbarTitle.setAlpha(0f);
@@ -352,19 +347,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            btnSearchSmall.setOnClickListener(v -> {
-                appBarLayout.setExpanded(true, true);
-                if (etSearch != null) {
-                    etSearch.requestFocus();
-                    android.view.inputmethod.InputMethodManager imm =
-                            (android.view.inputmethod.InputMethodManager)
-                                    getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-                    if (imm != null) {
-                        imm.showSoftInput(etSearch,
-                                android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-                    }
-                }
-            });
         }
     }
 
@@ -397,7 +379,14 @@ public class MainActivity extends AppCompatActivity {
         etSearch = findViewById(R.id.etSearch);
         tvLocation = findViewById(R.id.tvlocation);
 
-        ImageView headerOverlay = findViewById(R.id.headerOverlay);
+        ImageView topImage = findViewById(R.id.topImage); // Notification
+        ImageView headerOverlay = findViewById(R.id.headerOverlay); // Profile
+
+        if (topImage != null) {
+            topImage.setOnClickListener(v ->
+                    Toast.makeText(MainActivity.this, I18n.t(MainActivity.this, "Notifications coming soon!"), Toast.LENGTH_SHORT).show());
+        }
+
         if (headerOverlay != null) {
             headerOverlay.setOnClickListener(v ->
                     startActivity(new Intent(MainActivity.this, ProfileActivity.class)));
@@ -726,6 +715,9 @@ public class MainActivity extends AppCompatActivity {
 
             } else if (id == R.id.nav_about) {
                 startActivity(new Intent(MainActivity.this, AboutUsActivity.class));
+
+            } else if (id == R.id.nav_weather) {
+                startActivity(new Intent(MainActivity.this, WeatherActivity.class));
 
             } else if (id == R.id.nav_logout) {
                 doLogout();
@@ -1363,6 +1355,9 @@ public class MainActivity extends AppCompatActivity {
         dialog.setContentView(sheet);
 
         ChipGroup chipGroup = sheet.findViewById(R.id.chipGroupKm);
+        View layoutCustomKm = sheet.findViewById(R.id.layoutCustomKm);
+        TextInputEditText etCustomKm = sheet.findViewById(R.id.etCustomKm);
+        com.google.android.material.button.MaterialButton btnApplyCustomKm = sheet.findViewById(R.id.btnApplyCustomKm);
 
         if (selectedRadiusKm == null) {
             ((Chip) sheet.findViewById(R.id.chipAll)).setChecked(true);
@@ -1376,11 +1371,29 @@ public class MainActivity extends AppCompatActivity {
             ((Chip) sheet.findViewById(R.id.chip50km)).setChecked(true);
         } else if (selectedRadiusKm == 100) {
             ((Chip) sheet.findViewById(R.id.chip100km)).setChecked(true);
+        } else {
+            // Custom value
+            ((Chip) sheet.findViewById(R.id.chipCustom)).setChecked(true);
+            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.VISIBLE);
+            if (etCustomKm != null) etCustomKm.setText(String.valueOf(selectedRadiusKm));
         }
 
         chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (checkedIds.isEmpty()) return;
             int checkedId = checkedIds.get(0);
+
+            if (checkedId == R.id.chipCustom) {
+                if (layoutCustomKm != null) {
+                    layoutCustomKm.setVisibility(View.VISIBLE);
+                    // Set focus and show keyboard
+                    if (etCustomKm != null) {
+                        etCustomKm.requestFocus();
+                    }
+                }
+                return; // Don't dismiss yet
+            }
+
+            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.GONE);
 
             if (checkedId == R.id.chipAll) {
                 selectedRadiusKm = null;
@@ -1406,6 +1419,36 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        if (btnApplyCustomKm != null) {
+            btnApplyCustomKm.setOnClickListener(v -> {
+                String val = etCustomKm.getText() != null ? etCustomKm.getText().toString().trim() : "";
+                if (TextUtils.isEmpty(val)) {
+                    etCustomKm.setError(I18n.t(this, "Enter value"));
+                    return;
+                }
+
+                try {
+                    int km = Integer.parseInt(val);
+                    if (km <= 0) {
+                        etCustomKm.setError(I18n.t(this, "Must be > 0"));
+                        return;
+                    }
+
+                    selectedRadiusKm = km;
+                    updateKmChipText();
+                    dialog.dismiss();
+
+                    if (userLat == null || userLng == null) {
+                        fetchUserLocationThenFilter();
+                    } else {
+                        applyKmFilter();
+                    }
+                } catch (Exception e) {
+                    etCustomKm.setError(I18n.t(this, "Invalid number"));
+                }
+            });
+        }
 
         dialog.show();
     }
