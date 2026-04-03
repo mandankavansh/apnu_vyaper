@@ -53,9 +53,9 @@
                 android:icon="@drawable/ic_star_24"/>
 
             <item
-                android:id="@+id/nav_facebook"
-                android:title="Facebook"
-                android:icon="@drawable/ic_language_24"/>
+                android:id="@+id/nav_instagram"
+                android:title="Instagram"
+                android:icon="@drawable/ic_instagram_24"/>
         </menu>
     </item>
 

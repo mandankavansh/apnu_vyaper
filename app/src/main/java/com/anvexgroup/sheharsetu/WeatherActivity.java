@@ -94,9 +94,11 @@ public class WeatherActivity extends AppCompatActivity {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        checkLocationPermission();
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> checkLocationPermission());
+        }
 
-        btnRefresh.setOnClickListener(v -> checkLocationPermission());
+        checkLocationPermission();
 
         startFloatingAnimation();
     }
@@ -131,7 +133,9 @@ public class WeatherActivity extends AppCompatActivity {
 
         // Set current date
         SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd MMMM", Locale.getDefault());
-        tvDate.setText(sdf.format(new Date()));
+        if (tvDate != null) {
+            tvDate.setText(sdf.format(new Date()));
+        }
     }
 
     private void setupToolbar() {
@@ -162,6 +166,7 @@ public class WeatherActivity extends AppCompatActivity {
         try {
             fusedLocationClient.getLastLocation()
                     .addOnSuccessListener(this, location -> {
+                        if (isFinishing() || isDestroyed()) return;
                         if (location != null) {
                             fetchWeatherData(location.getLatitude(), location.getLongitude());
                         } else {
@@ -170,6 +175,7 @@ public class WeatherActivity extends AppCompatActivity {
                         }
                     })
                     .addOnFailureListener(this, e -> {
+                        if (isFinishing() || isDestroyed()) return;
                         if (progressBar != null) progressBar.setVisibility(View.GONE);
                         Log.e(TAG, "Location error: " + e.getMessage());
                         Toast.makeText(this, "Location error. Ensure GPS is on.", Toast.LENGTH_SHORT).show();
@@ -187,14 +193,16 @@ public class WeatherActivity extends AppCompatActivity {
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
+                    if (isFinishing() || isDestroyed()) return;
                     if (progressBar != null) progressBar.setVisibility(View.GONE);
                     parseAndDisplayWeather(response);
                 },
                 error -> {
+                    if (isFinishing() || isDestroyed()) return;
                     if (progressBar != null) progressBar.setVisibility(View.GONE);
                     int status = error.networkResponse != null ? error.networkResponse.statusCode : 0;
                     if (status == 401) {
-                        Toast.makeText(this, "API Key is activating. Please try again in an hour.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "API Key is activating. Please try again later.", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(this, "Failed to fetch weather data.", Toast.LENGTH_SHORT).show();
                     }
@@ -224,14 +232,14 @@ public class WeatherActivity extends AppCompatActivity {
             String iconCode = weather.getString("icon");
 
             // Update UI
-            tvCityName.setText(city);
-            tvTemperature.setText(Math.round(temp) + "°");
-            tvCondition.setText(capitalize(description));
-            tvFeelsLike.setText(I18n.t(this, "Feels like") + " " + Math.round(feelsLike) + "°");
-            tvHumidity.setText(humidity + "%");
-            tvWindSpeed.setText(windSpeed + " km/h");
-            tvPressure.setText(pressure + " hPa");
-            tvVisibility.setText(visibility + " km");
+            if (tvCityName != null) tvCityName.setText(city);
+            if (tvTemperature != null) tvTemperature.setText(Math.round(temp) + "°");
+            if (tvCondition != null) tvCondition.setText(capitalize(description));
+            if (tvFeelsLike != null) tvFeelsLike.setText(I18n.t(this, "Feels like") + " " + Math.round(feelsLike) + "°");
+            if (tvHumidity != null) tvHumidity.setText(humidity + "%");
+            if (tvWindSpeed != null) tvWindSpeed.setText(windSpeed + " km/h");
+            if (tvPressure != null) tvPressure.setText(pressure + " hPa");
+            if (tvVisibility != null) tvVisibility.setText(visibility + " km");
 
             updateWeatherIcon(iconCode);
 
@@ -257,14 +265,16 @@ public class WeatherActivity extends AppCompatActivity {
         keys.add("LOCAL UPDATES & FORECAST");
 
         I18n.prefetch(this, keys, () -> {
-            tvCityName.setText(I18n.t(this, tvCityName.getText().toString()));
-            tvCondition.setText(I18n.t(this, tvCondition.getText().toString()));
+            if (isFinishing() || isDestroyed()) return;
+            if (tvCityName != null) tvCityName.setText(I18n.t(this, tvCityName.getText().toString()));
+            if (tvCondition != null) tvCondition.setText(I18n.t(this, tvCondition.getText().toString()));
             if (tvGreeting != null) tvGreeting.setText(I18n.t(this, "Weather"));
             if (tvGreetingSub != null) tvGreetingSub.setText(I18n.t(this, "LOCAL UPDATES & FORECAST"));
         });
     }
 
     private void updateWeatherIcon(String iconCode) {
+        if (ivWeatherIcon == null) return;
         // Icon codes from OWM: 01d, 02d, etc.
         // For now using the generic ic_weather_24, but logic can be added here
         // if more specific vectors are available.

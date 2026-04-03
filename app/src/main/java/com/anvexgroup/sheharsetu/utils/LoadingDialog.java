@@ -181,18 +181,31 @@ public class LoadingDialog {
         }
 
         if (dialog != null && !dialog.isShowing()) {
-            currentIconIndex = 0;
-            if (ivLoaderIcon != null) {
-                ivLoaderIcon.setImageResource(LOADER_ICONS[0]);
-                ivLoaderIcon.setRotation(0f);
-                ivLoaderIcon.setScaleX(1f);
-                ivLoaderIcon.setScaleY(1f);
-                ivLoaderIcon.setAlpha(1f);
+            Context context = dialog.getContext();
+            if (context instanceof android.app.Activity) {
+                android.app.Activity activity = (android.app.Activity) context;
+                if (activity.isFinishing() || activity.isDestroyed()) {
+                    return;
+                }
             }
 
-            dialog.show();
-            startPulseAnimation();
-            startIconCycling();
+            try {
+                currentIconIndex = 0;
+                if (ivLoaderIcon != null) {
+                    ivLoaderIcon.setImageResource(LOADER_ICONS[0]);
+                    ivLoaderIcon.setRotation(0f);
+                    ivLoaderIcon.setScaleX(1f);
+                    ivLoaderIcon.setScaleY(1f);
+                    ivLoaderIcon.setAlpha(1f);
+                }
+
+                dialog.show();
+                startPulseAnimation();
+                startIconCycling();
+            } catch (Exception e) {
+                // Ignore crashes on OEM-specific frameworks (e.g. Vivo)
+                android.util.Log.e("LoadingDialog", "Failed to show dialog: " + e.getMessage());
+            }
         }
     }
 
@@ -204,9 +217,18 @@ public class LoadingDialog {
         stopIconCycling();
         if (dialog != null && dialog.isShowing()) {
             try {
+                Context context = dialog.getContext();
+                if (context instanceof android.app.Activity) {
+                    android.app.Activity activity = (android.app.Activity) context;
+                    if (activity.isFinishing() || activity.isDestroyed()) {
+                        dialog.dismiss(); // Still try to dismiss
+                        return;
+                    }
+                }
                 dialog.dismiss();
             } catch (Exception e) {
                 // Handle edge case where activity is finishing
+                android.util.Log.e("LoadingDialog", "Failed to dismiss dialog: " + e.getMessage());
             }
         }
     }
@@ -274,6 +296,13 @@ public class LoadingDialog {
      * Show loader with custom message using static instance
      */
     public static void showLoading(@NonNull Context context, @Nullable String message) {
+        if (context instanceof android.app.Activity) {
+            android.app.Activity activity = (android.app.Activity) context;
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return;
+            }
+        }
+        
         hideLoading(); // Dismiss any existing
         staticInstance = new LoadingDialog(context);
         staticInstance.show(message);

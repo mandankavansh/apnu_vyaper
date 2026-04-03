@@ -823,6 +823,15 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_weather) {
                 startActivity(new Intent(MainActivity.this, WeatherActivity.class));
 
+            } else if (id == R.id.nav_youtube) {
+                openUrl("https://www.youtube.com/@AnvexGroup");
+
+            } else if (id == R.id.nav_whatsapp) {
+                openWhatsApp("+91 6354355617");
+
+            } else if (id == R.id.nav_instagram) {
+                openUrl("https://www.instagram.com/anvexgroup?igsh=bmY4NGNnYnE3ejV1");
+
             } else if (id == R.id.nav_logout) {
                 doLogout();
             } else {
@@ -1132,6 +1141,12 @@ public class MainActivity extends AppCompatActivity {
                                 int catId = o.optInt("id", 0);
                                 m.put("id", catId);
                                 String nameEn = o.optString("name", "");
+
+                                // Patch misspelling from API
+                                if ("mobail".equalsIgnoreCase(nameEn)) {
+                                    nameEn = "Mobile";
+                                }
+                                
                                 m.put("name", nameEn);
 
                                 String iconUrl = o.optString("icon", "");
@@ -1141,6 +1156,13 @@ public class MainActivity extends AppCompatActivity {
 
                                 iconUrl = makeAbsoluteImageUrl(iconUrl);
                                 m.put("iconUrl", iconUrl);
+
+                                // Use the perfect smart phone vector
+                                if ("Mobile".equalsIgnoreCase(nameEn)) {
+                                    m.put("iconRes", R.drawable.ic_smartphone_24);
+                                    m.put("iconUrl", "");
+                                }
+
                                 m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
 
                                 categories.add(m);
@@ -1236,6 +1258,12 @@ public class MainActivity extends AppCompatActivity {
                                 m.put("id", subId);
                                 m.put("category_id", o.optInt("category_id", categoryId));
                                 String subName = o.optString("name", "");
+
+                                // Patch misspelling from API
+                                if ("mobail".equalsIgnoreCase(subName)) {
+                                    subName = "Mobile";
+                                }
+                                
                                 m.put("name", subName);
 
                                 String iconUrl = o.optString("icon", "");
@@ -1245,6 +1273,13 @@ public class MainActivity extends AppCompatActivity {
 
                                 iconUrl = makeAbsoluteImageUrl(iconUrl);
                                 m.put("iconUrl", iconUrl);
+
+                                // Use the perfect smart phone vector
+                                if ("Mobile".equalsIgnoreCase(subName)) {
+                                    m.put("iconRes", R.drawable.ic_smartphone_24);
+                                    m.put("iconUrl", "");
+                                }
+
                                 m.put("hasNewOld", o.optInt("hasNewOld", 0) == 1);
 
                                 subs.add(m);
@@ -2012,5 +2047,30 @@ public class MainActivity extends AppCompatActivity {
                         Log.w(TAG, "Notification permission denied");
                     }
                 });
+    }
+
+    private void openUrl(String url) {
+        try {
+            Intent i = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
+            startActivity(i);
+        } catch (Exception e) {
+            Toast.makeText(this, I18n.t(this, "Could not open link"), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openWhatsApp(String phoneRaw) {
+        String phone = phoneRaw.replace("+", "").replace(" ", "");
+        android.net.Uri uri = android.net.Uri.parse("https://wa.me/" + phone);
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        try {
+            intent.setPackage("com.whatsapp");
+            startActivity(intent);
+        } catch (Exception e) {
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+            } catch (Exception ex) {
+                Toast.makeText(this, I18n.t(this, "WhatsApp is not available."), Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

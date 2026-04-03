@@ -73,7 +73,6 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
     private TextView tvTitle;
     private RecyclerView rvForm;
     private Button btnSubmit;
-    private androidx.appcompat.widget.Toolbar toolbar;
 
     private DynamicFormAdapter adapter;
 
@@ -194,7 +193,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         etVillageCity.setOnFocusChangeListener(scrollToFocus);
 
         // Setup toolbar with back navigation
-        toolbar = findViewById(R.id.toolbar);
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         if (toolbar != null) {
             setSupportActionBar(toolbar);
             toolbar.setNavigationOnClickListener(v -> onBackPressed());
@@ -432,6 +431,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                         boolean success = response.optBoolean("success", false);
                         String msg = response.optString("message", "");
                         if (!success) {
+                            LoadingDialog.hideLoading();
                             toast(TextUtils.isEmpty(msg) ? "Failed to load form schema" : msg);
                             Log.e(TAG, "Backend returned success=false for schema, aborting.");
                             btnSubmit.setEnabled(false);
@@ -440,6 +440,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
                         JSONObject data = response.optJSONObject("data");
                         if (data == null) {
+                            LoadingDialog.hideLoading();
                             toast("Invalid schema response (data=null).");
                             Log.e(TAG, "Response data is null");
                             btnSubmit.setEnabled(false);
@@ -468,6 +469,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                         }
                         JSONArray schemaArr = data.optJSONArray("schema");
                         if (schemaArr == null) {
+                            LoadingDialog.hideLoading();
                             toast("No schema array returned.");
                             Log.e(TAG, "schemaArr is null");
                             btnSubmit.setEnabled(false);
@@ -521,12 +523,11 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                             schema.add(m);
                         }
                         if (schema.isEmpty()) {
-                            toast("Empty schema received from server.");
-                            Log.e(TAG, "Schema list is empty, not setting adapter");
-                            btnSubmit.setEnabled(false);
-                        } else {
-                            translateSchemaAndBind(schema);
+                            Log.w(TAG, "Empty schema received from server. Applying fallback schema.");
+                            schema = createFallbackSchema(categoryName);
                         }
+                        
+                        translateSchemaAndBind(schema);
 
                     } catch (Exception e) {
                         LoadingDialog.hideLoading();
@@ -561,6 +562,48 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
         };
         VolleySingleton.getInstance(this).add(req);
+    }
+
+    private java.util.ArrayList<Map<String, Object>> createFallbackSchema(String catName) {
+        java.util.ArrayList<Map<String, Object>> fallback = new java.util.ArrayList<>();
+
+        Map<String, Object> titleMap = new HashMap<>();
+        titleMap.put("key", "title");
+        titleMap.put("label", "Ad Title");
+        titleMap.put("hint", "e.g. " + ("Mobile".equalsIgnoreCase(catName) ? "iPhone 13 Pro Max" : "Item name"));
+        titleMap.put("type", "TEXT");
+        titleMap.put("required", true);
+        titleMap.put("unit", "");
+        fallback.add(titleMap);
+
+        Map<String, Object> descMap = new HashMap<>();
+        descMap.put("key", "description");
+        descMap.put("label", "Description");
+        descMap.put("hint", "Describe what you are selling");
+        descMap.put("type", "TEXTAREA");
+        descMap.put("required", true);
+        descMap.put("unit", "");
+        fallback.add(descMap);
+
+        Map<String, Object> priceMap = new HashMap<>();
+        priceMap.put("key", "price");
+        priceMap.put("label", "Price");
+        priceMap.put("hint", "Set your price");
+        priceMap.put("type", "NUMBER");
+        priceMap.put("required", true);
+        priceMap.put("unit", "");
+        fallback.add(priceMap);
+
+        Map<String, Object> photoMap = new HashMap<>();
+        photoMap.put("key", "listing_photos");
+        photoMap.put("label", "Photos");
+        photoMap.put("hint", "Upload photos of your item");
+        photoMap.put("type", "PHOTO_GALLERY");
+        photoMap.put("required", true);
+        photoMap.put("unit", "");
+        fallback.add(photoMap);
+
+        return fallback;
     }
 
     /**
