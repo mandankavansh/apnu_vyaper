@@ -524,7 +524,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                         }
                         if (schema.isEmpty()) {
                             Log.w(TAG, "Empty schema received from server. Applying fallback schema.");
-                            schema = createFallbackSchema(categoryName);
+
                         }
                         
                         translateSchemaAndBind(schema);
@@ -564,47 +564,47 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         VolleySingleton.getInstance(this).add(req);
     }
 
-    private java.util.ArrayList<Map<String, Object>> createFallbackSchema(String catName) {
-        java.util.ArrayList<Map<String, Object>> fallback = new java.util.ArrayList<>();
-
-        Map<String, Object> titleMap = new HashMap<>();
-        titleMap.put("key", "title");
-        titleMap.put("label", "Ad Title");
-        titleMap.put("hint", "e.g. " + ("Mobile".equalsIgnoreCase(catName) ? "iPhone 13 Pro Max" : "Item name"));
-        titleMap.put("type", "TEXT");
-        titleMap.put("required", true);
-        titleMap.put("unit", "");
-        fallback.add(titleMap);
-
-        Map<String, Object> descMap = new HashMap<>();
-        descMap.put("key", "description");
-        descMap.put("label", "Description");
-        descMap.put("hint", "Describe what you are selling");
-        descMap.put("type", "TEXTAREA");
-        descMap.put("required", true);
-        descMap.put("unit", "");
-        fallback.add(descMap);
-
-        Map<String, Object> priceMap = new HashMap<>();
-        priceMap.put("key", "price");
-        priceMap.put("label", "Price");
-        priceMap.put("hint", "Set your price");
-        priceMap.put("type", "NUMBER");
-        priceMap.put("required", true);
-        priceMap.put("unit", "");
-        fallback.add(priceMap);
-
-        Map<String, Object> photoMap = new HashMap<>();
-        photoMap.put("key", "listing_photos");
-        photoMap.put("label", "Photos");
-        photoMap.put("hint", "Upload photos of your item");
-        photoMap.put("type", "PHOTO_GALLERY");
-        photoMap.put("required", true);
-        photoMap.put("unit", "");
-        fallback.add(photoMap);
-
-        return fallback;
-    }
+//    private java.util.ArrayList<Map<String, Object>> createFallbackSchema(String catName) {
+//        java.util.ArrayList<Map<String, Object>> fallback = new java.util.ArrayList<>();
+//
+//        Map<String, Object> titleMap = new HashMap<>();
+//        titleMap.put("key", "title");
+//        titleMap.put("label", "Ad Title");
+//        titleMap.put("hint", "e.g. " + ("Mobile".equalsIgnoreCase(catName) ? "iPhone 13 Pro Max" : "Item name"));
+//        titleMap.put("type", "TEXT");
+//        titleMap.put("required", true);
+//        titleMap.put("unit", "");
+//        fallback.add(titleMap);
+//
+//        Map<String, Object> descMap = new HashMap<>();
+//        descMap.put("key", "description");
+//        descMap.put("label", "Description");
+//        descMap.put("hint", "Describe what you are selling");
+//        descMap.put("type", "TEXTAREA");
+//        descMap.put("required", true);
+//        descMap.put("unit", "");
+//        fallback.add(descMap);
+//
+//        Map<String, Object> priceMap = new HashMap<>();
+//        priceMap.put("key", "price");
+//        priceMap.put("label", "Price");
+//        priceMap.put("hint", "Set your price");
+//        priceMap.put("type", "NUMBER");
+//        priceMap.put("required", true);
+//        priceMap.put("unit", "");
+//        fallback.add(priceMap);
+//
+//        Map<String, Object> photoMap = new HashMap<>();
+//        photoMap.put("key", "listing_photos");
+//        photoMap.put("label", "Photos");
+//        photoMap.put("hint", "Upload photos of your item");
+//        photoMap.put("type", "PHOTO_GALLERY");
+//        photoMap.put("required", true);
+//        photoMap.put("unit", "");
+//        fallback.add(photoMap);
+//
+//        return fallback;
+//    }
 
     /**
      * Fetch existing listing data and pre-fill the form for edit mode.
