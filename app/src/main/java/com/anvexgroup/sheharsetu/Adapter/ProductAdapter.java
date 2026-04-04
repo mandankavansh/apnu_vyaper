@@ -3,16 +3,19 @@ package com.anvexgroup.sheharsetu.Adapter;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
 import com.anvexgroup.sheharsetu.ProductDetail;
@@ -39,8 +42,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     public ProductAdapter(Context ctx) {
         this.ctx = ctx;
     }
-
-
 
     public void setOnContactClickListener(OnContactClickListener l) {
         this.contactClickListener = l;
@@ -93,7 +94,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
             displayPrice = price.startsWith("₹") ? price : "₹ " + price;
         }
         h.price.setText(displayPrice);
-        
+
         String displayCity = TextUtils.isEmpty(city) ? "" : "📍 " + city;
         String distance = getString(p, "distance", "");
         if (!TextUtils.isEmpty(distance) && !distance.equals("0") && !distance.equals("null")) {
@@ -106,7 +107,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
             }
         }
         String posted = getString(p, "posted_when", getString(p, "posted_time", ""));
-        
+
         // --- Posted Time ---
         if (h.posted != null) {
             h.posted.setText(posted);
@@ -132,25 +133,55 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         int finalId = id;
         h.itemView.setOnClickListener(v -> openPdp(finalId, title, price, city, posted, 0));
 
-        // --- Load image using Glide ---
+        // --- Load images ---
+        @SuppressWarnings("unchecked")
         List<String> images = (List<String>) p.get("images");
-        String imageUrl = "";
+        String singleImageUrl = "";
         if (images != null && !images.isEmpty()) {
-            imageUrl = images.get(0);
+            singleImageUrl = images.get(0);
         }
-        if (TextUtils.isEmpty(imageUrl)) {
-            imageUrl = getString(p, "imageUrl", getString(p, "image_url", ""));
+        if (TextUtils.isEmpty(singleImageUrl)) {
+            singleImageUrl = getString(p, "imageUrl", getString(p, "image_url", ""));
         }
 
-        if (!TextUtils.isEmpty(imageUrl)) {
-            Glide.with(h.productImage.getContext())
-                    .load(imageUrl)
-                    .placeholder(placeholderIcon)
-                    .error(placeholderIcon)
-                    .centerCrop()
-                    .into(h.productImage);
+        if (images != null && images.size() > 1) {
+            // --- Multiple images: use ViewPager2 slider ---
+            h.productImage.setVisibility(View.GONE);
+            h.slider.setVisibility(View.VISIBLE);
+            h.dotIndicator.setVisibility(View.VISIBLE);
+
+            ImageSliderAdapter sliderAdapter = new ImageSliderAdapter(images, v -> {
+                openPdp(finalId, title, price, city, posted, 0);
+            });
+            h.slider.setAdapter(sliderAdapter);
+            h.slider.setCurrentItem(0, false);
+
+            // Setup dot indicators
+            setupDots(h.dotIndicator, images.size(), 0);
+
+            h.slider.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    setupDots(h.dotIndicator, images.size(), position);
+                }
+            });
+
         } else {
-            h.productImage.setImageResource(placeholderIcon);
+            // --- Single image or no image: use simple ImageView ---
+            h.slider.setVisibility(View.GONE);
+            h.dotIndicator.setVisibility(View.GONE);
+            h.productImage.setVisibility(View.VISIBLE);
+
+            if (!TextUtils.isEmpty(singleImageUrl)) {
+                Glide.with(h.productImage.getContext())
+                        .load(singleImageUrl)
+                        .placeholder(placeholderIcon)
+                        .error(placeholderIcon)
+                        .centerCrop()
+                        .into(h.productImage);
+            } else {
+                h.productImage.setImageResource(placeholderIcon);
+            }
         }
 
         // Contact button (might be hidden in grid view)
@@ -168,7 +199,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
     @Override
     public void onViewRecycled(@NonNull VH holder) {
         super.onViewRecycled(holder);
-        holder.cleanup();
     }
 
     @Override
@@ -176,27 +206,60 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         return items.size();
     }
 
+    /* ===================== Dot Indicator ===================== */
+    private void setupDots(LinearLayout dotContainer, int count, int selected) {
+        if (dotContainer == null)
+            return;
+        dotContainer.removeAllViews();
+
+        for (int i = 0; i < count; i++) {
+            View dot = new View(dotContainer.getContext());
+
+            int size = (i == selected) ? dpToPx(7) : dpToPx(5);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins(dpToPx(3), 0, dpToPx(3), 0);
+            dot.setLayoutParams(params);
+
+            GradientDrawable shape = new GradientDrawable();
+            shape.setShape(GradientDrawable.OVAL);
+
+            if (i == selected) {
+                shape.setColor(0xFFFFFFFF); // white
+            } else {
+                shape.setColor(0x80FFFFFF); // semi-transparent white
+            }
+
+            dot.setBackground(shape);
+            dotContainer.addView(dot);
+        }
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(ctx.getResources().getDisplayMetrics().density * dp);
+    }
+
     /* ===================== ViewHolder ===================== */
     static class VH extends RecyclerView.ViewHolder {
         ImageView productImage;
+        ViewPager2 slider;
+        LinearLayout dotIndicator;
         TextView title, price, city, soldBadge, posted;
         View btn, btnFavorite;
 
         VH(@NonNull View v) {
             super(v);
             productImage = v.findViewById(R.id.productImage);
+            slider = v.findViewById(R.id.productImageSlider);
+            dotIndicator = v.findViewById(R.id.dotIndicator);
             title = v.findViewById(R.id.tvTitle);
             price = v.findViewById(R.id.tvPrice);
             city = v.findViewById(R.id.tvCity);
             btn = v.findViewById(R.id.btnContact);
-//            soldBadge = v.findViewById(R.id.tvSoldBadge);
+            // soldBadge = v.findViewById(R.id.tvSoldBadge);
             posted = v.findViewById(R.id.tvPosted);
-//            btnFavorite = v.findViewById(R.id.btnFavorite);
+            // btnFavorite = v.findViewById(R.id.btnFavorite);
         }
 
-        void cleanup() {
-            // No-op: nothing to clean up with simple ImageView
-        }
     }
 
     /* ===================== Helpers ===================== */

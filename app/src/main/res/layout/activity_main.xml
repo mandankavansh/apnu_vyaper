@@ -491,16 +491,49 @@
                             android:gravity="center_vertical"
                             android:paddingTop="14dp"
                             android:paddingStart="20dp"
-                            android:paddingEnd="20dp">
+                            android:paddingEnd="16dp">
 
                             <TextView
-                                android:layout_width="match_parent"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
+                                android:layout_weight="1"
                                 android:text="Categories"
                                 android:textColor="@color/premium_text_main"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
 
+                            <!-- Nearby Chip — placed next to Categories header -->
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipKmFilter"
+                                style="@style/Widget.Material3.Chip.Assist"
+                                android:layout_width="wrap_content"
+                                android:layout_height="36dp"
+                                android:minHeight="36dp"
+                                android:checkable="false"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:text="Nearby"
+                                android:textColor="@color/white"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium"
+                                android:elevation="2dp"
+                                android:stateListAnimator="@null"
+                                app:chipBackgroundColor="@color/colorPrimary"
+                                app:chipCornerRadius="18dp"
+                                app:chipMinHeight="36dp"
+                                app:chipStrokeWidth="0dp"
+                                app:chipIcon="@drawable/ic_location_24"
+                                app:chipIconTint="@color/white"
+                                app:chipIconSize="15dp"
+                                app:chipIconVisible="true"
+                                app:ensureMinTouchTargetSize="false"
+                                app:iconStartPadding="8dp"
+                                app:iconEndPadding="2dp"
+                                app:textStartPadding="2dp"
+                                app:textEndPadding="10dp"
+                                app:rippleColor="#33FFFFFF" />
+                          
                         </LinearLayout>
 
                         <androidx.recyclerview.widget.RecyclerView
@@ -585,40 +618,7 @@
                                         app:chipIconSize="14dp"
                                         android:visibility="gone" />
 
-                                    <!-- Professional Nearby Chip (Little Big) -->
-                                    <com.google.android.material.chip.Chip
-                                        android:id="@+id/chipKmFilter"
-                                        style="@style/Widget.Material3.Chip.Assist"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="40dp"
-                                        android:minHeight="40dp"
-                                        android:minWidth="92dp"
-                                        android:checkable="false"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:gravity="center_vertical"
-                                        android:text="Nearby"
-                                        android:textColor="@color/white"
-                                        android:textSize="13sp"
-                                        android:textStyle="bold"
-                                        android:fontFamily="sans-serif-medium"
-                                        android:elevation="0dp"
-                                        android:stateListAnimator="@null"
 
-                                        app:chipBackgroundColor="@color/colorPrimary"
-                                        app:chipCornerRadius="20dp"
-                                        app:chipMinHeight="40dp"
-                                        app:chipStrokeWidth="0dp"
-                                        app:chipIcon="@drawable/ic_location_24"
-                                        app:chipIconTint="@color/white"
-                                        app:chipIconSize="16dp"
-                                        app:chipIconVisible="true"
-                                        app:ensureMinTouchTargetSize="true"
-                                        app:iconStartPadding="10dp"
-                                        app:iconEndPadding="4dp"
-                                        app:textStartPadding="2dp"
-                                        app:textEndPadding="12dp"
-                                        app:rippleColor="#33FFFFFF" />
 
                                 </LinearLayout>
                             </LinearLayout>

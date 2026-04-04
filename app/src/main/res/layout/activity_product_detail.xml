@@ -74,10 +74,10 @@
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintEnd_toEndOf="parent" />
 
-                        <!-- Premium bottom overlay for dots + price card readability -->
+                        <!-- Premium bottom overlay for dots readability -->
                         <View
                             android:layout_width="0dp"
-                            android:layout_height="180dp"
+                            android:layout_height="150dp"
                             android:background="@drawable/bg_toolbar_gradient"
                             android:rotation="180"
                             app:layout_constraintBottom_toBottomOf="parent"
@@ -100,92 +100,16 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:layout_marginBottom="96dp"
+                            android:layout_marginBottom="24dp"
+                            android:paddingStart="10dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="6dp"
+                            android:background="@drawable/bg_nav_button_teal"
+                            android:elevation="8dp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintEnd_toEndOf="parent" />
-
-                        <!-- Price row floating over image -->
-                        <LinearLayout
-                            android:id="@+id/priceRow"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginEnd="16dp"
-                            android:layout_marginBottom="20dp"
-                            android:padding="16dp"
-                            android:background="@drawable/bg_dark_teal_rounded"
-                            android:elevation="10dp"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent">
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="ASKING PRICE"
-                                    android:textColor="@color/accentGreen"
-                                    android:textSize="10sp"
-                                    android:textStyle="bold"
-                                    android:letterSpacing="0.05" />
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:gravity="center_vertical">
-
-                                    <TextView
-                                        android:id="@+id/pdpPrice"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="₹ 0"
-                                        android:textColor="@color/white"
-                                        android:textSize="24sp"
-                                        android:textStyle="bold" />
-
-                                    <com.google.android.material.chip.Chip
-                                        android:id="@+id/pdpSoldChip"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="24dp"
-                                        android:layout_marginStart="8dp"
-                                        android:text="FREE"
-                                        android:textColor="@color/white"
-                                        android:textSize="10sp"
-                                        android:textStyle="bold"
-                                        app:chipBackgroundColor="@color/accentGreen"
-                                        app:chipMinHeight="20dp"
-                                        app:chipCornerRadius="4dp"
-                                        app:chipStrokeWidth="0dp" />
-                                </LinearLayout>
-                            </LinearLayout>
-
-<!--                            <ImageView-->
-<!--                                android:layout_width="36dp"-->
-<!--                                android:layout_height="36dp"-->
-<!--                                android:layout_marginEnd="8dp"-->
-<!--                                android:background="@drawable/bg_icon_outline_teal"-->
-<!--                                android:padding="8dp"-->
-<!--                                android:src="@drawable/ic_location_24"-->
-<!--                                app:tint="#CCFFFFFF" />-->
-
-<!--                            <ImageView-->
-<!--                                android:layout_width="36dp"-->
-<!--                                android:layout_height="36dp"-->
-<!--                                android:background="@drawable/bg_icon_outline_teal"-->
-<!--                                android:padding="8dp"-->
-<!--                                android:src="@drawable/ic_copy_24"-->
-<!--                                app:tint="#CCFFFFFF" />-->
-
-                        </LinearLayout>
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -296,7 +220,7 @@
                             android:textSize="11sp" />
                     </LinearLayout>
 
-                    <!-- Title & Location -->
+                    <!-- Title -->
                     <TextView
                         android:id="@+id/pdpTitle"
                         android:layout_width="match_parent"
@@ -310,6 +234,70 @@
                         android:textStyle="bold"
                         android:lineSpacingExtra="4dp" />
 
+                    <!-- PRICE BELOW TITLE -->
+                    <LinearLayout
+                        android:id="@+id/priceRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginTop="14dp"
+                        android:padding="16dp"
+                        android:background="@drawable/bg_dark_teal_rounded"
+                        android:elevation="4dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ASKING PRICE"
+                                android:textColor="@color/accentGreen"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="4dp">
+
+                                <TextView
+                                    android:id="@+id/pdpPrice"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="₹ 0"
+                                    android:textColor="@color/white"
+                                    android:textSize="26sp"
+                                    android:textStyle="bold" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:id="@+id/pdpSoldChip"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="24dp"
+                                    android:layout_marginStart="8dp"
+                                    android:text="FREE"
+                                    android:textColor="@color/white"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    app:chipBackgroundColor="@color/accentGreen"
+                                    app:chipMinHeight="20dp"
+                                    app:chipCornerRadius="4dp"
+                                    app:chipStrokeWidth="0dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Title & Location -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -317,21 +305,21 @@
                         android:gravity="center_vertical"
                         android:layout_marginStart="20dp"
                         android:layout_marginEnd="20dp"
-                        android:layout_marginTop="8dp">
+                        android:layout_marginTop="10dp">
 
-<!--                        <ImageView-->
-<!--                            android:layout_width="16dp"-->
-<!--                            android:layout_height="16dp"-->
-<!--                            android:src="@drawable/ic_location_24"-->
-<!--                            app:tint="@color/colorPrimary" />-->
+                        <!--                        <ImageView-->
+                        <!--                            android:layout_width="16dp"-->
+                        <!--                            android:layout_height="16dp"-->
+                        <!--                            android:src="@drawable/ic_location_24"-->
+                        <!--                            app:tint="@color/colorPrimary" />-->
 
-<!--                        <TextView-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_marginStart="6dp"-->
-<!--                            android:text="Usmanpura, Ahmedabad, Gujarat"-->
-<!--                            android:textColor="@color/colorTextSecondary"-->
-<!--                            android:textSize="14sp" />-->
+                        <!--                        <TextView-->
+                        <!--                            android:layout_width="wrap_content"-->
+                        <!--                            android:layout_height="wrap_content"-->
+                        <!--                            android:layout_marginStart="6dp"-->
+                        <!--                            android:text="Usmanpura, Ahmedabad, Gujarat"-->
+                        <!--                            android:textColor="@color/colorTextSecondary"-->
+                        <!--                            android:textSize="14sp" />-->
                     </LinearLayout>
 
                     <View

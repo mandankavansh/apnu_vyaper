@@ -8,6 +8,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,6 +57,7 @@ import java.util.Map;
 public class ProductDetail extends AppCompatActivity {
 
     private static final String TAG = "ProductDetail";
+    private static final long AUTO_SLIDE_INTERVAL = 3500L;
 
     private ImageView pdpBack, pdpShare, pdpSave;
     private AppBarLayout appBar;
@@ -79,6 +82,8 @@ public class ProductDetail extends AppCompatActivity {
     private TextView labelSimilar;
 
     private final List<Object> imageSources = new ArrayList<>();
+    private final Handler autoSlideHandler = new Handler(Looper.getMainLooper());
+    private Runnable autoSlideRunnable;
 
     private final int royalBlue = Color.parseColor("#96A78D");
     private final int deepText = Color.parseColor("#111111");
@@ -147,6 +152,18 @@ public class ProductDetail extends AppCompatActivity {
                 setGallery(ph);
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startAutoSlide();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopAutoSlide();
     }
 
     private void bindViews() {
@@ -231,7 +248,42 @@ public class ProductDetail extends AppCompatActivity {
             public void onPageSelected(int position) {
                 highlightDot(position);
             }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+                if (state == ViewPager2.SCROLL_STATE_DRAGGING) {
+                    stopAutoSlide();
+                } else if (state == ViewPager2.SCROLL_STATE_IDLE) {
+                    startAutoSlide();
+                }
+            }
         });
+    }
+
+    private void startAutoSlide() {
+        stopAutoSlide();
+        int count = imageSources.size();
+        if (count <= 1 || pdpImagePager == null) return;
+
+        autoSlideRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (pdpImagePager == null || pdpImagePager.getAdapter() == null) return;
+                int current = pdpImagePager.getCurrentItem();
+                int next = (current + 1) % count;
+                pdpImagePager.setCurrentItem(next, true);
+                autoSlideHandler.postDelayed(this, AUTO_SLIDE_INTERVAL);
+            }
+        };
+        autoSlideHandler.postDelayed(autoSlideRunnable, AUTO_SLIDE_INTERVAL);
+    }
+
+    private void stopAutoSlide() {
+        if (autoSlideRunnable != null) {
+            autoSlideHandler.removeCallbacks(autoSlideRunnable);
+            autoSlideRunnable = null;
+        }
     }
 
     private void setupClicks() {
@@ -437,6 +489,7 @@ public class ProductDetail extends AppCompatActivity {
         thumbAdapter.notifyDataSetChanged();
         buildDots(0, imageSources.size());
         pdpImagePager.setCurrentItem(0, false);
+        startAutoSlide();
     }
 
     private void bindTextFallback(String title, String price, String city, String desc) {
