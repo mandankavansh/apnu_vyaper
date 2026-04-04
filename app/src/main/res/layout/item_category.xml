@@ -6,43 +6,89 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:layout_marginEnd="16dp"
+    android:layout_marginEnd="14dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
     android:clickable="true"
     android:focusable="true"
     android:background="?attr/selectableItemBackgroundBorderless">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/catCard"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        app:cardCornerRadius="32dp"
-        app:cardElevation="2dp"
+        android:layout_width="98dp"
+        android:layout_height="110dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:foreground="?attr/selectableItemBackground"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="6dp"
         app:strokeWidth="1dp"
-        app:strokeColor="@color/premium_divider"
-        app:cardBackgroundColor="@color/premium_surface">
+        app:strokeColor="#14000000">
 
-        <ImageView
-            android:id="@+id/catIcon"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="16dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_placeholder_circle"
-            app:tint="@color/colorPrimary" />
-    </com.google.android.material.card.MaterialCardView>
+            android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/catTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Category"
-        android:textSize="13sp"
-        android:fontFamily="sans-serif-medium"
-        android:textColor="@color/premium_text_main"
-        android:gravity="center"
-        android:maxWidth="80dp"
-        android:maxLines="1"
-        android:ellipsize="end"/>
+            <!-- Full image cover -->
+            <ImageView
+                android:id="@+id/catIcon"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_placeholder_circle"
+                android:background="#F4F7F8" />
+
+            <!-- Soft overlay -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#12000000" />
+
+            <!-- Bottom dark fade -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_gravity="bottom"
+                android:background="#33000000" />
+
+            <!-- Bottom glass title -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:minWidth="76dp"
+                app:cardBackgroundColor="#D9FFFFFF"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="#F2FFFFFF">
+
+                <TextView
+                    android:id="@+id/catTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:minWidth="76dp"
+                    android:gravity="center"
+                    android:text="Category"
+                    android:textAlignment="center"
+                    android:textColor="#222222"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+        </FrameLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

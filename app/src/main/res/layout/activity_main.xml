@@ -588,23 +588,37 @@
                                     <!-- Professional Nearby Chip (Little Big) -->
                                     <com.google.android.material.chip.Chip
                                         android:id="@+id/chipKmFilter"
+                                        style="@style/Widget.Material3.Chip.Assist"
                                         android:layout_width="wrap_content"
                                         android:layout_height="40dp"
+                                        android:minHeight="40dp"
+                                        android:minWidth="92dp"
+                                        android:checkable="false"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:gravity="center_vertical"
                                         android:text="Nearby"
-                                        android:textColor="@color/teal_premium"
+                                        android:textColor="@color/white"
                                         android:textSize="13sp"
                                         android:textStyle="bold"
-                                        app:chipBackgroundColor="#1216A085"
-                                        app:chipStrokeWidth="1dp"
-                                        app:chipStrokeColor="#3316A085"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:elevation="0dp"
+                                        android:stateListAnimator="@null"
+
+                                        app:chipBackgroundColor="@color/colorPrimary"
                                         app:chipCornerRadius="20dp"
+                                        app:chipMinHeight="40dp"
+                                        app:chipStrokeWidth="0dp"
                                         app:chipIcon="@drawable/ic_location_24"
-                                        app:chipIconTint="@color/teal_premium"
-                                        app:chipIconSize="18dp"
+                                        app:chipIconTint="@color/white"
+                                        app:chipIconSize="16dp"
+                                        app:chipIconVisible="true"
+                                        app:ensureMinTouchTargetSize="true"
                                         app:iconStartPadding="10dp"
-                                        app:textStartPadding="6dp"
-                                        app:textEndPadding="14dp"
-                                        android:elevation="0dp" />
+                                        app:iconEndPadding="4dp"
+                                        app:textStartPadding="2dp"
+                                        app:textEndPadding="12dp"
+                                        app:rippleColor="#33FFFFFF" />
 
                                 </LinearLayout>
                             </LinearLayout>
@@ -616,6 +630,7 @@
                                 android:layout_marginTop="8dp"
                                 android:paddingStart="12dp"
                                 android:paddingEnd="12dp"
+                                android:nestedScrollingEnabled="false"
                                 android:visibility="gone"
                                 tools:listitem="@layout/item_sub_filter" />
 
