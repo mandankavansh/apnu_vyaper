@@ -5,70 +5,53 @@
     android:layout_width="match_parent"
     android:layout_height="130dp"
     android:layout_margin="6dp"
+    android:clickable="true"
+    android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    app:cardCornerRadius="14dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="20dp"
     app:cardElevation="6dp"
-    app:strokeWidth="0dp"
-    app:cardBackgroundColor="@color/premium_surface">
+    app:strokeWidth="1dp"
+    app:strokeColor="#14000000">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <FrameLayout
+        android:id="@+id/iconContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp">
+        android:layout_height="match_parent">
 
-        <!-- ===== BACKGROUND IMAGE/ICON ===== -->
-        <!-- We use a subtle circle behind the icon for a premium look -->
-        <FrameLayout
-            android:id="@+id/iconContainer"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:background="@drawable/bg_circle_surface"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="8dp">
+        <!-- Full image cover -->
+        <ImageView
+            android:id="@+id/imgIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_placeholder_circle"
+            android:background="#F4F7F8" />
 
-            <ImageView
-                android:id="@+id/imgIcon"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="center"
-                android:scaleType="centerInside"
-                android:contentDescription="@null"
-                app:tint="@color/colorPrimary" />
+        <!-- Soft overlay -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#12000000" />
 
-        </FrameLayout>
+        <!-- Bottom dark fade -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_gravity="bottom"
+            android:background="#33000000" />
 
-        <!-- ===== CATEGORY NAME ===== -->
-        <TextView
-            android:id="@+id/tvName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:gravity="center"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:textColor="@color/premium_text_main"
-            android:textSize="13sp"
-            android:fontFamily="sans-serif-medium"
-            android:lineSpacingMultiplier="1.1"
-            app:layout_constraintTop_toBottomOf="@id/iconContainer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- ===== BADGE (If applicable) ===== -->
+        <!-- Selection badge -->
         <FrameLayout
             android:id="@+id/badge"
             android:layout_width="18dp"
             android:layout_height="18dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:visibility="gone"
-            android:background="@drawable/bg_check_badge_premium"
-            app:layout_constraintTop_toTopOf="@id/iconContainer"
-            app:layout_constraintEnd_toEndOf="@id/iconContainer"
-            android:layout_marginTop="-4dp"
-            android:layout_marginEnd="-4dp">
+            android:background="@drawable/bg_check_badge_premium">
 
             <ImageView
                 android:id="@+id/ivTick"
@@ -79,6 +62,40 @@
                 app:tint="@android:color/white" />
         </FrameLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <!-- Bottom glass title -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:minWidth="82dp"
+            app:cardBackgroundColor="#D9FFFFFF"
+            app:cardCornerRadius="17dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#F2FFFFFF">
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:minWidth="82dp"
+                android:gravity="center"
+                android:text="Category"
+                android:textAlignment="center"
+                android:textColor="#222222"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </FrameLayout>
 
 </com.google.android.material.card.MaterialCardView>
