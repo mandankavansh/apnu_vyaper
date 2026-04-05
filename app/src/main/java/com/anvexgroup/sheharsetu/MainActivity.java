@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
     private android.util.LruCache<String, JSONObject> productCache;
     private String lastProductsUrl = null;
     private boolean productsInFlight = false;
-
+    private boolean isConditionFilterAvailable = false;
     private void initCachedUserData() {
         cachedUserName = session.getCachedUserName();
         cachedUserPhone = session.getCachedUserPhone();
@@ -235,15 +235,23 @@ public class MainActivity extends AppCompatActivity {
         rvCategories = findViewById(R.id.rvCategories);
         rvSubFiltersGrid = findViewById(R.id.rvSubFiltersGrid);
         rvProducts = findViewById(R.id.rvProducts);
+//        chipCondition = findViewById(R.id.chipCondition);
+//        tvSectionTitle = findViewById(R.id.tvSectionTitle);
+
         chipCondition = findViewById(R.id.chipCondition);
         tvSectionTitle = findViewById(R.id.tvSectionTitle);
 
         if (chipCondition != null) {
             chipCondition.setVisibility(View.GONE);
-            chipCondition.setOnClickListener(v -> showConditionPopup());
+            chipCondition.setOnClickListener(v -> showCombinedFilterSheet());
             showNew = null;
         }
-
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        chipKmFilter = findViewById(R.id.chipKmFilter);
+        if (chipKmFilter != null) {
+            chipKmFilter.setOnClickListener(v -> showCombinedFilterSheet());
+            updateKmChipText();
+        }
         btnPost = findViewById(R.id.btnPost);
         btnHelp = findViewById(R.id.btnHelp);
         tvMarquee = findViewById(R.id.tvMarquee);
@@ -1044,6 +1052,16 @@ public class MainActivity extends AppCompatActivity {
         keys.add("Location permission needed for distance filter");
         keys.add("GPS is required for distance filter");
 
+
+        keys.add("Filter");
+        keys.add("Filter listings");
+        keys.add("New");
+        keys.add("Used");
+        keys.add("Clear");
+        keys.add("Apply");
+        keys.add("Enter value");
+        keys.add("Must be > 0");
+        keys.add("Invalid number");
         if (navigationView != null && navigationView.getMenu() != null) {
             android.view.Menu menu = navigationView.getMenu();
             for (int i = 0; i < menu.size(); i++) {
@@ -1078,17 +1096,28 @@ public class MainActivity extends AppCompatActivity {
             selectedCategoryId = toInt(cat.get("id"), -1);
             selectedSubFilterId = -1;
             showNew = null;
-
+            isConditionFilterAvailable = false;
             clearSearchSilently();
 
             if (chipCondition != null) {
                 chipCondition.setVisibility(View.GONE);
                 chipCondition.setText(I18n.t(this, "Condition: All"));
-                showNew = null;
+//                showNew = null;
             }
-
+            updateKmChipText();
             resetPagination();
-
+//
+//            VolleySingleton.getInstance(this).getQueue().cancelAll(TAG_FETCH_PRODUCTS);
+//            productsInFlight = false;
+//            lastProductsUrl = null;
+//
+//            if (selectedCategoryId == 0) {
+//                mapSubFilters.remove(0);
+//                showProducts();
+//                fetchProducts();
+//            } else {
+//                fetchSubFilters(selectedCategoryId);
+//            }
             VolleySingleton.getInstance(this).getQueue().cancelAll(TAG_FETCH_PRODUCTS);
             productsInFlight = false;
             lastProductsUrl = null;
@@ -1108,6 +1137,40 @@ public class MainActivity extends AppCompatActivity {
         rvProducts.setAdapter(productAdapterRef);
     }
 
+//    private void bindSubFilters(List<Map<String, Object>> subs) {
+//        rvSubFiltersGrid.setAdapter(new SubFilterGridAdapter(subs, sub -> {
+//            selectedSubFilterId = toInt(sub.get("id"), 0);
+//
+//            clearSearchSilently();
+//            showProducts();
+//
+//            if (selectedSubFilterId > 0) {
+//                boolean hasNewOld = toBool(sub.get("hasNewOld"), false);
+//                if (hasNewOld && chipCondition != null) {
+//                    chipCondition.setVisibility(View.VISIBLE);
+//                } else if (chipCondition != null) {
+//                    chipCondition.setVisibility(View.GONE);
+//                    showNew = null;
+//                    chipCondition.setText(I18n.t(this, "Condition: All"));
+//                }
+//            } else {
+//                if (chipCondition != null) {
+//                    chipCondition.setVisibility(View.GONE);
+//                    showNew = null;
+//                    chipCondition.setText(I18n.t(this, "Condition: All"));
+//                }
+//            }
+//
+//            productCache.evictAll();
+//            resetPagination();
+//            fetchProducts();
+//        }));
+//
+//        showSubFilters();
+//        if (catAdapter != null) {
+//            catAdapter.setSelectedId(selectedCategoryId);
+//        }
+//    }
     private void bindSubFilters(List<Map<String, Object>> subs) {
         rvSubFiltersGrid.setAdapter(new SubFilterGridAdapter(subs, sub -> {
             selectedSubFilterId = toInt(sub.get("id"), 0);
@@ -1115,22 +1178,25 @@ public class MainActivity extends AppCompatActivity {
             clearSearchSilently();
             showProducts();
 
+            isConditionFilterAvailable = false;
+
             if (selectedSubFilterId > 0) {
                 boolean hasNewOld = toBool(sub.get("hasNewOld"), false);
-                if (hasNewOld && chipCondition != null) {
-                    chipCondition.setVisibility(View.VISIBLE);
-                } else if (chipCondition != null) {
-                    chipCondition.setVisibility(View.GONE);
+                isConditionFilterAvailable = hasNewOld;
+
+                if (!hasNewOld) {
                     showNew = null;
-                    chipCondition.setText(I18n.t(this, "Condition: All"));
                 }
             } else {
-                if (chipCondition != null) {
-                    chipCondition.setVisibility(View.GONE);
-                    showNew = null;
-                    chipCondition.setText(I18n.t(this, "Condition: All"));
-                }
+                showNew = null;
             }
+
+            if (chipCondition != null) {
+                chipCondition.setVisibility(View.GONE);
+                chipCondition.setText(I18n.t(this, "Condition: All"));
+            }
+
+            updateKmChipText();
 
             productCache.evictAll();
             resetPagination();
@@ -1628,119 +1694,279 @@ public class MainActivity extends AppCompatActivity {
 
     // ================= KM Filter =================
 
-    private void showKmFilterSheet() {
+//    private void showKmFilterSheet() {
+//        BottomSheetDialog dialog = new BottomSheetDialog(this);
+//        View sheet = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_km_filter, null);
+//        dialog.setContentView(sheet);
+//
+//        ChipGroup chipGroup = sheet.findViewById(R.id.chipGroupKm);
+//        View layoutCustomKm = sheet.findViewById(R.id.layoutCustomKm);
+//        TextInputEditText etCustomKm = sheet.findViewById(R.id.etCustomKm);
+//        com.google.android.material.button.MaterialButton btnApplyCustomKm = sheet.findViewById(R.id.btnApplyCustomKm);
+//
+//        if (selectedRadiusKm == null) {
+//            ((Chip) sheet.findViewById(R.id.chipAll)).setChecked(true);
+//        } else if (selectedRadiusKm == 5) {
+//            ((Chip) sheet.findViewById(R.id.chip5km)).setChecked(true);
+//        } else if (selectedRadiusKm == 10) {
+//            ((Chip) sheet.findViewById(R.id.chip10km)).setChecked(true);
+//        } else if (selectedRadiusKm == 25) {
+//            ((Chip) sheet.findViewById(R.id.chip25km)).setChecked(true);
+//        } else if (selectedRadiusKm == 50) {
+//            ((Chip) sheet.findViewById(R.id.chip50km)).setChecked(true);
+//        } else if (selectedRadiusKm == 100) {
+//            ((Chip) sheet.findViewById(R.id.chip100km)).setChecked(true);
+//        } else {
+//            // Custom value
+//            ((Chip) sheet.findViewById(R.id.chipCustom)).setChecked(true);
+//            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.VISIBLE);
+//            if (etCustomKm != null) etCustomKm.setText(String.valueOf(selectedRadiusKm));
+//        }
+//
+//        chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+//            if (checkedIds.isEmpty()) return;
+//            int checkedId = checkedIds.get(0);
+//
+//            if (checkedId == R.id.chipCustom) {
+//                if (layoutCustomKm != null) {
+//                    layoutCustomKm.setVisibility(View.VISIBLE);
+//                    // Set focus and show keyboard
+//                    if (etCustomKm != null) {
+//                        etCustomKm.requestFocus();
+//                    }
+//                }
+//                return; // Don't dismiss yet
+//            }
+//
+//            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.GONE);
+//
+//            if (checkedId == R.id.chipAll) {
+//                selectedRadiusKm = null;
+//                updateKmChipText();
+//                dialog.dismiss();
+//                applyKmFilter();
+//            } else {
+//                int km = 10;
+//                if (checkedId == R.id.chip5km) km = 5;
+//                else if (checkedId == R.id.chip10km) km = 10;
+//                else if (checkedId == R.id.chip25km) km = 25;
+//                else if (checkedId == R.id.chip50km) km = 50;
+//                else if (checkedId == R.id.chip100km) km = 100;
+//
+//                selectedRadiusKm = km;
+//                updateKmChipText();
+//                dialog.dismiss();
+//
+//                if (userLat == null || userLng == null) {
+//                    fetchUserLocationThenFilter();
+//                } else {
+//                    applyKmFilter();
+//                }
+//            }
+//        });
+//
+//        if (btnApplyCustomKm != null) {
+//            btnApplyCustomKm.setOnClickListener(v -> {
+//                String val = etCustomKm.getText() != null ? etCustomKm.getText().toString().trim() : "";
+//                if (TextUtils.isEmpty(val)) {
+//                    etCustomKm.setError(I18n.t(this, "Enter value"));
+//                    return;
+//                }
+//
+//                try {
+//                    int km = Integer.parseInt(val);
+//                    if (km <= 0) {
+//                        etCustomKm.setError(I18n.t(this, "Must be > 0"));
+//                        return;
+//                    }
+//
+//                    selectedRadiusKm = km;
+//                    updateKmChipText();
+//                    dialog.dismiss();
+//
+//                    if (userLat == null || userLng == null) {
+//                        fetchUserLocationThenFilter();
+//                    } else {
+//                        applyKmFilter();
+//                    }
+//                } catch (Exception e) {
+//                    etCustomKm.setError(I18n.t(this, "Invalid number"));
+//                }
+//            });
+//        }
+//
+//        dialog.show();
+//    }
+private void showKmFilterSheet() {
+    showCombinedFilterSheet();
+}
+
+    private void showCombinedFilterSheet() {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
-        View sheet = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_km_filter, null);
+        View sheet = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_main_filter, null);
         dialog.setContentView(sheet);
 
-        ChipGroup chipGroup = sheet.findViewById(R.id.chipGroupKm);
+        ChipGroup chipGroupDistance = sheet.findViewById(R.id.chipGroupDistance);
+        ChipGroup chipGroupCondition = sheet.findViewById(R.id.chipGroupCondition);
         View layoutCustomKm = sheet.findViewById(R.id.layoutCustomKm);
         TextInputEditText etCustomKm = sheet.findViewById(R.id.etCustomKm);
-        com.google.android.material.button.MaterialButton btnApplyCustomKm = sheet.findViewById(R.id.btnApplyCustomKm);
+        View layoutConditionSection = sheet.findViewById(R.id.layoutConditionSection);
 
+        com.google.android.material.button.MaterialButton btnClear =
+                sheet.findViewById(R.id.btnClearFilter);
+        com.google.android.material.button.MaterialButton btnApply =
+                sheet.findViewById(R.id.btnApplyFilter);
+
+        final Integer[] tempRadius = new Integer[]{selectedRadiusKm};
+        final Boolean[] tempShowNew = new Boolean[]{showNew};
+
+        // ----- distance preselect -----
         if (selectedRadiusKm == null) {
-            ((Chip) sheet.findViewById(R.id.chipAll)).setChecked(true);
+            chipGroupDistance.check(R.id.chipDistanceAll);
         } else if (selectedRadiusKm == 5) {
-            ((Chip) sheet.findViewById(R.id.chip5km)).setChecked(true);
+            chipGroupDistance.check(R.id.chip5km);
         } else if (selectedRadiusKm == 10) {
-            ((Chip) sheet.findViewById(R.id.chip10km)).setChecked(true);
+            chipGroupDistance.check(R.id.chip10km);
         } else if (selectedRadiusKm == 25) {
-            ((Chip) sheet.findViewById(R.id.chip25km)).setChecked(true);
+            chipGroupDistance.check(R.id.chip25km);
         } else if (selectedRadiusKm == 50) {
-            ((Chip) sheet.findViewById(R.id.chip50km)).setChecked(true);
+            chipGroupDistance.check(R.id.chip50km);
         } else if (selectedRadiusKm == 100) {
-            ((Chip) sheet.findViewById(R.id.chip100km)).setChecked(true);
+            chipGroupDistance.check(R.id.chip100km);
         } else {
-            // Custom value
-            ((Chip) sheet.findViewById(R.id.chipCustom)).setChecked(true);
-            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.VISIBLE);
-            if (etCustomKm != null) etCustomKm.setText(String.valueOf(selectedRadiusKm));
+            chipGroupDistance.check(R.id.chipCustomDistance);
+            layoutCustomKm.setVisibility(View.VISIBLE);
+            if (etCustomKm != null) {
+                etCustomKm.setText(String.valueOf(selectedRadiusKm));
+            }
         }
 
-        chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.isEmpty()) return;
+        chipGroupDistance.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds == null || checkedIds.isEmpty()) return;
             int checkedId = checkedIds.get(0);
 
-            if (checkedId == R.id.chipCustom) {
-                if (layoutCustomKm != null) {
-                    layoutCustomKm.setVisibility(View.VISIBLE);
-                    // Set focus and show keyboard
-                    if (etCustomKm != null) {
-                        etCustomKm.requestFocus();
-                    }
-                }
-                return; // Don't dismiss yet
+            if (checkedId == R.id.chipCustomDistance) {
+                layoutCustomKm.setVisibility(View.VISIBLE);
+                return;
             }
 
-            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.GONE);
+            layoutCustomKm.setVisibility(View.GONE);
 
-            if (checkedId == R.id.chipAll) {
-                selectedRadiusKm = null;
-                updateKmChipText();
-                dialog.dismiss();
-                applyKmFilter();
-            } else {
-                int km = 10;
-                if (checkedId == R.id.chip5km) km = 5;
-                else if (checkedId == R.id.chip10km) km = 10;
-                else if (checkedId == R.id.chip25km) km = 25;
-                else if (checkedId == R.id.chip50km) km = 50;
-                else if (checkedId == R.id.chip100km) km = 100;
-
-                selectedRadiusKm = km;
-                updateKmChipText();
-                dialog.dismiss();
-
-                if (userLat == null || userLng == null) {
-                    fetchUserLocationThenFilter();
-                } else {
-                    applyKmFilter();
-                }
-            }
+            if (checkedId == R.id.chipDistanceAll) tempRadius[0] = null;
+            else if (checkedId == R.id.chip5km) tempRadius[0] = 5;
+            else if (checkedId == R.id.chip10km) tempRadius[0] = 10;
+            else if (checkedId == R.id.chip25km) tempRadius[0] = 25;
+            else if (checkedId == R.id.chip50km) tempRadius[0] = 50;
+            else if (checkedId == R.id.chip100km) tempRadius[0] = 100;
         });
 
-        if (btnApplyCustomKm != null) {
-            btnApplyCustomKm.setOnClickListener(v -> {
-                String val = etCustomKm.getText() != null ? etCustomKm.getText().toString().trim() : "";
-                if (TextUtils.isEmpty(val)) {
-                    etCustomKm.setError(I18n.t(this, "Enter value"));
+        // ----- condition section -----
+        if (layoutConditionSection != null) {
+            layoutConditionSection.setVisibility(isConditionFilterAvailable ? View.VISIBLE : View.GONE);
+        }
+
+        if (isConditionFilterAvailable && chipGroupCondition != null) {
+            if (showNew == null) {
+                chipGroupCondition.check(R.id.chipConditionAll);
+            } else if (showNew) {
+                chipGroupCondition.check(R.id.chipConditionNew);
+            } else {
+                chipGroupCondition.check(R.id.chipConditionUsed);
+            }
+        } else {
+            tempShowNew[0] = null;
+        }
+
+        btnClear.setOnClickListener(v -> {
+            selectedRadiusKm = null;
+            showNew = null;
+            updateKmChipText();
+            dialog.dismiss();
+            applyKmFilter();
+        });
+
+        btnApply.setOnClickListener(v -> {
+            int checkedDistanceId = chipGroupDistance.getCheckedChipId();
+
+            if (checkedDistanceId == R.id.chipCustomDistance) {
+                String value = etCustomKm != null && etCustomKm.getText() != null
+                        ? etCustomKm.getText().toString().trim()
+                        : "";
+
+                if (TextUtils.isEmpty(value)) {
+                    if (etCustomKm != null) etCustomKm.setError(I18n.t(this, "Enter value"));
                     return;
                 }
 
                 try {
-                    int km = Integer.parseInt(val);
+                    int km = Integer.parseInt(value);
                     if (km <= 0) {
-                        etCustomKm.setError(I18n.t(this, "Must be > 0"));
+                        if (etCustomKm != null) etCustomKm.setError(I18n.t(this, "Must be > 0"));
                         return;
                     }
-
-                    selectedRadiusKm = km;
-                    updateKmChipText();
-                    dialog.dismiss();
-
-                    if (userLat == null || userLng == null) {
-                        fetchUserLocationThenFilter();
-                    } else {
-                        applyKmFilter();
-                    }
+                    tempRadius[0] = km;
                 } catch (Exception e) {
-                    etCustomKm.setError(I18n.t(this, "Invalid number"));
+                    if (etCustomKm != null) etCustomKm.setError(I18n.t(this, "Invalid number"));
+                    return;
                 }
-            });
-        }
+            }
+
+            if (isConditionFilterAvailable && chipGroupCondition != null) {
+                int checkedConditionId = chipGroupCondition.getCheckedChipId();
+
+                if (checkedConditionId == R.id.chipConditionNew) {
+                    tempShowNew[0] = true;
+                } else if (checkedConditionId == R.id.chipConditionUsed) {
+                    tempShowNew[0] = false;
+                } else {
+                    tempShowNew[0] = null;
+                }
+            } else {
+                tempShowNew[0] = null;
+            }
+
+            selectedRadiusKm = tempRadius[0];
+            showNew = tempShowNew[0];
+            updateKmChipText();
+            dialog.dismiss();
+
+            if (selectedRadiusKm != null && (userLat == null || userLng == null)) {
+                fetchUserLocationThenFilter();
+            } else {
+                applyKmFilter();
+            }
+        });
 
         dialog.show();
     }
 
+//    private void updateKmChipText() {
+//        if (chipKmFilter == null) return;
+//        if (selectedRadiusKm == null) {
+//            chipKmFilter.setText(I18n.t(this, "Nearby"));
+//        } else {
+//            chipKmFilter.setText(selectedRadiusKm + " km");
+//        }
+//    }
     private void updateKmChipText() {
         if (chipKmFilter == null) return;
-        if (selectedRadiusKm == null) {
-            chipKmFilter.setText(I18n.t(this, "Nearby"));
+
+        List<String> active = new ArrayList<>();
+
+        if (selectedRadiusKm != null) {
+            active.add(selectedRadiusKm + " km");
+        }
+
+        if (isConditionFilterAvailable && showNew != null) {
+            active.add(I18n.t(this, showNew ? "New" : "Used"));
+        }
+
+        if (active.isEmpty()) {
+            chipKmFilter.setText(I18n.t(this, "Filter"));
         } else {
-            chipKmFilter.setText(selectedRadiusKm + " km");
+            chipKmFilter.setText(I18n.t(this, "Filter") + " • " + TextUtils.join(" • ", active));
         }
     }
-
     private void applyKmFilter() {
         ensureProductsView();
         productCache.evictAll();

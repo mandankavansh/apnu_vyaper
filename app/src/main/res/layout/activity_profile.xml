@@ -200,7 +200,7 @@
                                 <ImageView
                                     android:layout_width="20dp"
                                     android:layout_height="20dp"
-                                    android:src="@drawable/ic_contact_phone"
+                                    android:src="@drawable/ic_phone_24px"
                                     app:tint="#195E63" />
                             </LinearLayout>
                             <TextView

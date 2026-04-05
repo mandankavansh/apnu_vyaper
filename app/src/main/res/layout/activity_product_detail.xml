@@ -85,14 +85,6 @@
                             app:layout_constraintEnd_toEndOf="parent" />
 
                         <!-- Soft middle tint -->
-                        <View
-                            android:layout_width="0dp"
-                            android:layout_height="0dp"
-                            android:background="#18000000"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent" />
 
                         <!-- Dots over image -->
                         <LinearLayout
@@ -105,7 +97,7 @@
                             android:paddingTop="6dp"
                             android:paddingEnd="10dp"
                             android:paddingBottom="6dp"
-                            android:background="@drawable/bg_nav_button_teal"
+
                             android:elevation="8dp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -635,6 +627,13 @@
                     android:layout_height="48dp"
                     android:layout_gravity="center" />
             </FrameLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="#18000000"
+                app:layout_anchor="@+id/appBar"
+                app:layout_anchorGravity="center" />
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

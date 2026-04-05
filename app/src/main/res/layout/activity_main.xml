@@ -518,36 +518,7 @@
                                 android:textStyle="bold" />
 
                             <!-- Nearby Chip — placed next to Categories header -->
-                            <com.google.android.material.chip.Chip
-                                android:id="@+id/chipKmFilter"
-                                style="@style/Widget.Material3.Chip.Assist"
-                                android:layout_width="wrap_content"
-                                android:layout_height="36dp"
-                                android:minHeight="36dp"
-                                android:checkable="false"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:text="Nearby"
-                                android:textColor="@color/white"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                android:fontFamily="sans-serif-medium"
-                                android:elevation="2dp"
-                                android:stateListAnimator="@null"
-                                app:chipBackgroundColor="@color/colorPrimary"
-                                app:chipCornerRadius="18dp"
-                                app:chipMinHeight="36dp"
-                                app:chipStrokeWidth="0dp"
-                                app:chipIcon="@drawable/ic_location_24"
-                                app:chipIconTint="@color/white"
-                                app:chipIconSize="15dp"
-                                app:chipIconVisible="true"
-                                app:ensureMinTouchTargetSize="false"
-                                app:iconStartPadding="8dp"
-                                app:iconEndPadding="2dp"
-                                app:textStartPadding="2dp"
-                                app:textEndPadding="10dp"
-                                app:rippleColor="#33FFFFFF" />
+
                           
                         </LinearLayout>
 
@@ -612,28 +583,48 @@
                                     android:gravity="center_vertical"
                                     android:orientation="horizontal">
 
-                                    <!-- Professional Dropdown Chip for Condition -->
+                                    <!-- Single visible filter trigger -->
+                                    <com.google.android.material.chip.Chip
+                                        android:id="@+id/chipKmFilter"
+                                        style="@style/Widget.Material3.Chip.Assist"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="40dp"
+                                        android:minHeight="40dp"
+                                        android:checkable="false"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:text="Filter"
+                                        android:textColor="@color/white"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:elevation="2dp"
+                                        android:stateListAnimator="@null"
+                                        app:chipBackgroundColor="@color/colorPrimary"
+                                        app:chipCornerRadius="20dp"
+                                        app:chipMinHeight="40dp"
+                                        app:chipStrokeWidth="0dp"
+                                        app:chipIcon="@drawable/ic_filter_list_24"
+                                        app:chipIconTint="@color/white"
+                                        app:chipIconSize="16dp"
+                                        app:chipIconVisible="true"
+                                        app:ensureMinTouchTargetSize="false"
+                                        app:iconStartPadding="8dp"
+                                        app:iconEndPadding="4dp"
+                                        app:textStartPadding="2dp"
+                                        app:textEndPadding="12dp"
+                                        app:rippleColor="#33FFFFFF" />
+
+                                    <!-- Keep existing id alive, but hidden -->
                                     <com.google.android.material.chip.Chip
                                         android:id="@+id/chipCondition"
                                         style="@style/Widget.Material3.Chip.Filter"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="36dp"
-                                        android:layout_marginEnd="8dp"
-                                        android:text="Condition: All"
-                                        android:textColor="@color/teal_premium"
-                                        android:textSize="12sp"
-                                        android:fontFamily="sans-serif-medium"
-                                        app:chipBackgroundColor="#00FFFFFF"
-                                        app:chipStrokeWidth="1dp"
-                                        app:chipStrokeColor="#3316A085"
-                                        app:chipCornerRadius="18dp"
-                                        app:closeIconVisible="false"
-                                        app:chipIcon="@drawable/ic_filter_list_24"
-                                        app:chipIconTint="@color/teal_premium"
-                                        app:chipIconSize="14dp"
-                                        android:visibility="gone" />
-
-
+                                        android:layout_width="0dp"
+                                        android:layout_height="0dp"
+                                        android:visibility="gone"
+                                        android:clickable="false"
+                                        android:focusable="false"
+                                        android:text="Condition: All" />
 
                                 </LinearLayout>
                             </LinearLayout>
