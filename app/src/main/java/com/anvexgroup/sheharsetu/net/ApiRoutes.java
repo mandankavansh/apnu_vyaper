@@ -37,6 +37,11 @@ public final class ApiRoutes {
     public static final String DELETE_LISTING = BASE_URL + "/delete_listing.php";
     public static final String REPOST_LISTING = BASE_URL + "/repost_listing.php";
 
+    // Notifications
+    public static final String LIST_NOTIFICATIONS      = BASE_URL + "/list_user_notifications.php";
+    public static final String MARK_NOTIFICATION_READ  = BASE_URL + "/mark_notification_read.php";
+    public static final String MARK_ALL_NOTIF_READ     = BASE_URL + "/mark_all_notifications_read.php";
+
     private ApiRoutes() {
     }
 }

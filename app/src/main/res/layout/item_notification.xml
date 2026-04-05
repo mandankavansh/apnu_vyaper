@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardNotification"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="4dp"
+    app:cardBackgroundColor="@color/colorSurface"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/colorBorder"
+    app:rippleColor="#1A000000">
+
+    <LinearLayout
+        android:id="@+id/layoutNotifRoot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="14dp"
+        android:gravity="top">
+
+        <!-- Unread indicator dot + icon column -->
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="12dp">
+
+            <!-- Bell icon circle -->
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/ivNotifIcon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_notif_icon_circle"
+                android:padding="12dp"
+                android:src="@drawable/ic_bell_vector"
+                app:tint="@color/colorPrimary"
+                android:contentDescription="@null" />
+
+            <!-- Unread dot overlay -->
+            <View
+                android:id="@+id/viewUnreadDot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="top|end"
+                android:background="@drawable/bg_notif_unread_dot"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+        <!-- Text content -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNotifTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorTextPrimary"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="New listing available near you" />
+
+            <TextView
+                android:id="@+id/tvNotifBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/colorTextSecondary"
+                android:textSize="13sp"
+                android:maxLines="3"
+                android:ellipsize="end"
+                tools:text="A new scrap listing has been posted in Ahmedabad. Tap to view details." />
+
+            <TextView
+                android:id="@+id/tvNotifTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="#9B9B9B"
+                android:textSize="11sp"
+                tools:text="2h ago" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Bottom strip: a faint primary-colored line for unread items -->
+    <View
+        android:id="@+id/viewUnreadStrip"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/colorPrimary"
+        android:visibility="gone" />
+
+</com.google.android.material.card.MaterialCardView>

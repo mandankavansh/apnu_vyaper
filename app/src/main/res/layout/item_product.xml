@@ -2,6 +2,7 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
@@ -140,7 +141,7 @@
                         android:layout_marginStart="4dp"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="Rajkot"
+                        tools:text="Ahmedabad"
                         android:textColor="#939BA3"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -150,7 +151,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:text="2d ago"
+                    tools:text="2d ago"
                     android:textColor="#939BA3"
                     android:textSize="12sp" />
 

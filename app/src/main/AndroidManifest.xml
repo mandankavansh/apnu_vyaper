@@ -84,6 +84,10 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".NotificationsActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:theme="@style/Theme.SheharSetu" />
