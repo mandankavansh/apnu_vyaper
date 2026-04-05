@@ -59,6 +59,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 
 import com.anvexgroup.sheharsetu.Adapter.CategoryAdapter;
+import com.anvexgroup.sheharsetu.Adapter.LanguageAdapter;
 import com.anvexgroup.sheharsetu.Adapter.I18n;
 import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
 import com.anvexgroup.sheharsetu.Adapter.ProductAdapter;
@@ -330,6 +331,18 @@ public class MainActivity extends AppCompatActivity {
         AppBarLayout appBarLayout = findViewById(R.id.appBarLayout);
         View tvToolbarTitle = findViewById(R.id.tvToolbarTitle);
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        ImageView topImageOuter = findViewById(R.id.topImage);
+        ImageView headerOverlayOuter = findViewById(R.id.headerOverlay);
+        ImageView toolbarSearchIcon = findViewById(R.id.toolbarSearchIcon);
+
+        if (toolbarSearchIcon != null) {
+            toolbarSearchIcon.setOnClickListener(v -> {
+                if (appBarLayout != null) {
+                    appBarLayout.setExpanded(true, true);
+                    if (etSearch != null) etSearch.requestFocus();
+                }
+            });
+        }
 
         if (appBarLayout != null) {
             appBarLayout.addOnOffsetChangedListener((appBarLayout1, verticalOffset) -> {
@@ -344,10 +357,22 @@ public class MainActivity extends AppCompatActivity {
                         tvToolbarTitle.setVisibility(View.VISIBLE);
                         tvToolbarTitle.setAlpha(alpha);
                     }
+                    if (topImageOuter != null) topImageOuter.setVisibility(View.GONE);
+                    if (headerOverlayOuter != null) headerOverlayOuter.setVisibility(View.GONE);
+                    if (toolbarSearchIcon != null) {
+                        toolbarSearchIcon.setVisibility(View.VISIBLE);
+                        toolbarSearchIcon.setAlpha(alpha);
+                    }
                 } else {
                     if (tvToolbarTitle != null) {
                         tvToolbarTitle.setVisibility(View.GONE);
                         tvToolbarTitle.setAlpha(0f);
+                    }
+                    if (topImageOuter != null) topImageOuter.setVisibility(View.VISIBLE);
+                    if (headerOverlayOuter != null) headerOverlayOuter.setVisibility(View.VISIBLE);
+                    if (toolbarSearchIcon != null) {
+                        toolbarSearchIcon.setVisibility(View.GONE);
+                        toolbarSearchIcon.setAlpha(0f);
                     }
                 }
 
@@ -490,9 +515,119 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (headerOverlay != null) {
-            headerOverlay.setOnClickListener(v ->
-                    startActivity(new Intent(MainActivity.this, ProfileActivity.class)));
+            headerOverlay.setOnClickListener(v -> showLanguageBottomSheet());
         }
+    }
+
+    /**
+     * Show language picker bottom sheet
+     */
+    private void showLanguageBottomSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(this,
+                com.google.android.material.R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog);
+
+        View view = LayoutInflater.from(this).inflate(R.layout.sheet_language_picker, null, false);
+        dialog.setContentView(view);
+
+        RecyclerView rvLangs = view.findViewById(R.id.rvLanguages);
+        View progress = view.findViewById(R.id.progressLanguages);
+
+        java.util.List<String[]> languages = new java.util.ArrayList<>();
+
+        LanguageAdapter adapter = new LanguageAdapter(languages, lang -> {
+            session.setLang(lang[0], lang[1]);
+
+            getSharedPreferences("sheharsetu_prefs", MODE_PRIVATE).edit()
+                    .putString("app_lang_code", lang[0])
+                    .putString("app_lang_name", lang[1])
+                    .apply();
+
+            LanguageManager.apply(this, lang[0]);
+
+            dialog.dismiss();
+
+            Toast.makeText(this, I18n.t(this, "Language changed to") + " " + lang[1], Toast.LENGTH_SHORT).show();
+            recreate();
+        });
+
+        rvLangs.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 3));
+        rvLangs.setAdapter(adapter);
+
+        fetchLanguagesForPicker(languages, adapter, progress, rvLangs);
+
+        dialog.show();
+    }
+
+    /**
+     * Fetch languages from API for picker
+     */
+    private void fetchLanguagesForPicker(java.util.List<String[]> languages,
+                                         LanguageAdapter adapter,
+                                         View progress,
+                                         RecyclerView rvLangs) {
+        progress.setVisibility(View.VISIBLE);
+        rvLangs.setVisibility(View.INVISIBLE);
+
+        String url = ApiRoutes.GET_LANGUAGES;
+
+        com.android.volley.toolbox.StringRequest req = new com.android.volley.toolbox.StringRequest(
+                Request.Method.GET,
+                url,
+                response -> {
+                    progress.setVisibility(View.GONE);
+                    rvLangs.setVisibility(View.VISIBLE);
+
+                    try {
+                        org.json.JSONObject resp = new org.json.JSONObject(response.trim());
+                        if (!resp.optBoolean("ok", false))
+                            return;
+
+                        org.json.JSONArray arr = resp.optJSONArray("data");
+                        if (arr == null)
+                            return;
+
+                        languages.clear();
+                        int englishIndex = -1;
+
+                        for (int i = 0; i < arr.length(); i++) {
+                            org.json.JSONObject o = arr.optJSONObject(i);
+                            if (o == null)
+                                continue;
+                            if (o.optInt("enabled", 1) != 1)
+                                continue;
+
+                            String code = o.optString("code", "").trim();
+                            String nativeName = o.optString("native_name", "").trim();
+                            String englishName = o.optString("english_name", "").trim();
+
+                            if (code.isEmpty() || nativeName.isEmpty())
+                                continue;
+
+                            languages.add(new String[] { code, nativeName, englishName });
+
+                            if ("en".equalsIgnoreCase(code)) {
+                                englishIndex = languages.size() - 1;
+                            }
+                        }
+
+                        if (englishIndex > 0) {
+                            String[] en = languages.remove(englishIndex);
+                            languages.add(0, en);
+                        }
+
+                        adapter.notifyDataSetChanged();
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing languages: " + e.getMessage());
+                    }
+                },
+                error -> {
+                    progress.setVisibility(View.GONE);
+                    Toast.makeText(this, I18n.t(this, "Failed to load languages"), Toast.LENGTH_SHORT).show();
+                });
+
+        req.setRetryPolicy(new DefaultRetryPolicy(15000, 0, 1.0f));
+        VolleySingleton.getInstance(this).add(req);
     }
 
     // ================= Header Location =================
