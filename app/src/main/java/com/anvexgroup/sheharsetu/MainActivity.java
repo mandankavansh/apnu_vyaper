@@ -486,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (topImage != null) {
             topImage.setOnClickListener(v ->
-                    Toast.makeText(MainActivity.this, I18n.t(MainActivity.this, "Notifications coming soon!"), Toast.LENGTH_SHORT).show());
+                    startActivity(new Intent(MainActivity.this, NotificationsActivity.class)));
         }
 
         if (headerOverlay != null) {
@@ -806,7 +806,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, MyAdsActivity.class));
 
             } else if (id == R.id.nav_notifications) {
-                Toast.makeText(MainActivity.this, I18n.t(this, "Notifications"), Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, NotificationsActivity.class));
 
             } else if (id == R.id.nav_invite) {
                 shareApp();
@@ -1448,6 +1448,10 @@ public class MainActivity extends AppCompatActivity {
                         posted = o.optString("posted_time", "");
                     }
                     m.put("posted_when", posted);
+
+                    // Raw UTC timestamp – preferred for client-side relative-time via TimeUtils
+                    String createdAt = o.optString("created_at", "");
+                    m.put("created_at", createdAt);
 
                     List<String> images = new ArrayList<>();
                     JSONArray imgArr = o.optJSONArray("images");

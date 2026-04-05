@@ -20,6 +20,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.bumptech.glide.Glide;
 import com.anvexgroup.sheharsetu.ProductDetail;
 import com.anvexgroup.sheharsetu.R;
+import com.anvexgroup.sheharsetu.utils.TimeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,18 +96,32 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
         }
         h.price.setText(displayPrice);
 
-        String displayCity = TextUtils.isEmpty(city) ? "" : "📍 " + city;
+        String displayCity = TextUtils.isEmpty(city) ? "" : city;
         String distance = getString(p, "distance", "");
         if (!TextUtils.isEmpty(distance) && !distance.equals("0") && !distance.equals("null")) {
             try {
                 double distVal = Double.parseDouble(distance);
-                displayCity += " • " + String.format(java.util.Locale.getDefault(), "%.1f km", distVal);
+                displayCity += (TextUtils.isEmpty(displayCity) ? "" : " • ")
+                        + String.format(java.util.Locale.getDefault(), "%.1f km", distVal);
             } catch (Exception e) {
-                // Fallback if parsing fails but string is present
-                displayCity += " • " + distance + " km";
+                displayCity += (TextUtils.isEmpty(displayCity) ? "" : " • ") + distance + " km";
             }
         }
-        String posted = getString(p, "posted_when", getString(p, "posted_time", ""));
+
+        // Apply location to view  ← THIS WAS THE MISSING LINE causing "Rajkot" to stick
+        if (h.city != null) {
+            h.city.setText(displayCity);
+        }
+
+        // Prefer raw UTC timestamp for accurate client-side relative time.
+        // Fall back to server's pre-formatted string only if no raw timestamp present.
+        String createdAt = getString(p, "created_at", "");
+        String posted;
+        if (!TextUtils.isEmpty(createdAt) && !"null".equalsIgnoreCase(createdAt)) {
+            posted = TimeUtils.relativeTime(createdAt);
+        } else {
+            posted = getString(p, "posted_when", getString(p, "posted_time", ""));
+        }
 
         // --- Posted Time ---
         if (h.posted != null) {

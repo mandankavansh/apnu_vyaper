@@ -202,24 +202,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         try {
             createNotificationChannel();
 
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-            if (data != null && !data.isEmpty()) {
-                for (Map.Entry<String, String> entry : data.entrySet()) {
-                    intent.putExtra(entry.getKey(), entry.getValue());
-                }
-            }
+            // Resolve tap destination
+            // If data carries target_screen + target_id → route to correct screen.
+            // Otherwise → open NotificationsActivity so user can see their inbox.
+            Intent tapIntent = buildTapIntent(data);
 
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     this,
                     (int) System.currentTimeMillis(),
-                    intent,
+                    tapIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setSmallIcon(R.mipmap.ic_launcher) // keep this for compatibility now
+                    .setSmallIcon(R.mipmap.ic_launcher)
                     .setContentTitle(title)
                     .setContentText(body)
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
@@ -242,6 +238,49 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         } catch (Exception e) {
             Log.e(TAG, "showNotification failed", e);
         }
+    }
+
+    /**
+     * Builds the Intent to open when a push notification is tapped.
+     * Routes to the specific target screen when target_screen and target_id are present.
+     * Falls back to NotificationsActivity otherwise.
+     */
+    private Intent buildTapIntent(Map<String, String> data) {
+        String targetScreen = data != null ? data.get("target_screen") : null;
+        String targetId     = data != null ? data.get("target_id")     : null;
+
+        if (!TextUtils.isEmpty(targetScreen) && !TextUtils.isEmpty(targetId)) {
+            switch (targetScreen.toLowerCase(java.util.Locale.ROOT)) {
+                case "product_detail":
+                case "listing_detail":
+                case "listing": {
+                    try {
+                        int listingId = Integer.parseInt(targetId.trim());
+                        if (listingId > 0) {
+                            Intent i = new Intent(this, ProductDetail.class);
+                            i.putExtra("listing_id", listingId);
+                            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            return i;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        // Default: open notifications inbox
+        Intent i = new Intent(this, NotificationsActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        // Pass through any target extras so NotificationsActivity can act on them
+        if (!TextUtils.isEmpty(targetScreen)) {
+            i.putExtra(NotificationsActivity.EXTRA_TARGET_SCREEN, targetScreen);
+        }
+        if (!TextUtils.isEmpty(targetId)) {
+            i.putExtra(NotificationsActivity.EXTRA_TARGET_ID, targetId);
+        }
+        return i;
     }
 
     private void createNotificationChannel() {
