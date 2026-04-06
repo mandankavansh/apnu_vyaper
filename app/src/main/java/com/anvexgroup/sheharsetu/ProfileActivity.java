@@ -5,9 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.AutoCompleteTextView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -37,6 +40,8 @@ import com.anvexgroup.sheharsetu.net.VolleySingleton;
 import com.anvexgroup.sheharsetu.utils.LoadingDialog;
 
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -45,11 +50,13 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity {
 
     private static final String TAG = "ProfileActivity";
+    private static final String APP_BRAND = "Shaher Setu";
 
     // View mode widgets (main screen)
     private TextView tvAvatarLetter, tvFullName, tvPhone, tvPlaceTypeChip;
@@ -106,7 +113,7 @@ public class ProfileActivity extends AppCompatActivity {
         View viewStatusBarBg = findViewById(R.id.viewStatusBarBg);
         View viewNavBarBg = findViewById(R.id.viewNavBarBg);
 
-        View rootProfile = findViewById(R.id.rootProfile);
+        rootProfile = findViewById(R.id.rootProfile);
         if (rootProfile != null) {
             androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rootProfile, (v, insets) -> {
                 androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
@@ -160,6 +167,7 @@ public class ProfileActivity extends AppCompatActivity {
         layoutLanguage = findViewById(R.id.layoutLanguage);
         tvLanguageValue = findViewById(R.id.tvLanguageValue);
 
+        applyAvatarLetterCentering();
     }
 
 
@@ -177,7 +185,8 @@ public class ProfileActivity extends AppCompatActivity {
                 || id == R.id.tvState
                 || id == R.id.tvPincode
                 || id == R.id.tvLanguageValue
-                || id == R.id.tvAvatarLetter;
+                || id == R.id.tvAvatarLetter
+                || id == R.id.tvToolbarTitle;
     }
 
     private void collectTranslatableTexts(View view, List<String> out) {
@@ -259,14 +268,10 @@ public class ProfileActivity extends AppCompatActivity {
         collectTranslatableTexts(rootProfile, keys);
 
         I18n.prefetch(this, keys, () -> {
-            if (tvToolbarTitle != null) {
-                tvToolbarTitle.setText(I18n.t(this, "Profile"));
-            }
+            applyFixedBrandText();
             applyTranslationsToViewTree(rootProfile);
         }, () -> {
-            if (tvToolbarTitle != null) {
-                tvToolbarTitle.setText(I18n.t(this, "Profile"));
-            }
+            applyFixedBrandText();
             applyTranslationsToViewTree(rootProfile);
         });
     }
@@ -294,10 +299,7 @@ public class ProfileActivity extends AppCompatActivity {
             tvPlaceTypeChip.setText(TextUtils.isEmpty(displayPlaceType) ? I18n.t(this, "Village") : I18n.t(this, displayPlaceType));
             tvPlaceTypeChip.setVisibility(View.VISIBLE);
 
-            if (!TextUtils.isEmpty(displayName)) {
-                char first = Character.toUpperCase(displayName.trim().charAt(0));
-                tvAvatarLetter.setText(String.valueOf(first));
-            }
+            setAvatarLetter(displayName, "U");
         }, () -> {
             tvFullName.setText(TextUtils.isEmpty(displayName) ? "-" : displayName);
             tvPhone.setText(formattedPhone);
@@ -311,16 +313,82 @@ public class ProfileActivity extends AppCompatActivity {
             tvPlaceTypeChip.setText(TextUtils.isEmpty(displayPlaceType) ? "Village" : displayPlaceType);
             tvPlaceTypeChip.setVisibility(View.VISIBLE);
 
-            if (!TextUtils.isEmpty(displayName)) {
-                char first = Character.toUpperCase(displayName.trim().charAt(0));
-                tvAvatarLetter.setText(String.valueOf(first));
-            }
+            setAvatarLetter(displayName, "U");
+        });
+    }
+
+    private void setAvatarLetter(String displayName, String fallbackLetter) {
+        if (tvAvatarLetter == null) return;
+
+        String source = TextUtils.isEmpty(displayName) ? fallbackLetter : displayName.trim();
+        if (TextUtils.isEmpty(source)) source = fallbackLetter;
+
+        String letter = source.substring(0, 1).toUpperCase(Locale.getDefault());
+        tvAvatarLetter.setText(letter);
+        applyAvatarLetterCentering();
+    }
+
+    private void applyAvatarLetterCentering() {
+        if (tvAvatarLetter == null) return;
+
+        tvAvatarLetter.setGravity(Gravity.CENTER);
+        tvAvatarLetter.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        tvAvatarLetter.setIncludeFontPadding(false);
+        tvAvatarLetter.setPadding(0, 0, 0, 0);
+        tvAvatarLetter.setSingleLine(true);
+        tvAvatarLetter.setMaxLines(1);
+
+        ViewGroup.LayoutParams rawParams = tvAvatarLetter.getLayoutParams();
+
+        if (rawParams instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) rawParams;
+            lp.gravity = Gravity.CENTER;
+            tvAvatarLetter.setLayoutParams(lp);
+        } else if (rawParams instanceof LinearLayout.LayoutParams) {
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) rawParams;
+            lp.gravity = Gravity.CENTER;
+            tvAvatarLetter.setLayoutParams(lp);
+        } else if (rawParams instanceof RelativeLayout.LayoutParams) {
+            RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) rawParams;
+            lp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE);
+            tvAvatarLetter.setLayoutParams(lp);
+        } else if (rawParams instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams lp =
+                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) rawParams;
+            lp.startToStart = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID;
+            lp.endToEnd = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID;
+            lp.topToTop = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID;
+            lp.bottomToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID;
+            lp.horizontalBias = 0.5f;
+            lp.verticalBias = 0.5f;
+            tvAvatarLetter.setLayoutParams(lp);
+        }
+
+        tvAvatarLetter.post(() -> {
+            tvAvatarLetter.setGravity(Gravity.CENTER);
+            tvAvatarLetter.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            tvAvatarLetter.setTranslationX(0f);
+            tvAvatarLetter.setTranslationY(0f);
+            tvAvatarLetter.requestLayout();
+            tvAvatarLetter.invalidate();
         });
     }
 
     private void setupToolbar() {
-        tvToolbarTitle.setText(I18n.t(this, "Profile"));
+        applyFixedBrandText();
         btnBack.setOnClickListener(v -> onBackPressed());
+    }
+
+    private void applyFixedBrandText() {
+        setTitle(APP_BRAND);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(APP_BRAND);
+        }
+
+        if (tvToolbarTitle != null) {
+            tvToolbarTitle.setText(APP_BRAND);
+        }
     }
 
     private void setupEditFab() {
@@ -581,7 +649,7 @@ public class ProfileActivity extends AppCompatActivity {
         tvState.setText("-");
         tvPincode.setText("-");
         tvPlaceTypeChip.setText(I18n.t(this, "Village"));
-        tvAvatarLetter.setText("G");
+        setAvatarLetter("Guest User", "G");
     }
 
     /**

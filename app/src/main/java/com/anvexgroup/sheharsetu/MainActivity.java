@@ -90,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_FCM_TOKEN = "fcm_token";
     private static final String KEY_LAST_UPLOADED_FCM_TOKEN = "last_uploaded_fcm_token";
 
+    private static final String APP_BRAND = "Shaher Setu";
+
     // ===== Views (Header) =====
     private ImageView btnDrawer, btnVoiceSearch;
     private TextInputEditText etSearch;
@@ -268,7 +270,9 @@ public class MainActivity extends AppCompatActivity {
         btnPost = findViewById(R.id.btnPost);
         btnHelp = findViewById(R.id.btnHelp);
         tvMarquee = findViewById(R.id.tvMarquee);
-        if (tvMarquee != null) tvMarquee.setSelected(true);
+        if (tvMarquee != null) {
+            applyContinuousMarquee(tvMarquee.getText() == null ? "" : tvMarquee.getText().toString());
+        }
 
         swipeRefresh = findViewById(R.id.swipeRefresh);
         layoutEmptyState = findViewById(R.id.layoutEmptyState);
@@ -342,6 +346,7 @@ public class MainActivity extends AppCompatActivity {
 
         fetchAndDisplayHeaderLocation();
 
+        applyFixedBrandText();
         prefetchAndApplyStaticTexts();
 
         showProducts();
@@ -1031,7 +1036,6 @@ public class MainActivity extends AppCompatActivity {
         View root = findViewById(R.id.rootContainer);
         collectTexts(root, keys);
 
-        keys.add("SheharSetu");
         keys.add("LOCAL MARKETPLACE PLATFORM");
         keys.add("Ahmedabad, Gujarat");
         keys.add("Find the Best");
@@ -1132,6 +1136,7 @@ public class MainActivity extends AppCompatActivity {
         I18n.prefetch(this, new ArrayList<>(keys), () -> {
             translateTextsRecursively(findViewById(R.id.rootContainer));
             applyDrawerMenuTranslations();
+            applyFixedBrandText();
 
             TextView tvLangBadge = findViewById(R.id.tvLangBadge);
             if (tvLangBadge != null) {
@@ -1142,6 +1147,10 @@ public class MainActivity extends AppCompatActivity {
                 chipCondition.setText(I18n.t(this, "Condition: All"));
             }
 
+            if (tvMarquee != null) {
+                applyContinuousMarquee(tvMarquee.getText() == null ? "" : tvMarquee.getText().toString());
+            }
+
             updateKmChipText();
             updatePriceChipText();
         });
@@ -1149,6 +1158,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void collectTexts(View view, Set<String> keys) {
         if (view == null) return;
+
+        if (shouldSkipAutoTranslation(view)) {
+            return;
+        }
 
         if (view instanceof TextView) {
             TextView tv = (TextView) view;
@@ -1175,6 +1188,10 @@ public class MainActivity extends AppCompatActivity {
     private void translateTextsRecursively(View view) {
         if (view == null) return;
 
+        if (shouldSkipAutoTranslation(view)) {
+            return;
+        }
+
         if (view instanceof TextView) {
             TextView tv = (TextView) view;
 
@@ -1195,6 +1212,85 @@ public class MainActivity extends AppCompatActivity {
                 translateTextsRecursively(vg.getChildAt(i));
             }
         }
+    }
+
+    private boolean shouldSkipAutoTranslation(View view) {
+        if (view == null) return false;
+
+        int id = view.getId();
+        if (id == R.id.tvToolbarTitle
+                || id == R.id.tvGreeting
+                || id == R.id.tvGreetingSub) {
+            return true;
+        }
+
+        View parent = (view.getParent() instanceof View) ? (View) view.getParent() : null;
+        while (parent != null) {
+            if (parent.getId() == R.id.tvToolbarTitle) {
+                return true;
+            }
+            parent = (parent.getParent() instanceof View) ? (View) parent.getParent() : null;
+        }
+
+        return false;
+    }
+
+    private void applyFixedBrandText() {
+        setTitle(APP_BRAND);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(APP_BRAND);
+        }
+
+        TextView tvGreeting = findViewById(R.id.tvGreeting);
+        if (tvGreeting != null) {
+            tvGreeting.setText(APP_BRAND);
+        }
+
+        View toolbarTitleView = findViewById(R.id.tvToolbarTitle);
+        TextView titleTextView = findFirstTextView(toolbarTitleView);
+        if (titleTextView != null) {
+            titleTextView.setText(APP_BRAND);
+        }
+    }
+
+    @Nullable
+    private TextView findFirstTextView(View view) {
+        if (view == null) return null;
+
+        if (view instanceof TextView) {
+            return (TextView) view;
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                TextView result = findFirstTextView(group.getChildAt(i));
+                if (result != null) return result;
+            }
+        }
+
+        return null;
+    }
+
+    private void applyContinuousMarquee(String text) {
+        if (tvMarquee == null) return;
+
+        String safe = text == null ? "" : text.trim();
+        if (safe.isEmpty()) safe = APP_BRAND;
+
+        String loopText = safe + "     •     " + safe + "     •     " + safe + "     •     ";
+
+        tvMarquee.setSingleLine(true);
+        tvMarquee.setHorizontallyScrolling(true);
+        tvMarquee.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
+        tvMarquee.setMarqueeRepeatLimit(-1);
+        tvMarquee.setFocusable(true);
+        tvMarquee.setFocusableInTouchMode(true);
+        tvMarquee.setSelected(true);
+        tvMarquee.setText(loopText);
+
+        tvMarquee.post(() -> tvMarquee.setSelected(true));
     }
 
     // ================= Adapters =================
@@ -2040,7 +2136,7 @@ public class MainActivity extends AppCompatActivity {
      * Used to set floating hints on the Min / Max price fields programmatically with I18n.
      */
     private void collectTextInputLayouts(View root,
-            List<com.google.android.material.textfield.TextInputLayout> out) {
+                                         List<com.google.android.material.textfield.TextInputLayout> out) {
         if (root == null) return;
         if (root instanceof com.google.android.material.textfield.TextInputLayout) {
             out.add((com.google.android.material.textfield.TextInputLayout) root);
