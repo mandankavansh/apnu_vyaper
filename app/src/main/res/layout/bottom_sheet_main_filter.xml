@@ -15,14 +15,14 @@
         android:paddingStart="18dp"
         android:paddingTop="14dp"
         android:paddingEnd="18dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="26dp">
 
         <!-- Drag Handle -->
         <View
-            android:layout_width="42dp"
+            android:layout_width="44dp"
             android:layout_height="5dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="18dp"
             android:background="@drawable/bg_sheet_handle" />
 
         <!-- Header -->
@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:text="Refine results by distance and condition"
+                android:text="Refine results by distance, condition, and price"
                 android:textColor="@color/premium_text_sub"
                 android:textSize="13sp"
                 android:fontFamily="sans-serif" />
@@ -58,7 +58,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="22dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="@color/colorSurface"
             app:strokeWidth="1dp"
@@ -77,16 +77,16 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.card.MaterialCardView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        app:cardCornerRadius="18dp"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        app:cardCornerRadius="19dp"
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="#1439A99C">
 
                         <ImageView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="9dp"
+                            android:padding="10dp"
                             android:src="@drawable/ic_location_24"
                             app:tint="@color/colorPrimary" />
                     </com.google.android.material.card.MaterialCardView>
@@ -111,7 +111,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Show listings within your selected range"
+                            android:text="Show listings within your selected distance"
                             android:textColor="@color/premium_text_sub"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -123,7 +123,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     app:singleSelection="true"
-                    app:selectionRequired="true">
+                    app:selectionRequired="true"
+                    app:chipSpacingHorizontal="8dp"
+                    app:chipSpacingVertical="8dp">
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipDistanceAll"
@@ -198,8 +200,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
+                    android:orientation="vertical"
                     android:visibility="gone">
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -212,12 +213,7 @@
                         app:boxCornerRadiusBottomStart="18dp"
                         app:boxCornerRadiusBottomEnd="18dp"
                         app:boxStrokeColor="@color/colorPrimary"
-                        app:hintTextColor="@color/premium_text_sub"
-                        app:startIconDrawable="@drawable/ic_location_24"
-                        app:startIconTint="@color/colorPrimary"
-                        app:endIconMode="custom"
-                        app:endIconDrawable="@drawable/ic_arrow_right_24"
-                        app:endIconTint="@color/colorPrimary">
+                        app:hintTextColor="@color/premium_text_sub">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etCustomKm"
@@ -240,7 +236,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            app:cardCornerRadius="20dp"
+            app:cardCornerRadius="22dp"
             app:cardElevation="0dp"
             app:cardBackgroundColor="@color/colorSurface"
             app:strokeWidth="1dp"
@@ -259,16 +255,16 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.card.MaterialCardView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        app:cardCornerRadius="18dp"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        app:cardCornerRadius="19dp"
                         app:cardElevation="0dp"
                         app:cardBackgroundColor="#1439A99C">
 
                         <ImageView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="9dp"
+                            android:padding="10dp"
                             android:src="@drawable/ic_filter_list_24"
                             app:tint="@color/colorPrimary" />
                     </com.google.android.material.card.MaterialCardView>
@@ -305,7 +301,9 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
                     app:singleSelection="true"
-                    app:selectionRequired="true">
+                    app:selectionRequired="true"
+                    app:chipSpacingHorizontal="8dp"
+                    app:chipSpacingVertical="8dp">
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/chipConditionAll"
@@ -334,6 +332,145 @@
                         android:textStyle="bold"
                         app:chipCornerRadius="20dp" />
                 </com.google.android.material.chip.ChipGroup>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Price Section Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/layoutPriceSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/colorSurface"
+            app:strokeWidth="1dp"
+            app:strokeColor="#14222222">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        app:cardCornerRadius="19dp"
+                        app:cardElevation="0dp"
+                        app:cardBackgroundColor="#1439A99C">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_filter_list_24"
+                            app:tint="@color/colorPrimary" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Price Range"
+                            android:textColor="@color/premium_text_main"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Filter listings by minimum and maximum price"
+                            android:textColor="@color/premium_text_sub"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        android:hint="Min Price"
+                        app:boxBackgroundMode="outline"
+                        app:boxCornerRadiusTopStart="18dp"
+                        app:boxCornerRadiusTopEnd="18dp"
+                        app:boxCornerRadiusBottomStart="18dp"
+                        app:boxCornerRadiusBottomEnd="18dp"
+                        app:boxStrokeColor="@color/colorPrimary"
+                        app:hintTextColor="@color/premium_text_sub"
+                        app:prefixText="₹ "
+                        app:prefixTextColor="@color/premium_text_main">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etMinPrice"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textColor="@color/premium_text_main"
+                            android:textSize="15sp"
+                            android:paddingTop="14dp"
+                            android:paddingBottom="14dp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:hint="Max Price"
+                        app:boxBackgroundMode="outline"
+                        app:boxCornerRadiusTopStart="18dp"
+                        app:boxCornerRadiusTopEnd="18dp"
+                        app:boxCornerRadiusBottomStart="18dp"
+                        app:boxCornerRadiusBottomEnd="18dp"
+                        app:boxStrokeColor="@color/colorPrimary"
+                        app:hintTextColor="@color/premium_text_sub"
+                        app:prefixText="₹ "
+                        app:prefixTextColor="@color/premium_text_main">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etMaxPrice"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textColor="@color/premium_text_main"
+                            android:textSize="15sp"
+                            android:paddingTop="14dp"
+                            android:paddingBottom="14dp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvPriceHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Leave any field empty to keep it open-ended"
+                    android:textColor="@color/premium_text_sub"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
