@@ -85,6 +85,7 @@ public class CategorySelectActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_category_select);
+        LanguageManager.enforceLtr(this);
 bindViews();
         prefetchAndApplyStaticTexts();
         setupLists();

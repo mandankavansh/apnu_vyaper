@@ -19,6 +19,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
+
 public class SplashScreen extends AppCompatActivity {
 
     private static final long SPLASH_DELAY = 1800L; // 1.8s
@@ -34,7 +36,7 @@ public class SplashScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
 
-
+        LanguageManager.enforceLtr(this);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
 

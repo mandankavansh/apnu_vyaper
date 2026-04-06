@@ -81,7 +81,7 @@ public class MyAdsActivity extends AppCompatActivity implements MyAdsAdapter.OnA
         LanguageManager.apply(this, langCode);
 
         setContentView(R.layout.activity_my_ads);
-
+        LanguageManager.enforceLtr(this);
         session = new SessionManager(this);
 
         // Toolbar

@@ -25,6 +25,7 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.anvexgroup.sheharsetu.Adapter.I18n;
+import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
 import com.anvexgroup.sheharsetu.core.SessionManager;
 import com.anvexgroup.sheharsetu.net.ApiRoutes;
 import com.anvexgroup.sheharsetu.net.VolleySingleton;
@@ -93,7 +94,7 @@ public class NotificationsActivity extends AppCompatActivity
         }
 
         setContentView(R.layout.activity_notifications);
-
+        LanguageManager.enforceLtr(this);
         // System-bar insets (mirrors MainActivity/MyAdsActivity pattern)
         View viewStatusBar = findViewById(R.id.viewStatusBarBackground);
         View viewNavBar    = findViewById(R.id.viewNavBarBackground);

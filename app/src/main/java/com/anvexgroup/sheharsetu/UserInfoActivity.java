@@ -108,7 +108,7 @@ public class UserInfoActivity extends AppCompatActivity {
         LanguageManager.apply(this, langCode);
 
         setContentView(R.layout.activity_user_info);
-
+        LanguageManager.enforceLtr(this);
         // Status bar: no overlap, white icons on black bar
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(Color.BLACK);

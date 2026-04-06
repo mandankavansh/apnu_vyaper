@@ -12,6 +12,7 @@ import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
 import com.bumptech.glide.Glide;
 import com.anvexgroup.sheharsetu.utils.TouchImageView;
 
@@ -28,7 +29,7 @@ public class FullScreenImageActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fullscreen_image);
-
+        LanguageManager.enforceLtr(this);
         // Handle edge-to-edge
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.vpFullScreen), (v, insets) -> {
             // Apply no padding to full screen image, but maybe to close button

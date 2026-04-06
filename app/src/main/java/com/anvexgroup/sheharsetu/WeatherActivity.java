@@ -25,6 +25,7 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.anvexgroup.sheharsetu.Adapter.I18n;
+import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.material.button.MaterialButton;
@@ -72,6 +73,8 @@ public class WeatherActivity extends AppCompatActivity {
         setContentView(R.layout.activity_weather);
         initViews();
         setupToolbar();
+        LanguageManager.enforceLtr(this);
+
 
         // Dynamic Status Bar & Nav Bar Height logic (Proper Black Frame)
         View viewStatusBarBackground = findViewById(R.id.viewStatusBarBackground);

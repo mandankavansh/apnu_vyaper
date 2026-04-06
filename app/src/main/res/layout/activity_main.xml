@@ -583,7 +583,7 @@
                                     android:gravity="center_vertical"
                                     android:orientation="horizontal">
 
-                                    <!-- Single visible filter trigger -->
+                                    <!-- Nearby / Distance filter chip -->
                                     <com.google.android.material.chip.Chip
                                         android:id="@+id/chipKmFilter"
                                         style="@style/Widget.Material3.Chip.Assist"
@@ -594,6 +594,39 @@
                                         android:clickable="true"
                                         android:focusable="true"
                                         android:text="Filter"
+                                        android:textColor="@color/white"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:elevation="2dp"
+                                        android:stateListAnimator="@null"
+                                        app:chipBackgroundColor="@color/colorPrimary"
+                                        app:chipCornerRadius="20dp"
+                                        app:chipMinHeight="40dp"
+                                        app:chipStrokeWidth="0dp"
+                                        app:chipIcon="@drawable/ic_filter_list_24"
+                                        app:chipIconTint="@color/white"
+                                        app:chipIconSize="16dp"
+                                        app:chipIconVisible="true"
+                                        app:ensureMinTouchTargetSize="false"
+                                        app:iconStartPadding="8dp"
+                                        app:iconEndPadding="4dp"
+                                        app:textStartPadding="2dp"
+                                        app:textEndPadding="12dp"
+                                        app:rippleColor="#33FFFFFF" />
+
+                                    <!-- Price filter chip — same premium teal family -->
+                                    <com.google.android.material.chip.Chip
+                                        android:id="@+id/chipPriceFilter"
+                                        style="@style/Widget.Material3.Chip.Assist"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="40dp"
+                                        android:layout_marginStart="8dp"
+                                        android:minHeight="40dp"
+                                        android:checkable="false"
+                                        android:clickable="true"
+                                        android:focusable="true"
+                                        android:text="Price"
                                         android:textColor="@color/white"
                                         android:textSize="12sp"
                                         android:textStyle="bold"

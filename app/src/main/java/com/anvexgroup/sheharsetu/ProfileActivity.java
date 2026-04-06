@@ -101,7 +101,7 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_profile);
-
+        LanguageManager.enforceLtr(this);
         // Apply dynamically heights to the custom background views
         View viewStatusBarBg = findViewById(R.id.viewStatusBarBg);
         View viewNavBarBg = findViewById(R.id.viewNavBarBg);

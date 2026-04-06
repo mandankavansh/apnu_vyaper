@@ -7,12 +7,14 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -51,8 +53,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ProductDetail extends AppCompatActivity {
 
@@ -96,6 +100,12 @@ public class ProductDetail extends AppCompatActivity {
     private String sellerPhone = "";
     private int sellerId = 0;
     private int categoryId = 0;
+    private int pendingListingId = 0;
+    private String fallbackTitle = "";
+    private String fallbackPrice = "";
+    private String fallbackCity = "";
+    private String fallbackDesc = "";
+    private int[] fallbackImages;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -132,26 +142,14 @@ public class ProductDetail extends AppCompatActivity {
         setupClicks();
         setupSimilarListings();
 
-        int listingId = getIntent().getIntExtra("listing_id", 0);
-        if (listingId > 0) {
-            fetchListing(listingId);
-        } else {
-            String t = getIntent().getStringExtra("title");
-            String p = getIntent().getStringExtra("price");
-            String c = getIntent().getStringExtra("city");
-            String d = getIntent().getStringExtra("desc");
-            int[] imgs = getIntent().getIntArrayExtra("images");
-            bindTextFallback(t, p, c, d);
-            if (imgs != null && imgs.length > 0) {
-                List<Object> drawables = new ArrayList<>();
-                for (int idRes : imgs) drawables.add(idRes);
-                setGallery(drawables);
-            } else {
-                List<Object> ph = new ArrayList<>();
-                ph.add(R.drawable.image1);
-                setGallery(ph);
-            }
-        }
+        pendingListingId = getIntent().getIntExtra("listing_id", 0);
+        fallbackTitle = getIntent().getStringExtra("title");
+        fallbackPrice = getIntent().getStringExtra("price");
+        fallbackCity = getIntent().getStringExtra("city");
+        fallbackDesc = getIntent().getStringExtra("desc");
+        fallbackImages = getIntent().getIntArrayExtra("images");
+
+        prefetchStaticTextsAndLoad();
     }
 
     @Override
@@ -197,6 +195,53 @@ public class ProductDetail extends AppCompatActivity {
         labelSimilar = findViewById(R.id.labelSimilar);
     }
 
+    private void prefetchStaticTextsAndLoad() {
+        Set<String> keys = new LinkedHashSet<>();
+        collectTexts(findViewById(R.id.root), keys);
+
+        keys.add("Saved/Unsaved (demo)");
+        keys.add("Posted");
+        keys.add("Share via");
+        keys.add("Hi, I'm interested in");
+        keys.add("Loading listing...");
+        keys.add("Failed");
+        keys.add("Seller");
+        keys.add("Member since");
+        keys.add("listings");
+        keys.add("Status");
+        keys.add("Verified Listing");
+        keys.add("Parse error");
+        keys.add("Network error");
+        keys.add("Feature");
+        keys.add("Demo");
+        keys.add("Fallback");
+        keys.add("WhatsApp not installed");
+        keys.add("Available");
+        keys.add("availability");
+
+        I18n.prefetch(this, new ArrayList<>(keys), () -> {
+            translateTextsRecursively(findViewById(R.id.root));
+            continueLoadFlow();
+        }, this::continueLoadFlow);
+    }
+
+    private void continueLoadFlow() {
+        if (pendingListingId > 0) {
+            fetchListing(pendingListingId);
+        } else {
+            bindTextFallback(fallbackTitle, fallbackPrice, fallbackCity, fallbackDesc);
+            if (fallbackImages != null && fallbackImages.length > 0) {
+                List<Object> drawables = new ArrayList<>();
+                for (int idRes : fallbackImages) drawables.add(idRes);
+                setGallery(drawables);
+            } else {
+                List<Object> ph = new ArrayList<>();
+                ph.add(R.drawable.image1);
+                setGallery(ph);
+            }
+        }
+    }
+
     @SuppressLint("SetTextI18n")
     private void setupStaticUi() {
         if (appBar != null) {
@@ -209,7 +254,7 @@ public class ProductDetail extends AppCompatActivity {
 
         pdpSellerAvatar.setVisibility(View.INVISIBLE);
         if (tvSellerAvatarLetter != null) tvSellerAvatarLetter.setText("S");
-        pdpSellerName.setText("Seller");
+        pdpSellerName.setText(I18n.t(this, "Seller"));
         pdpSellerMeta.setText("");
     }
 
@@ -298,7 +343,7 @@ public class ProductDetail extends AppCompatActivity {
             startActivity(Intent.createChooser(s, I18n.t(this, "Share via")));
         });
 
-        pdpSave.setOnClickListener(v -> Toast.makeText(this, "Saved/Unsaved (demo)", Toast.LENGTH_SHORT).show());
+        pdpSave.setOnClickListener(v -> Toast.makeText(this, I18n.t(this, "Saved/Unsaved (demo)"), Toast.LENGTH_SHORT).show());
 
         pdpViewProfile.setOnClickListener(v -> {
             if (sellerId > 0) {
@@ -342,7 +387,7 @@ public class ProductDetail extends AppCompatActivity {
                         JSONObject root = new JSONObject(resp);
 
                         if (!"success".equalsIgnoreCase(root.optString("status"))) {
-                            String msg = root.optString("message", "Failed");
+                            String msg = root.optString("message", I18n.t(this, "Failed"));
                             Log.e(TAG, "❌ Server returned error status: " + msg);
                             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
                             return;
@@ -375,7 +420,7 @@ public class ProductDetail extends AppCompatActivity {
                         JSONObject seller = d.optJSONObject("seller");
                         if (seller != null) {
                             sellerId = seller.optInt("id", 0);
-                            String sName = seller.optString("name", "Seller");
+                            String sName = seller.optString("name", I18n.t(this, "Seller"));
                             pdpSellerName.setText(sName);
                             if (!sName.isEmpty() && tvSellerAvatarLetter != null) {
                                 tvSellerAvatarLetter.setText(String.valueOf(sName.charAt(0)).toUpperCase());
@@ -471,7 +516,7 @@ public class ProductDetail extends AppCompatActivity {
         View card = LayoutInflater.from(this).inflate(R.layout.item_listing_detail, pdpChips, false);
         TextView tvLabel = card.findViewById(R.id.tvDetailLabel);
         TextView tvVal = card.findViewById(R.id.tvDetailValue);
-        tvLabel.setText(label.toUpperCase());
+        tvLabel.setText(I18n.t(this, label).toUpperCase());
         tvVal.setText(value);
 
         if ("availability".equalsIgnoreCase(label) || "Available".equalsIgnoreCase(value)) {
@@ -503,11 +548,11 @@ public class ProductDetail extends AppCompatActivity {
         pdpPrice.setText(productPrice);
         pdpPrice.setTextColor(royalBlue);
         String meta = productCity;
-        if (postedWhen != null && !postedWhen.isEmpty()) meta += " • Posted " + postedWhen;
+        if (postedWhen != null && !postedWhen.isEmpty()) meta += " • " + I18n.t(this, "Posted") + " " + postedWhen;
         pdpMeta.setText(meta);
         pdpDesc.setText(productDesc);
 
-        bindFeatureChips(new String[]{"Demo", "Fallback"});
+        bindFeatureChips(new String[]{I18n.t(this, "Demo"), I18n.t(this, "Fallback")});
     }
 
     private void bindFeatureChips(String[] chips) {
@@ -660,6 +705,52 @@ public class ProductDetail extends AppCompatActivity {
         }
         if (pdpSimilarRv != null) {
             pdpSimilarRv.setVisibility(View.GONE);
+        }
+    }
+
+    private void collectTexts(View view, Set<String> keys) {
+        if (view == null) return;
+
+        if (view instanceof TextView) {
+            TextView tv = (TextView) view;
+            CharSequence text = tv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                keys.add(text.toString().trim());
+            }
+            CharSequence hint = tv.getHint();
+            if (!TextUtils.isEmpty(hint)) {
+                keys.add(hint.toString().trim());
+            }
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                collectTexts(vg.getChildAt(i), keys);
+            }
+        }
+    }
+
+    private void translateTextsRecursively(View view) {
+        if (view == null) return;
+
+        if (view instanceof TextView) {
+            TextView tv = (TextView) view;
+            CharSequence text = tv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                tv.setText(I18n.t(this, text.toString()));
+            }
+            CharSequence hint = tv.getHint();
+            if (!TextUtils.isEmpty(hint)) {
+                tv.setHint(I18n.t(this, hint.toString()));
+            }
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                translateTextsRecursively(vg.getChildAt(i));
+            }
         }
     }
 }

@@ -70,7 +70,7 @@ public class LoginActivity extends AppCompatActivity {
         LanguageManager.apply(this, langCode);
 
         setContentView(R.layout.activity_login);
-
+        LanguageManager.enforceLtr(this);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(Color.BLACK);
         new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView())

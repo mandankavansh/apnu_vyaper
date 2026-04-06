@@ -4,6 +4,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,11 +16,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.appbar.MaterialToolbar;
 import com.anvexgroup.sheharsetu.Adapter.ContactSupportAdapter;
 import com.anvexgroup.sheharsetu.Adapter.I18n;
 import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
 import com.anvexgroup.sheharsetu.core.SessionManager;
+import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,11 +46,9 @@ public class ContactUsActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_contact_us);
-
+        LanguageManager.enforceLtr(this);
         bindViews();
-        setupToolbar();
-        setupTexts();
-        setupRecycler();
+        prefetchStaticTextsAndBuildUi();
     }
 
     private void bindViews() {
@@ -60,6 +61,52 @@ public class ContactUsActivity extends AppCompatActivity {
         tvSubHeading = findViewById(R.id.tvSubHeading);
         tvResponseTitle = findViewById(R.id.tvResponseTitle);
         tvResponseNote = findViewById(R.id.tvResponseNote);
+    }
+
+    private void prefetchStaticTextsAndBuildUi() {
+        List<String> keys = new ArrayList<>();
+
+        View root = findViewById(R.id.root);
+        collectTexts(root, keys);
+
+        keys.add("Contact & Support");
+        keys.add("Contact and Support");
+        keys.add("Need help with Shehar Setu?");
+        keys.add("Choose the fastest support option for your issue. We are here to help you quickly and clearly.");
+        keys.add("We are here to help");
+        keys.add("Connect with our team through email, call, or WhatsApp for fast support.");
+        keys.add("Support Hours");
+        keys.add("10:00 AM – 7:00 PM • Monday to Saturday");
+
+        keys.add("Email Support");
+        keys.add("Best for issue details and screenshots");
+        keys.add("Send");
+
+        keys.add("Call Support");
+        keys.add("Best for urgent help and quick discussion");
+        keys.add("Call");
+
+        keys.add("WhatsApp Chat");
+        keys.add("Best for fast chat and easy follow-up");
+        keys.add("Chat");
+
+        keys.add("Support - Shehar Setu");
+        keys.add("Send email");
+        keys.add("No email app found on this device.");
+        keys.add("Unable to open dialer.");
+        keys.add("WhatsApp is not available.");
+
+        I18n.prefetch(this, keys, () -> {
+            setupToolbar();
+            setupTexts();
+            setupRecycler();
+            translateTextsRecursively(findViewById(R.id.root));
+        }, () -> {
+            setupToolbar();
+            setupTexts();
+            setupRecycler();
+            translateTextsRecursively(findViewById(R.id.root));
+        });
     }
 
     private void setupToolbar() {
@@ -81,6 +128,7 @@ public class ContactUsActivity extends AppCompatActivity {
         recyclerSupport.setNestedScrollingEnabled(false);
 
         List<ContactSupportAdapter.SupportItem> items = new ArrayList<>();
+
         items.add(new ContactSupportAdapter.SupportItem(
                 I18n.t(this, "Email Support"),
                 SUPPORT_EMAIL,
@@ -106,11 +154,9 @@ public class ContactUsActivity extends AppCompatActivity {
         ));
 
         ContactSupportAdapter adapter = new ContactSupportAdapter(this, items, item -> {
-            String title = item.title.toLowerCase();
-
-            if (title.contains("email")) {
+            if (item.iconRes == R.drawable.gmail) {
                 openEmail();
-            } else if (title.contains("call")) {
+            } else if (item.iconRes == R.drawable.ic_phone_24px) {
                 openDialer(SUPPORT_PHONE);
             } else {
                 openWhatsApp(WHATSAPP_NUMBER);
@@ -124,7 +170,7 @@ public class ContactUsActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_SENDTO);
         intent.setData(Uri.parse("mailto:" + SUPPORT_EMAIL));
         intent.putExtra(Intent.EXTRA_EMAIL, new String[]{SUPPORT_EMAIL});
-        intent.putExtra(Intent.EXTRA_SUBJECT, "Support - Shehar Setu");
+        intent.putExtra(Intent.EXTRA_SUBJECT, I18n.t(this, "Support - Shehar Setu"));
 
         try {
             startActivity(Intent.createChooser(intent, I18n.t(this, "Send email")));
@@ -158,6 +204,56 @@ public class ContactUsActivity extends AppCompatActivity {
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
             } catch (ActivityNotFoundException ex) {
                 Toast.makeText(this, I18n.t(this, "WhatsApp is not available."), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void collectTexts(View view, List<String> keys) {
+        if (view == null) return;
+
+        if (view instanceof TextView) {
+            TextView tv = (TextView) view;
+
+            CharSequence txt = tv.getText();
+            if (!TextUtils.isEmpty(txt)) {
+                keys.add(txt.toString().trim());
+            }
+
+            CharSequence hint = tv.getHint();
+            if (!TextUtils.isEmpty(hint)) {
+                keys.add(hint.toString().trim());
+            }
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                collectTexts(vg.getChildAt(i), keys);
+            }
+        }
+    }
+
+    private void translateTextsRecursively(View view) {
+        if (view == null) return;
+
+        if (view instanceof TextView) {
+            TextView tv = (TextView) view;
+
+            CharSequence txt = tv.getText();
+            if (!TextUtils.isEmpty(txt)) {
+                tv.setText(I18n.t(this, txt.toString()));
+            }
+
+            CharSequence hint = tv.getHint();
+            if (!TextUtils.isEmpty(hint)) {
+                tv.setHint(I18n.t(this, hint.toString()));
+            }
+        }
+
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                translateTextsRecursively(vg.getChildAt(i));
             }
         }
     }

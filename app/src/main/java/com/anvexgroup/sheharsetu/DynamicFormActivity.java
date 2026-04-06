@@ -168,6 +168,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
         setContentView(R.layout.activity_dynamic_form);
         applyThemeBarsAndWidgets();
+        LanguageManager.enforceLtr(this);
 
         tvTitle = findViewById(R.id.tvTitle);
         rvForm = findViewById(R.id.rvForm);

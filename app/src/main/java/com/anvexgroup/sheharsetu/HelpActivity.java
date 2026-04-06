@@ -40,7 +40,7 @@ public class HelpActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_help);
-
+        LanguageManager.enforceLtr(this);
         View mainView = findViewById(R.id.main);
         prefetchAndTranslateViewTree(mainView);
 

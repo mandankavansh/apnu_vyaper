@@ -80,7 +80,7 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         }
 
         setContentView(R.layout.activity_language_selection);
-
+        LanguageManager.enforceLtr(this);
         rv = findViewById(R.id.rvLanguages);
         progress = findViewById(R.id.progressLanguages);
         btnContinue = findViewById(R.id.btnContinue);
