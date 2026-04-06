@@ -107,19 +107,41 @@
                     android:paddingTop="26dp"
                     android:paddingBottom="26dp">
 
-                    <TextView
-                        android:id="@+id/tvAvatarLetter"
-                        android:layout_width="110dp"
-                        android:layout_height="110dp"
-                        android:background="@drawable/bg_profile_avatar_ring"
-                        android:gravity="center"
-                        android:text="-"
-                        android:textAllCaps="true"
-                        android:textColor="@android:color/white"
-                        android:textSize="42sp"
-                        android:textStyle="bold"
-                        android:fontFamily="sans-serif-medium"
-                        android:includeFontPadding="false" />
+                    <FrameLayout
+                        android:layout_width="112dp"
+                        android:layout_height="112dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="4dp"
+                        android:elevation="4dp">
+
+                        <View
+                            android:layout_width="112dp"
+                            android:layout_height="112dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/bg_profile_avatar_outer" />
+
+                        <View
+                            android:layout_width="96dp"
+                            android:layout_height="96dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/bg_profile_avatar_inner" />
+
+                        <TextView
+                            android:id="@+id/tvAvatarLetter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:textAlignment="center"
+                            android:text="-"
+                            android:textAllCaps="true"
+                            android:textColor="@android:color/white"
+                            android:textSize="42sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-black"
+                            android:includeFontPadding="false"
+                            android:translationX="1dp" />
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/tvFullName"
@@ -176,7 +198,7 @@
                 android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="@android:color/white"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
+
                 app:strokeColor="#E8EFF1"
                 app:strokeWidth="1dp">
 
@@ -309,7 +331,7 @@
                 android:layout_marginBottom="16dp"
                 app:cardBackgroundColor="@android:color/white"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
+
                 app:strokeColor="#E8EFF1"
                 app:strokeWidth="1dp">
 
@@ -533,7 +555,7 @@
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="@android:color/white"
                 app:cardCornerRadius="24dp"
-                app:cardElevation="4dp"
+
                 app:strokeColor="#E8EFF1"
                 app:strokeWidth="1dp">
 
@@ -665,7 +687,7 @@
         app:tint="@android:color/white"
         app:backgroundTint="#0E666C"
         app:useCompatPadding="true"
-        app:elevation="8dp"
+
         app:layout_constraintBottom_toTopOf="@id/viewNavBarBg"
         app:layout_constraintEnd_toEndOf="parent" />
 
