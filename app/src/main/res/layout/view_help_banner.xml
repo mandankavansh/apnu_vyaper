@@ -37,7 +37,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Need help? Contact support"
+            android:text="Need help with the Shehar Setu app? Contact support"
             android:textStyle="bold"
             android:textSize="18sp"
             android:textColor="#D32F2F"

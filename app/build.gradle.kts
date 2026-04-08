@@ -10,7 +10,6 @@ android {
     defaultConfig {
         applicationId = "com.anvexgroup.sheharsetu"
         minSdk = 23
-        //noinspection OldTargetApi
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -19,14 +18,27 @@ android {
     }
 
     buildTypes {
+
         release {
-            isMinifyEnabled = false
+
+            // ✅ ProGuard Enable
+            isMinifyEnabled = true
+            isShrinkResources = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+
+        debug {
+
+            // Debug build me ProGuard off
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -34,6 +46,7 @@ android {
 }
 
 dependencies {
+
     // AndroidX Core
     implementation(libs.appcompat)
     implementation(libs.activity)
@@ -53,18 +66,21 @@ dependencies {
     // Networking
     implementation("com.android.volley:volley:1.2.1")
 
-    // Image Loading (Glide + OkHttp integration)
+    // Image Loading
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.github.bumptech.glide:okhttp3-integration:4.16.0")
+
+    // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // UI
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
-    // ⚡ Cloud Messaging – REQUIRED for push notifications
     implementation("com.google.firebase:firebase-messaging")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
