@@ -32,22 +32,21 @@
             app:tint="@android:color/white" />
 
         <!-- CENTER: Big sliding marquee -->
-
-        <!-- RIGHT: Help (?) in green circle -->
         <TextView
             android:id="@+id/tvMarquee"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:text="Need help? Contact support"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#D32F2F"
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
-            android:paddingVertical="4dp"
             android:singleLine="true"
-            android:text="  Need help with the Shehar Setu app? Contact support"
-            android:textColor="#D32F2F"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:paddingVertical="4dp"/>
 
+        <!-- RIGHT: Help (?) in green circle -->
         <ImageButton
             android:id="@+id/btnHelp"
             android:layout_width="44dp"
