@@ -1944,195 +1944,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // ================= Price Filter =================
-
-//    private void showPriceFilterSheet() {
-//        BottomSheetDialog dialog = new BottomSheetDialog(this);
-//        View sheet = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_price_filter, null);
-//        dialog.setContentView(sheet);
-//
-//        com.google.android.material.chip.ChipGroup chipGroupPrice = sheet.findViewById(R.id.chipGroupPrice);
-//        View layoutCustomPrice = sheet.findViewById(R.id.layoutCustomPrice);
-//        TextInputEditText etMinPrice = sheet.findViewById(R.id.etMinPrice);
-//        TextInputEditText etMaxPrice = sheet.findViewById(R.id.etMaxPrice);
-//        com.google.android.material.button.MaterialButton btnClear = sheet.findViewById(R.id.btnClearPriceFilter);
-//        com.google.android.material.button.MaterialButton btnApply = sheet.findViewById(R.id.btnApplyPriceFilter);
-//
-//        // ── Translate all visible strings in this sheet at runtime ──
-//
-//        // 1. Title & subtitle
-//        TextView tvPriceSheetTitle = sheet.findViewById(R.id.tvPriceFilterTitle);
-//        if (tvPriceSheetTitle != null) {
-//            tvPriceSheetTitle.setText(I18n.t(this, "Price filter"));
-//        }
-//
-//        // 2. Every other TextView/hint in the sheet (section labels, separator "to", etc.)
-//        translatePriceSheetTexts(sheet);
-//
-//        // 3. TextInputLayout floating hints for the custom input fields
-//        List<com.google.android.material.textfield.TextInputLayout> tils = new ArrayList<>();
-//        collectTextInputLayouts(sheet, tils);
-//        if (tils.size() >= 1) tils.get(0).setHint(I18n.t(this, "Minimum price"));
-//        if (tils.size() >= 2) tils.get(1).setHint(I18n.t(this, "Maximum price"));
-//
-//        // 4. Chip texts (preset budget options)
-//        translateChipGroup(chipGroupPrice);
-//
-//        // 5. Button labels
-//        btnClear.setText(I18n.t(this, "Clear"));
-//        btnApply.setText(I18n.t(this, "Apply filter"));
-//
-//
-//        // Preload state
-////        final Double[] tempMin = {selectedMinPrice};
-////        final Double[] tempMax = {selectedMaxPrice};
-//
-//        // Detect current state and preselect the matching chip
-//        boolean isCustom = false;
-//        if (selectedMinPrice == null && selectedMaxPrice == null) {
-//            chipGroupPrice.check(R.id.chipPriceAll);
-//        } else if (selectedMinPrice == null && selectedMaxPrice != null && selectedMaxPrice == 1000) {
-//            chipGroupPrice.check(R.id.chipPriceUnder1k);
-//        } else if (selectedMinPrice == null && selectedMaxPrice != null && selectedMaxPrice == 5000) {
-//            chipGroupPrice.check(R.id.chipPriceUnder5k);
-//        } else if (selectedMinPrice != null && selectedMinPrice == 5000
-//                && selectedMaxPrice != null && selectedMaxPrice == 20000) {
-//            chipGroupPrice.check(R.id.chipPrice5kTo20k);
-//        } else if (selectedMinPrice != null && selectedMinPrice == 20000
-//                && selectedMaxPrice != null && selectedMaxPrice == 50000) {
-//            chipGroupPrice.check(R.id.chipPrice20kTo50k);
-//        } else if (selectedMinPrice != null && selectedMinPrice == 50000
-//                && selectedMaxPrice == null) {
-//            chipGroupPrice.check(R.id.chipPrice50kPlus);
-//        } else {
-//            chipGroupPrice.check(R.id.chipPriceCustom);
-//            isCustom = true;
-//        }
-//
-//        if (isCustom) {
-//            layoutCustomPrice.setVisibility(View.VISIBLE);
-//            if (etMinPrice != null && selectedMinPrice != null) {
-//                etMinPrice.setText(formatPriceInput(selectedMinPrice));
-//            }
-//            if (etMaxPrice != null && selectedMaxPrice != null) {
-//                etMaxPrice.setText(formatPriceInput(selectedMaxPrice));
-//            }
-//        }
-//
-//        chipGroupPrice.setOnCheckedStateChangeListener((group, checkedIds) -> {
-//            if (checkedIds == null || checkedIds.isEmpty()) return;
-//            int cid = checkedIds.get(0);
-//
-//            layoutCustomPrice.setVisibility(cid == R.id.chipPriceCustom ? View.VISIBLE : View.GONE);
-//
-//            if (cid == R.id.chipPriceAll) { tempMin[0] = null; tempMax[0] = null; }
-//            else if (cid == R.id.chipPriceUnder1k) { tempMin[0] = null; tempMax[0] = 1000.0; }
-//            else if (cid == R.id.chipPriceUnder5k) { tempMin[0] = null; tempMax[0] = 5000.0; }
-//            else if (cid == R.id.chipPrice5kTo20k) { tempMin[0] = 5000.0; tempMax[0] = 20000.0; }
-//            else if (cid == R.id.chipPrice20kTo50k) { tempMin[0] = 20000.0; tempMax[0] = 50000.0; }
-//            else if (cid == R.id.chipPrice50kPlus) { tempMin[0] = 50000.0; tempMax[0] = null; }
-//            // Custom: values resolved on Apply
-//        });
-//
-//        btnClear.setOnClickListener(v -> {
-//            selectedMinPrice = null;
-//            selectedMaxPrice = null;
-////            updatePriceChipText();
-//            dialog.dismiss();
-//            productCache.evictAll();
-//            lastProductsUrl = null;
-//            productsInFlight = false;
-//            resetPagination();
-//            fetchProducts();
-//        });
-//
-//        btnApply.setOnClickListener(v -> {
-//            int checkedId = chipGroupPrice.getCheckedChipId();
-//
-//            if (checkedId == R.id.chipPriceCustom) {
-//                // Resolve custom values
-//                String rawMin = etMinPrice != null && etMinPrice.getText() != null
-//                        ? etMinPrice.getText().toString().trim() : "";
-//                String rawMax = etMaxPrice != null && etMaxPrice.getText() != null
-//                        ? etMaxPrice.getText().toString().trim() : "";
-//
-//                Double parsedMin = null, parsedMax = null;
-//
-//                if (!rawMin.isEmpty()) {
-//                    try {
-//                        parsedMin = Double.parseDouble(rawMin);
-//                        if (parsedMin < 0) {
-//                            if (etMinPrice != null)
-//                                etMinPrice.setError(I18n.t(this, "Invalid price range"));
-//                            return;
-//                        }
-//                    } catch (NumberFormatException e) {
-//                        if (etMinPrice != null)
-//                            etMinPrice.setError(I18n.t(this, "Invalid price range"));
-//                        return;
-//                    }
-//                }
-//
-//                if (!rawMax.isEmpty()) {
-//                    try {
-//                        parsedMax = Double.parseDouble(rawMax);
-//                        if (parsedMax < 0) {
-//                            if (etMaxPrice != null)
-//                                etMaxPrice.setError(I18n.t(this, "Invalid price range"));
-//                            return;
-//                        }
-//                    } catch (NumberFormatException e) {
-//                        if (etMaxPrice != null)
-//                            etMaxPrice.setError(I18n.t(this, "Invalid price range"));
-//                        return;
-//                    }
-//                }
-//
-//                if (parsedMin != null && parsedMax != null && parsedMax < parsedMin) {
-//                    if (etMaxPrice != null)
-//                        etMaxPrice.setError(I18n.t(this,
-//                                "Maximum price must be greater than or equal to minimum price"));
-//                    return;
-//                }
-//
-//                tempMin[0] = parsedMin;
-//                tempMax[0] = parsedMax;
-//            }
-//
-////            selectedMinPrice = tempMin[0];
-////            selectedMaxPrice = tempMax[0];
-////            updatePriceChipText();
-//            dialog.dismiss();
-//            productCache.evictAll();
-//            lastProductsUrl = null;
-//            productsInFlight = false;
-//            resetPagination();
-//            fetchProducts();
-//        });
-//
-//        dialog.show();
-//    }
-
-//    private void updatePriceChipText() {
-//        if (chipPriceFilter == null) return;
-//
-//        String label;
-//        if (selectedMinPrice == null && selectedMaxPrice == null) {
-//            label = I18n.t(this, "Price");
-//        } else if (selectedMinPrice == null) {
-//            label = I18n.t(this, "Price") + " \u2022 "
-//                    + I18n.t(this, "Up to") + " \u20B9" + formatPriceShort(selectedMaxPrice);
-//        } else if (selectedMaxPrice == null) {
-//            label = I18n.t(this, "Price") + " \u2022 "
-//                    + I18n.t(this, "From") + " \u20B9" + formatPriceShort(selectedMinPrice);
-//        } else {
-//            label = I18n.t(this, "Price") + " \u2022 "
-//                    + "\u20B9" + formatPriceShort(selectedMinPrice)
-//                    + " - \u20B9" + formatPriceShort(selectedMaxPrice);
-//        }
-//        chipPriceFilter.setText(label);
-//    }
-
     /** Format a price double to a compact, human-friendly string (e.g. 1000 -> "1K"). */
     private String formatPriceShort(Double value) {
         if (value == null) return "";
@@ -2209,112 +2020,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // ================= KM Filter =================
-
-
-    //    private void showKmFilterSheet() {
-//        BottomSheetDialog dialog = new BottomSheetDialog(this);
-//        View sheet = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_km_filter, null);
-//        dialog.setContentView(sheet);
-//
-//        ChipGroup chipGroup = sheet.findViewById(R.id.chipGroupKm);
-//        View layoutCustomKm = sheet.findViewById(R.id.layoutCustomKm);
-//        TextInputEditText etCustomKm = sheet.findViewById(R.id.etCustomKm);
-//        com.google.android.material.button.MaterialButton btnApplyCustomKm = sheet.findViewById(R.id.btnApplyCustomKm);
-//
-//        if (selectedRadiusKm == null) {
-//            ((Chip) sheet.findViewById(R.id.chipAll)).setChecked(true);
-//        } else if (selectedRadiusKm == 5) {
-//            ((Chip) sheet.findViewById(R.id.chip5km)).setChecked(true);
-//        } else if (selectedRadiusKm == 10) {
-//            ((Chip) sheet.findViewById(R.id.chip10km)).setChecked(true);
-//        } else if (selectedRadiusKm == 25) {
-//            ((Chip) sheet.findViewById(R.id.chip25km)).setChecked(true);
-//        } else if (selectedRadiusKm == 50) {
-//            ((Chip) sheet.findViewById(R.id.chip50km)).setChecked(true);
-//        } else if (selectedRadiusKm == 100) {
-//            ((Chip) sheet.findViewById(R.id.chip100km)).setChecked(true);
-//        } else {
-//            // Custom value
-//            ((Chip) sheet.findViewById(R.id.chipCustom)).setChecked(true);
-//            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.VISIBLE);
-//            if (etCustomKm != null) etCustomKm.setText(String.valueOf(selectedRadiusKm));
-//        }
-//
-//        chipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-//            if (checkedIds.isEmpty()) return;
-//            int checkedId = checkedIds.get(0);
-//
-//            if (checkedId == R.id.chipCustom) {
-//                if (layoutCustomKm != null) {
-//                    layoutCustomKm.setVisibility(View.VISIBLE);
-//                    // Set focus and show keyboard
-//                    if (etCustomKm != null) {
-//                        etCustomKm.requestFocus();
-//                    }
-//                }
-//                return; // Don't dismiss yet
-//            }
-//
-//            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.GONE);
-//
-//            if (checkedId == R.id.chipAll) {
-//                selectedRadiusKm = null;
-//                updateKmChipText();
-//                dialog.dismiss();
-//                applyKmFilter();
-//            } else {
-//                int km = 10;
-//                if (checkedId == R.id.chip5km) km = 5;
-//                else if (checkedId == R.id.chip10km) km = 10;
-//                else if (checkedId == R.id.chip25km) km = 25;
-//                else if (checkedId == R.id.chip50km) km = 50;
-//                else if (checkedId == R.id.chip100km) km = 100;
-//
-//                selectedRadiusKm = km;
-//                updateKmChipText();
-//                dialog.dismiss();
-//
-//                if (userLat == null || userLng == null) {
-//                    fetchUserLocationThenFilter();
-//                } else {
-//                    applyKmFilter();
-//                }
-//            }
-//        });
-//
-//        if (btnApplyCustomKm != null) {
-//            btnApplyCustomKm.setOnClickListener(v -> {
-//                String val = etCustomKm.getText() != null ? etCustomKm.getText().toString().trim() : "";
-//                if (TextUtils.isEmpty(val)) {
-//                    etCustomKm.setError(I18n.t(this, "Enter value"));
-//                    return;
-//                }
-//
-//                try {
-//                    int km = Integer.parseInt(val);
-//                    if (km <= 0) {
-//                        etCustomKm.setError(I18n.t(this, "Must be > 0"));
-//                        return;
-//                    }
-//
-//                    selectedRadiusKm = km;
-//                    updateKmChipText();
-//                    dialog.dismiss();
-//
-//                    if (userLat == null || userLng == null) {
-//                        fetchUserLocationThenFilter();
-//                    } else {
-//                        applyKmFilter();
-//                    }
-//                } catch (Exception e) {
-//                    etCustomKm.setError(I18n.t(this, "Invalid number"));
-//                }
-//            });
-//        }
-//
-//        dialog.show();
-//    }
     private void showKmFilterSheet() {
         showCombinedFilterSheet();
     }
@@ -2344,6 +2049,10 @@ public class MainActivity extends AppCompatActivity {
         final Integer[] tempMinPrice = new Integer[]{selectedMinPrice};
         final Integer[] tempMaxPrice = new Integer[]{selectedMaxPrice};
 
+        // Translate all texts inside this bottom sheet
+        translateCombinedFilterSheetTexts(sheet);
+        dialog.setOnShowListener(d -> translateCombinedFilterSheetTexts(sheet));
+
         // ----- distance preselect -----
         if (selectedRadiusKm == null) {
             chipGroupDistance.check(R.id.chipDistanceAll);
@@ -2359,7 +2068,7 @@ public class MainActivity extends AppCompatActivity {
             chipGroupDistance.check(R.id.chip100km);
         } else {
             chipGroupDistance.check(R.id.chipCustomDistance);
-            layoutCustomKm.setVisibility(View.VISIBLE);
+            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.VISIBLE);
             if (etCustomKm != null) {
                 etCustomKm.setText(String.valueOf(selectedRadiusKm));
             }
@@ -2371,11 +2080,11 @@ public class MainActivity extends AppCompatActivity {
             int checkedId = checkedIds.get(0);
 
             if (checkedId == R.id.chipCustomDistance) {
-                layoutCustomKm.setVisibility(View.VISIBLE);
+                if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.VISIBLE);
                 return;
             }
 
-            layoutCustomKm.setVisibility(View.GONE);
+            if (layoutCustomKm != null) layoutCustomKm.setVisibility(View.GONE);
 
             if (checkedId == R.id.chipDistanceAll) tempRadius[0] = null;
             else if (checkedId == R.id.chip5km) tempRadius[0] = 5;
@@ -2485,7 +2194,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (parsedMin != null && parsedMax != null && parsedMin > parsedMax) {
-                if (etMaxPrice != null) etMaxPrice.setError("Max must be greater than or equal to Min");
+                if (etMaxPrice != null) {
+                    etMaxPrice.setError(I18n.t(this, "Max must be greater than or equal to Min"));
+                }
                 return;
             }
 
@@ -2510,14 +2221,6 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    //    private void updateKmChipText() {
-//        if (chipKmFilter == null) return;
-//        if (selectedRadiusKm == null) {
-//            chipKmFilter.setText(I18n.t(this, "Nearby"));
-//        } else {
-//            chipKmFilter.setText(selectedRadiusKm + " km");
-//        }
-//    }
     private void updateKmChipText() {
         if (chipKmFilter == null) return;
 
@@ -2841,7 +2544,46 @@ public class MainActivity extends AppCompatActivity {
 
         popup.show();
     }
+    private void translateCombinedFilterSheetTexts(View root) {
+        if (root == null) return;
 
+        if (root instanceof com.google.android.material.textfield.TextInputLayout) {
+            com.google.android.material.textfield.TextInputLayout til =
+                    (com.google.android.material.textfield.TextInputLayout) root;
+
+            CharSequence hint = til.getHint();
+            if (!TextUtils.isEmpty(hint)) {
+                til.setHint(I18n.t(this, hint.toString().trim()));
+            }
+        } else if (root instanceof com.google.android.material.chip.Chip) {
+            com.google.android.material.chip.Chip chip =
+                    (com.google.android.material.chip.Chip) root;
+
+            CharSequence text = chip.getText();
+            if (!TextUtils.isEmpty(text)) {
+                chip.setText(I18n.t(this, text.toString().trim()));
+            }
+        } else if (root instanceof TextView) {
+            TextView tv = (TextView) root;
+
+            CharSequence text = tv.getText();
+            if (!TextUtils.isEmpty(text)) {
+                tv.setText(I18n.t(this, text.toString().trim()));
+            }
+
+            CharSequence hint = tv.getHint();
+            if (!TextUtils.isEmpty(hint)) {
+                tv.setHint(I18n.t(this, hint.toString().trim()));
+            }
+        }
+
+        if (root instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) root;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                translateCombinedFilterSheetTexts(vg.getChildAt(i));
+            }
+        }
+    }
     // ================= Back =================
 
     @Override
