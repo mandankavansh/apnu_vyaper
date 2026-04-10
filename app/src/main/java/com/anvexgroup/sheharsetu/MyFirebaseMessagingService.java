@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.Manifest;
 import android.app.NotificationChannel;
@@ -21,9 +21,9 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.anvexgroup.sheharsetu.core.SessionManager;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -36,7 +36,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "FCM_SERVICE";
 
-    private static final String CHANNEL_ID = "sheharsetu_general_notifications";
+    private static final String CHANNEL_ID = "apnuvyapar_general_notifications";
     private static final String CHANNEL_NAME = "General Notifications";
     private static final String CHANNEL_DESC = "App alerts and updates";
 

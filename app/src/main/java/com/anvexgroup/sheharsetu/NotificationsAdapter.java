@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.card.MaterialCardView;
-import com.anvexgroup.sheharsetu.utils.TimeUtils;
+import com.anvexgroup.apnuvyapar.utils.TimeUtils;
 
 import java.util.List;
 

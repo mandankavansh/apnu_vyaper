@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu.Adapter;
+package com.anvexgroup.apnuvyapar.Adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.card.MaterialCardView;
-import com.anvexgroup.sheharsetu.R;
+import com.anvexgroup.apnuvyapar.R;
 
 import java.util.ArrayList;
 import java.util.List;

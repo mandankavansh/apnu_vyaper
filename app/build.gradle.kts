@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.anvexgroup.sheharsetu"
+    namespace = "com.anvexgroup.apnuvyapar"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.anvexgroup.sheharsetu"
+        applicationId = "com.anvexgroup.apnuvyapar"
         minSdk = 23
         targetSdk = 35
         versionCode = 1

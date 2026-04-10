@@ -81,7 +81,7 @@
                                         android:id="@+id/tvGreeting"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="SheharSetu"
+                                        android:text="apnuvyapar"
                                         android:textColor="@color/white"
                                         android:textSize="22sp"
                                         android:fontFamily="sans-serif-medium"
@@ -425,7 +425,7 @@
                                     <TextView
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="SheharSetu"
+                                        android:text="apnuvyapar"
                                         android:textColor="@color/white"
                                         android:textSize="18sp"
                                         android:fontFamily="sans-serif-medium"

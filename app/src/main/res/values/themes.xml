@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
 <!-- Base app theme (Material 3, no ActionBar) -->
-<style name="Base.Theme.SheharSetu" parent="Theme.Material3.Light.NoActionBar">
+<style name="Base.Theme.apnuvyapar" parent="Theme.Material3.Light.NoActionBar">
     <!-- System bars handle edge-to-edge -->
     <item name="android:statusBarColor">@android:color/transparent</item>
     <item name="android:navigationBarColor">@android:color/transparent</item>
@@ -14,6 +14,6 @@
 </style>
 
 <!-- App theme alias -->
-<style name="Theme.SheharSetu" parent="Base.Theme.SheharSetu" />
-<style name="Theme.SheharSetu.M3" parent="Theme.SheharSetu" />
+<style name="Theme.apnuvyapar" parent="Base.Theme.apnuvyapar" />
+<style name="Theme.apnuvyapar.M3" parent="Theme.apnuvyapar" />
 </resources>

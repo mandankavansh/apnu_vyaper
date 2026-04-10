@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu.Adapter;
+package com.anvexgroup.apnuvyapar.Adapter;
 
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
@@ -22,7 +22,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.anvexgroup.sheharsetu.R;
+import com.anvexgroup.apnuvyapar.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

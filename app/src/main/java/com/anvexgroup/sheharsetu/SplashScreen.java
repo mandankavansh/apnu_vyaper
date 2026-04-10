@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,13 +19,13 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 
 public class SplashScreen extends AppCompatActivity {
 
     private static final long SPLASH_DELAY = 1800L; // 1.8s
 
-    public static final String PREFS          = "sheharsetu_prefs";
+    public static final String PREFS          = "apnuvyapar_prefs";
     public static final String KEY_LANG_CODE  = "app_lang_code";
     public static final String KEY_ONBOARDED  = "onboarding_done";
     public static final String KEY_ACCESS     = "access_token";

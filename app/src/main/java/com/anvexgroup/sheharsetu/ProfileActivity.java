@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -30,14 +30,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.LanguageAdapter;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 
-import com.anvexgroup.sheharsetu.core.SessionManager;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
-import com.anvexgroup.sheharsetu.utils.LoadingDialog;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
 
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -432,7 +432,7 @@ public class ProfileActivity extends AppCompatActivity {
             session.setLang(lang[0], lang[1]);
 
             // Save to SharedPreferences (same key as LanguageSelection)
-            getSharedPreferences("sheharsetu_prefs", MODE_PRIVATE).edit()
+            getSharedPreferences("apnuvyapar_prefs", MODE_PRIVATE).edit()
                     .putString("app_lang_code", lang[0])
                     .putString("app_lang_name", lang[1])
                     .apply();

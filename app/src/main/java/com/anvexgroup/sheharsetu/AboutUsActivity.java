@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -12,10 +12,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.anvexgroup.sheharsetu.Adapter.AboutSectionAdapter;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.core.SessionManager;
+import com.anvexgroup.apnuvyapar.Adapter.AboutSectionAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
@@ -109,7 +109,7 @@ public class AboutUsActivity extends AppCompatActivity {
         keys.add("Support");
         keys.add("Support and Feedback");
         keys.add("For any issues, suggestions, or feedback related to Shehar Setu, users can reach out to the development team.");
-        keys.add("• Email: support@sheharsetu.com");
+        keys.add("• Email: support@apnuvyapar.com");
 
         I18n.prefetch(this, keys, () -> {
             setupToolbar();
@@ -197,7 +197,7 @@ public class AboutUsActivity extends AppCompatActivity {
                 I18n.t(this, "Support and Feedback"),
                 null,
                 I18n.t(this, "For any issues, suggestions, or feedback related to Shehar Setu, users can reach out to the development team."),
-                I18n.t(this, "• Email: support@sheharsetu.com")
+                I18n.t(this, "• Email: support@apnuvyapar.com")
         ));
 
         recyclerAboutSections.setAdapter(new AboutSectionAdapter(this, items));

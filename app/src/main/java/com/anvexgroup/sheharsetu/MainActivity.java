@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import static android.widget.Toast.makeText;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -59,16 +59,16 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 
-import com.anvexgroup.sheharsetu.Adapter.CategoryAdapter;
-import com.anvexgroup.sheharsetu.Adapter.LanguageAdapter;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.Adapter.ProductAdapter;
-import com.anvexgroup.sheharsetu.Adapter.SubFilterGridAdapter;
-import com.anvexgroup.sheharsetu.core.SessionManager;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
-import com.anvexgroup.sheharsetu.utils.LoadingDialog;
+import com.anvexgroup.apnuvyapar.Adapter.CategoryAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.Adapter.ProductAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.SubFilterGridAdapter;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -566,7 +566,7 @@ public class MainActivity extends AppCompatActivity {
         LanguageAdapter adapter = new LanguageAdapter(languages, lang -> {
             session.setLang(lang[0], lang[1]);
 
-            getSharedPreferences("sheharsetu_prefs", MODE_PRIVATE).edit()
+            getSharedPreferences("apnuvyapar_prefs", MODE_PRIVATE).edit()
                     .putString("app_lang_code", lang[0])
                     .putString("app_lang_name", lang[1])
                     .apply();
@@ -2687,7 +2687,7 @@ public class MainActivity extends AppCompatActivity {
         i.setType("text/plain");
         i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
         i.putExtra(Intent.EXTRA_TEXT,
-                "Check out SheharSetu: https://play.google.com/store/apps/details?id=" + getPackageName());
+                "Check out apnuvyapar: https://play.google.com/store/apps/details?id=" + getPackageName());
         try {
             startActivity(Intent.createChooser(i, I18n.t(this, "Share via")));
         } catch (Exception e) {

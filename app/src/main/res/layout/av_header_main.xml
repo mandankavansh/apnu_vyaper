@@ -74,7 +74,7 @@
                 android:id="@+id/tvUserTagline"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SheharSetu · Smart. Simple."
+                android:text="apnuvyapar · Smart. Simple."
                 android:textSize="10sp"
                 android:textColor="#80FFFFFF"
                 android:fontFamily="sans-serif"

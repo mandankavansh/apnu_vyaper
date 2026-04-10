@@ -22,7 +22,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="false"
-        android:theme="@style/Theme.SheharSetu"
+        android:theme="@style/Theme.apnuvyapar"
         android:usesCleartextTraffic="true"
         tools:targetApi="35">
         <activity
@@ -46,7 +46,7 @@
         <activity
             android:name=".LoginActivity"
             android:exported="false"
-            android:theme="@style/Theme.SheharSetu.M3" />
+            android:theme="@style/Theme.apnuvyapar.M3" />
         <activity
             android:name=".HelpActivity"
             android:exported="false" />
@@ -63,11 +63,11 @@
         <activity
             android:name=".UserInfoActivity"
             android:exported="false"
-            android:theme="@style/Theme.SheharSetu.M3" />
+            android:theme="@style/Theme.apnuvyapar.M3" />
         <activity
             android:name=".FullScreenImageActivity"
             android:exported="false"
-            android:theme="@style/Theme.SheharSetu.M3" />
+            android:theme="@style/Theme.apnuvyapar.M3" />
         <activity
             android:name=".SellerProfileActivity"
             android:exported="false" />
@@ -90,7 +90,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:theme="@style/Theme.SheharSetu" />
+            android:theme="@style/Theme.apnuvyapar" />
 
         <service
             android:name=".MyFirebaseMessagingService"

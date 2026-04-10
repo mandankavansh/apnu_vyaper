@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
@@ -43,11 +43,11 @@ import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.core.SessionManager;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 
 import org.json.JSONArray;
 import org.json.JSONException;

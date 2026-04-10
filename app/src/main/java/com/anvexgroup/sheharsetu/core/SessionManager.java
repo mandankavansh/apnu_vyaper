@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu.core;
+package com.anvexgroup.apnuvyapar.core;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.Nullable;
 
 public class SessionManager {
-    public static final String PREFS = "sheharsetu_prefs";
+    public static final String PREFS = "apnuvyapar_prefs";
 
     public static final String KEY_LANG_CODE = "app_lang_code";
     public static final String KEY_LANG_NAME = "app_lang_name";

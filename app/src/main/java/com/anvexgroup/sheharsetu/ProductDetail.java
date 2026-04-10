@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
@@ -40,13 +40,13 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.ImagePagerAdapter;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.Adapter.SimilarAdapter;
-import com.anvexgroup.sheharsetu.Adapter.ThumbAdapter;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.utils.LoadingDialog;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.ImagePagerAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.Adapter.SimilarAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.ThumbAdapter;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -112,7 +112,7 @@ public class ProductDetail extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         LanguageManager.apply(this,
-                getSharedPreferences(com.anvexgroup.sheharsetu.core.SessionManager.PREFS, MODE_PRIVATE)
+                getSharedPreferences(com.anvexgroup.apnuvyapar.core.SessionManager.PREFS, MODE_PRIVATE)
                         .getString("app_lang_code", "en"));
         getWindow().setStatusBarColor(ContextCompat.getColor(this, android.R.color.black));
         getWindow().setNavigationBarColor(ContextCompat.getColor(this, android.R.color.black));
@@ -509,7 +509,7 @@ public class ProductDetail extends AppCompatActivity {
                 }
         );
 
-        com.anvexgroup.sheharsetu.net.VolleySingleton.queue(this).add(req);
+        com.anvexgroup.apnuvyapar.net.VolleySingleton.queue(this).add(req);
     }
 
     private void addDetailCard(String label, String value) {
@@ -696,7 +696,7 @@ public class ProductDetail extends AppCompatActivity {
         );
 
         req.setShouldCache(false);
-        com.anvexgroup.sheharsetu.net.VolleySingleton.queue(this).add(req);
+        com.anvexgroup.apnuvyapar.net.VolleySingleton.queue(this).add(req);
     }
 
     private void hideSimilarSection() {

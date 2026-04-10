@@ -1,4 +1,4 @@
-# Caching Guide - SheharSetu
+# Caching Guide - apnuvyapar
 
 ## The Problem
 
@@ -118,5 +118,5 @@ App saves this version. On next call, compare versions:
 
 1. Check if `setShouldCache(false)` is added in the Activity
 2. Check if PHP file has no-cache headers
-3. Ask user to clear app data (Settings → Apps → SheharSetu → Clear Data)
+3. Ask user to clear app data (Settings → Apps → apnuvyapar → Clear Data)
 4. For images: add timestamp parameter or clear Glide cache

@@ -1,9 +1,9 @@
-# SheharSetu Project Analysis Report
+# apnuvyapar Project Analysis Report
 **Date:** February 4, 2026
 **Time:** 4:09 PM IST
 
 ## 1. Executive Summary
-This report summarizes the comprehensive analysis of the **SheharSetu Android Application** and its associated **SQL Database** (`u765344947_Shaher_setu.sql`).
+This report summarizes the comprehensive analysis of the **apnuvyapar Android Application** and its associated **SQL Database** (`u765344947_Shaher_setu.sql`).
 
 The project operates on a **Server-Driven UI Architecture**, utilizing an Entity-Attribute-Value (EAV) model. This sophisticated design allows the application to adapt to varying product requirements (e.g., different fields for "Cars" vs. "Real Estate") purely through database updates, without requiring changes to the Android native code.
 
@@ -32,7 +32,7 @@ The database is correctly structured to support the dynamic nature of the applic
 ---
 
 ## 3. Android Application Code Analysis
-**Root:** `d:\SheharSetu\app\src\main\java\com\infowave\sheharsetu\`
+**Root:** `d:\apnuvyapar\app\src\main\java\com\infowave\apnuvyapar\`
 
 ### A. Dynamic Form Engine (`DynamicFormActivity.java`)
 *   **Functionality:** This is the core of the dynamic architecture. It successfully:

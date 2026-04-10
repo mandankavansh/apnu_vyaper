@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu.Adapter;
+package com.anvexgroup.apnuvyapar.Adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -18,9 +18,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
-import com.anvexgroup.sheharsetu.ProductDetail;
-import com.anvexgroup.sheharsetu.R;
-import com.anvexgroup.sheharsetu.utils.TimeUtils;
+import com.anvexgroup.apnuvyapar.ProductDetail;
+import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.TimeUtils;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu.net;
+package com.anvexgroup.apnuvyapar.net;
 
 public final class ApiRoutes {
     // अपने सर्वर का बेस URL भरो (trailing slash के बिना)

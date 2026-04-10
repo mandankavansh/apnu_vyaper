@@ -1,17 +1,17 @@
-package com.anvexgroup.sheharsetu.utils;
+package com.anvexgroup.apnuvyapar.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.widget.TextView;
 
-import com.anvexgroup.sheharsetu.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
 
 /**
  * Utility class for language management and translation
  */
 public class LanguageUtils {
     
-    private static final String PREFS_NAME = "sheharsetu_prefs";
+    private static final String PREFS_NAME = "apnuvyapar_prefs";
     private static final String KEY_LANGUAGE = "app_lang_code";
     
     /**

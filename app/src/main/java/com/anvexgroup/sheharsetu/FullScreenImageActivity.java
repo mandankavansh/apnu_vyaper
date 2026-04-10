@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.os.Bundle;
 import android.view.View;
@@ -12,9 +12,9 @@ import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.bumptech.glide.Glide;
-import com.anvexgroup.sheharsetu.utils.TouchImageView;
+import com.anvexgroup.apnuvyapar.utils.TouchImageView;
 
 import java.util.ArrayList;
 

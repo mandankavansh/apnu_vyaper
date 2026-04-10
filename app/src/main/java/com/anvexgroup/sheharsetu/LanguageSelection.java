@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -28,10 +28,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.StringRequest;
-import com.anvexgroup.sheharsetu.Adapter.LanguageAdapter;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,7 +44,7 @@ import java.util.Map;
 
 public class LanguageSelection extends AppCompatActivity implements LanguageAdapter.OnLanguageClick {
 
-    public static final String PREFS = "sheharsetu_prefs";
+    public static final String PREFS = "apnuvyapar_prefs";
     public static final String KEY_LANG_CODE = "app_lang_code";
     public static final String KEY_LANG_NAME = "app_lang_name";
 

@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu.Adapter;
+package com.anvexgroup.apnuvyapar.Adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -11,7 +11,7 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.StringRequest;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,7 +47,7 @@ public final class I18n {
     private I18n() {}
 
     public static String lang(Context ctx) {
-        SharedPreferences sp = ctx.getSharedPreferences("sheharsetu_prefs", Context.MODE_PRIVATE);
+        SharedPreferences sp = ctx.getSharedPreferences("apnuvyapar_prefs", Context.MODE_PRIVATE);
         String code = sp.getString("app_lang_code", "en");
         return (code == null || code.trim().isEmpty()) ? "en" : code.trim();
     }

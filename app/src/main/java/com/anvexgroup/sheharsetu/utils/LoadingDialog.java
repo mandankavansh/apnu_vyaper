@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu.utils;
+package com.anvexgroup.apnuvyapar.utils;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -20,10 +20,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.anvexgroup.sheharsetu.R;
+import com.anvexgroup.apnuvyapar.R;
 
 /**
- * Custom Loading Dialog for SheharSetu
+ * Custom Loading Dialog for apnuvyapar
  * 
  * Features:
  * - Animated buy/sell themed icons that cycle in center

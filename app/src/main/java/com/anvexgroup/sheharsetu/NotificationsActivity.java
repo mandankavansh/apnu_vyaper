@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.content.Intent;
 import android.os.Build;
@@ -24,11 +24,11 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.core.SessionManager;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 
@@ -454,8 +454,8 @@ public class NotificationsActivity extends AppCompatActivity
 
     private void applySavedLocale() {
         android.content.SharedPreferences sp =
-                getSharedPreferences(com.anvexgroup.sheharsetu.LanguageSelection.PREFS, MODE_PRIVATE);
-        String lang = sp.getString(com.anvexgroup.sheharsetu.LanguageSelection.KEY_LANG_CODE, "en");
-        com.anvexgroup.sheharsetu.Adapter.LanguageManager.apply(this, lang);
+                getSharedPreferences(com.anvexgroup.apnuvyapar.LanguageSelection.PREFS, MODE_PRIVATE);
+        String lang = sp.getString(com.anvexgroup.apnuvyapar.LanguageSelection.KEY_LANG_CODE, "en");
+        com.anvexgroup.apnuvyapar.Adapter.LanguageManager.apply(this, lang);
     }
 }

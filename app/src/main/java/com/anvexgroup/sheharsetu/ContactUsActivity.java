@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -16,10 +16,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.anvexgroup.sheharsetu.Adapter.ContactSupportAdapter;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.core.SessionManager;
+import com.anvexgroup.apnuvyapar.Adapter.ContactSupportAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
 import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class ContactUsActivity extends AppCompatActivity {
 
     private TextView tvPageTitle, tvPageSubtitle, tvHeading, tvSubHeading, tvResponseTitle, tvResponseNote;
 
-    private static final String SUPPORT_EMAIL = "support@sheharsetu.com";
+    private static final String SUPPORT_EMAIL = "support@apnuvyapar.com";
     private static final String SUPPORT_PHONE = "+916354355617";
     private static final String WHATSAPP_NUMBER = "+916354355617";
 

@@ -1,4 +1,4 @@
-package com.anvexgroup.sheharsetu;
+package com.anvexgroup.apnuvyapar;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -26,14 +26,14 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
-import com.anvexgroup.sheharsetu.Adapter.CategoryGridAdapter;
-import com.anvexgroup.sheharsetu.Adapter.I18n;
-import com.anvexgroup.sheharsetu.Adapter.LanguageManager;
-import com.anvexgroup.sheharsetu.Adapter.SubcategoryGridAdapter;
-import com.anvexgroup.sheharsetu.net.ApiRoutes;
-import com.anvexgroup.sheharsetu.net.VolleySingleton;
-import com.anvexgroup.sheharsetu.utils.CategoryCache;
-import com.anvexgroup.sheharsetu.utils.LoadingDialog;
+import com.anvexgroup.apnuvyapar.Adapter.CategoryGridAdapter;
+import com.anvexgroup.apnuvyapar.Adapter.I18n;
+import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.Adapter.SubcategoryGridAdapter;
+import com.anvexgroup.apnuvyapar.net.ApiRoutes;
+import com.anvexgroup.apnuvyapar.net.VolleySingleton;
+import com.anvexgroup.apnuvyapar.utils.CategoryCache;
+import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
