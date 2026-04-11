@@ -1,116 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
+<!--  item_form_photos.xml — Photo upload strip  -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="1dp"
-    app:cardBackgroundColor="@color/colorBackgroundSoft"
-    app:strokeWidth="1dp"
-    app:strokeColor="@color/colorPrimaryLight">
+    android:orientation="vertical"
+    android:paddingTop="6dp"
+    android:paddingBottom="2dp">
 
+    <!-- Header row: camera icon + label + required badge -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="14dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dp">
 
-        <!-- Label with icon -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
+        <!-- Camera icon badge -->
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_profile_icon_badge"
+            android:layout_marginEnd="10dp">
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
+                android:layout_gravity="center"
                 android:src="@drawable/ic_camera_24"
-                android:tint="@color/colorPrimary"
-                android:contentDescription="Photos" />
+                app:tint="@color/colorPrimary"
+                android:contentDescription="@null" />
+        </FrameLayout>
 
-            <TextView
-                android:id="@+id/tvLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Add Photos"
-                android:textStyle="bold"
-                android:textSize="15sp"
-                android:textColor="@color/colorTextPrimary" />
-
-            <TextView
-                android:id="@+id/tvRequired"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:text="*"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:textColor="#E53935"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <!-- Helper text -->
-        <TextView
-            android:id="@+id/tvHelper"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Add clear, well-lit photos to attract buyers"
-            android:textSize="12sp"
-            android:textColor="@color/colorTextSecondary"
-            android:layout_marginTop="6dp" />
-
-        <!-- Tip -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_tip_box"
-            android:padding="10dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_info_outline"
-                android:tint="@color/colorPrimary"
-                android:contentDescription="Tip" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Photos"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorTextPrimary"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/tvRequired"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="Required"
+                    android:textSize="10sp"
+                    android:textColor="@color/colorError"
+                    android:background="@drawable/bg_light_teal_pill"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/tvTip"
-                android:layout_width="0dp"
+                android:id="@+id/tvHelper"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="The first photo will be shown as your main image. Tap any photo to change or delete it."
-                android:textSize="11sp"
+                android:layout_marginTop="2dp"
+                android:text="Clear, well-lit photos attract more buyers"
+                android:textSize="12sp"
                 android:textColor="@color/colorTextSecondary" />
+
         </LinearLayout>
 
-        <!-- Photos RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvPhotosStrip"
-            android:layout_width="match_parent"
-            android:layout_height="110dp"
-            android:layout_marginTop="12dp"
-            android:overScrollMode="never"
-            android:clipToPadding="false" />
-
-        <!-- Photo count status -->
+        <!-- Photo counter badge -->
         <TextView
             android:id="@+id/tvPhotoStatus"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="@color/colorTextSecondary"
-            android:layout_marginTop="8dp"
+            android:text="0 / 8"
             android:textSize="12sp"
-            android:gravity="center" />
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
+            android:background="@drawable/bg_light_teal_pill"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp" />
 
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <!-- Tips banner -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorSurfaceVariant"
+        android:layout_marginBottom="12dp"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_info_outline"
+            app:tint="@color/colorPrimary"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tvTip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="First photo = cover image. Tap any photo to change or remove it."
+            android:textSize="11sp"
+            android:textColor="@color/colorTextSecondary"
+            android:lineSpacingMultiplier="1.3" />
+
+    </LinearLayout>
+
+    <!-- Photos horizontal strip -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPhotosStrip"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:overScrollMode="never"
+        android:clipToPadding="false" />
+
+</LinearLayout>

@@ -1,30 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--  item_form_date.xml — Date picker trigger field  -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:layout_marginTop="12dp">
+    android:paddingTop="6dp"
+    android:paddingBottom="2dp">
 
-    <TextView
-        android:id="@+id/tvLabel"
+    <!-- Label row -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Date"
-        android:textStyle="bold"
-        android:textSize="15sp"
-        android:textColor="@android:color/black"
-        android:paddingBottom="4dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="7dp">
 
-    <EditText
-        android:id="@+id/etDate"
+        <TextView
+            android:id="@+id/tvLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Date"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorTextPrimary"
+            android:fontFamily="sans-serif-medium" />
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_calendar"
+            app:tint="@color/colorPrimary"
+            android:contentDescription="@null" />
+
+    </LinearLayout>
+
+    <!-- Date input row: looks like TextInputLayout but uses EditText for date picker -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:background="@drawable/bg_edittext"
-        android:hint="Select date"
-        android:focusable="false"
-        android:textColor="@color/black"
-        android:textColorHint="@color/ss_hint"
+        android:layout_height="54dp"
+        android:background="@drawable/bg_dropdown_rounded"
         android:clickable="true"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"/>
+        android:focusable="true">
+
+        <EditText
+            android:id="@+id/etDate"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:hint="Select date"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:textColor="@color/colorTextPrimary"
+            android:textColorHint="@color/colorTextSecondary"
+            android:textSize="15sp"
+            android:clickable="false"
+            android:paddingStart="16dp"
+            android:paddingEnd="52dp"
+            android:gravity="center_vertical" />
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="14dp"
+            android:src="@drawable/ic_calendar"
+            app:tint="@color/colorPrimary"
+            android:contentDescription="@null" />
+
+    </FrameLayout>
+
 </LinearLayout>

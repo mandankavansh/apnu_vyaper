@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    SUBCATEGORY GRID ITEM — Same portrait card style as Category
+    Difference: no teal top bar. Saffron badge for selection.
+-->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -10,15 +14,16 @@
     android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="20dp"
-    app:cardElevation="6dp"
+    app:cardElevation="3dp"
     app:strokeWidth="1dp"
-    app:strokeColor="#14000000">
+    app:strokeColor="@color/colorBorder">
 
     <FrameLayout
         android:id="@+id/iconContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- Full-bleed subcategory image -->
         <ImageView
             android:id="@+id/imgIcon"
             android:layout_width="match_parent"
@@ -26,37 +31,43 @@
             android:contentDescription="@null"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_placeholder_circle"
-            android:background="#F4F7F8" />
+            android:background="@color/colorSurfaceVariant" />
 
+        <!-- Soft overlay -->
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#12000000" />
+            android:background="#10000000" />
 
+        <!-- Bottom gradient scrim -->
         <View
             android:layout_width="match_parent"
             android:layout_height="58dp"
             android:layout_gravity="bottom"
-            android:background="#33000000" />
+            android:background="@drawable/bg_bottom_scrim" />
 
+        <!-- ━━ SAFFRON SELECTION BADGE — top right, always visible ━━ -->
         <FrameLayout
             android:id="@+id/badge"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_gravity="top|end"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:visibility="gone"
-            android:background="@drawable/bg_check_badge_premium">
+            android:background="@drawable/bg_check_badge_premium"
+            android:elevation="6dp">
 
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="3dp"
+                android:padding="6dp"
                 android:src="@drawable/ic_check_24"
                 app:tint="@android:color/white" />
+
         </FrameLayout>
 
+        <!-- Frosted pill label — bottom center -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="wrap_content"
             android:layout_height="34dp"
@@ -65,11 +76,10 @@
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:minWidth="82dp"
-            app:cardBackgroundColor="#D9FFFFFF"
+            app:cardBackgroundColor="#E6FFFFFF"
             app:cardCornerRadius="17dp"
             app:cardElevation="0dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="#F2FFFFFF">
+            app:strokeWidth="0dp">
 
             <TextView
                 android:id="@+id/tvName"
@@ -77,9 +87,9 @@
                 android:layout_height="match_parent"
                 android:minWidth="82dp"
                 android:gravity="center"
-                android:text="Category"
+                android:text="Subcategory"
                 android:textAlignment="center"
-                android:textColor="#222222"
+                android:textColor="#1A2332"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium"

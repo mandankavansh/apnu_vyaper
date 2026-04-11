@@ -216,7 +216,9 @@
                             android:layout_height="wrap_content"
                             android:nestedScrollingEnabled="false"
                             android:overScrollMode="never"
-                            android:clipToPadding="false" />
+                            android:clipToPadding="false"
+                            android:divider="@color/colorDivider"
+                            android:dividerHeight="1dp" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
