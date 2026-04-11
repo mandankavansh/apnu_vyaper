@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Premium Gradient using app primary palette -->
+    <!-- Rich teal diagonal gradient -->
     <item>
         <shape>
             <gradient
                 android:type="linear"
                 android:angle="135"
-                android:startColor="#2A7B81"
+                android:startColor="#0A8080"
                 android:centerColor="@color/colorPrimary"
-                android:endColor="@color/colorPrimaryDark"/>
+                android:endColor="@color/colorPrimaryDark" />
+        </shape>
+    </item>
+
+    <!-- Saffron accent tint (top-right corner warmth) -->
+    <item
+        android:gravity="top|end"
+        android:right="-60dp"
+        android:top="-60dp">
+        <shape android:shape="oval">
+            <size android:width="160dp" android:height="160dp" />
+            <solid android:color="#12F5A623" />
         </shape>
     </item>
 
     <!-- Subtle texture overlay -->
     <item>
         <shape>
-            <!-- 5% white overlay to keep it sleek -->
-            <solid android:color="#0DFFFFFF" />
+            <solid android:color="#06FFFFFF" />
         </shape>
     </item>
 

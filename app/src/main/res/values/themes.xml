@@ -1,19 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-<!-- Base app theme (Material 3, no ActionBar) -->
-<style name="Base.Theme.apnuvyapar" parent="Theme.Material3.Light.NoActionBar">
-    <!-- System bars handle edge-to-edge -->
-    <item name="android:statusBarColor">@android:color/transparent</item>
-    <item name="android:navigationBarColor">@android:color/transparent</item>
-    <item name="android:windowLightStatusBar">true</item>
+    <!-- ====================================================== -->
+    <!--   BASE THEME — Material3, No ActionBar                  -->
+    <!-- ====================================================== -->
+    <style name="Base.Theme.apnuvyapar" parent="Theme.Material3.Light.NoActionBar">
 
-    <item name="colorPrimary">@color/colorPrimary</item>
-    <item name="colorSecondary">@color/teal_premium</item>
-    <item name="android:windowBackground">@color/premium_bg</item>
-</style>
+        <!-- Edge-to-edge system bars -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="27">shortEdges</item>
 
-<!-- App theme alias -->
-<style name="Theme.apnuvyapar" parent="Base.Theme.apnuvyapar" />
-<style name="Theme.apnuvyapar.M3" parent="Theme.apnuvyapar" />
+        <!-- M3 color roles mapped to brand palette -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryContainer">@color/colorSurfaceVariant</item>
+        <item name="colorOnPrimaryContainer">@color/colorPrimary</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorSecondaryContainer">#FDEBC5</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnSecondary">@color/colorTextPrimary</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorSurfaceVariant">@color/colorSurfaceVariant</item>
+        <item name="colorOnSurface">@color/colorTextPrimary</item>
+        <item name="colorOnSurfaceVariant">@color/colorTextSecondary</item>
+        <item name="colorError">@color/colorError</item>
+        <item name="colorOutline">@color/colorBorder</item>
+
+        <!-- Window -->
+        <item name="android:windowBackground">@color/colorBackground</item>
+
+        <!-- Ripple -->
+        <item name="rippleColor">@color/nav_ripple</item>
+
+        <!-- Global elevation overlay — disable for flat premium look -->
+        <item name="elevationOverlayEnabled">false</item>
+
+        <!-- Shape system -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeSmall</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeMedium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeLarge</item>
+
+        <!-- Global TextInputLayout style — outlined box -->
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
+
+        <!-- Bottom sheet rounded corners -->
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.App.BottomSheetDialog</item>
+
+        <!-- Toolbar title text style -->
+        <item name="toolbarStyle">@style/Widget.AV.Toolbar</item>
+    </style>
+
+    <!-- Runtime alias — do NOT change this name, AndroidManifest references it -->
+    <style name="Theme.apnuvyapar" parent="Base.Theme.apnuvyapar" />
+    <style name="Theme.apnuvyapar.M3" parent="Theme.apnuvyapar" />
+
+    <!-- Splash — dark status bar for teal background readability -->
+    <style name="Theme.apnuvyapar.Splash" parent="Base.Theme.apnuvyapar">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+    </style>
+
+    <!-- ====================================================== -->
+    <!--   SHAPE SYSTEM                                         -->
+    <!-- ====================================================== -->
+    <style name="ShapeSmall">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">10dp</item>
+    </style>
+    <style name="ShapeMedium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">18dp</item>
+    </style>
+    <style name="ShapeLarge">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <!-- ====================================================== -->
+    <!--   TOOLBAR                                              -->
+    <!-- ====================================================== -->
+    <style name="Widget.AV.Toolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="titleTextColor">@color/white</item>
+        <item name="navigationIconTint">@color/white</item>
+        <item name="android:elevation">0dp</item>
+    </style>
+
+    <!-- ====================================================== -->
+    <!--   BOTTOM SHEET DIALOG                                  -->
+    <!-- ====================================================== -->
+    <style name="ThemeOverlay.App.BottomSheetDialog"
+        parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.AV.BottomSheet</item>
+    </style>
+
+    <style name="Widget.AV.BottomSheet" parent="Widget.Material3.BottomSheet">
+        <item name="shapeAppearance">@style/ShapeTopRounded</item>
+        <item name="android:elevation">16dp</item>
+    </style>
+
+    <style name="ShapeTopRounded">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">28dp</item>
+        <item name="cornerSizeTopRight">28dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
 </resources>

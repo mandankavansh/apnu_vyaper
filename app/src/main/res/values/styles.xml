@@ -1,35 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<!--    <style name="OtpBox">-->
-<!--        <item name="android:layout_width">0dp</item>-->
-<!--        <item name="android:layout_height">56dp</item>-->
-<!--        <item name="android:layout_weight">1</item>-->
-<!--        <item name="android:layout_margin">4dp</item>-->
-<!--        <item name="android:gravity">center</item>-->
-<!--        <item name="android:inputType">number</item>-->
-<!--        <item name="android:maxLength">1</item>-->
-<!--        <item name="android:textSize">18sp</item>-->
-<!--        <item name="android:background">@drawable/otp_box_bg</item>-->
-<!--    </style>-->
 
-
-    <style name="Rounded16">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item>
+    <!-- ====================================================== -->
+    <!--   OTP Input Box                                        -->
+    <!-- ====================================================== -->
+    <style name="OtpBox" parent="@android:style/Widget.EditText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_otp_box</item>
+        <item name="android:inputType">number</item>
+        <item name="android:maxLength">1</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/ss_on_surface</item>
+        <item name="android:importantForAutofill">no</item>
     </style>
 
-
-
+    <!-- ====================================================== -->
+    <!--   Toggle / SubFilter Button                            -->
+    <!-- ====================================================== -->
     <style name="SheharToggleButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="android:minHeight">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="iconPadding">0dp</item>
-
-        <!-- square look -->
-        <item name="cornerRadius">0dp</item>
-
-        <!-- colors -->
+        <item name="cornerRadius">10dp</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/toggle_text_tint</item>
         <item name="backgroundTint">@color/toggle_bg_tint</item>
@@ -38,39 +36,92 @@
         <item name="rippleColor">@color/toggle_ripple</item>
     </style>
 
-    <!-- Left/Right edges भी square (0dp) -->
-    <style name="ShapeSquareLeft">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">0dp</item>
-    </style>
-    <style name="ShapeSquareRight">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">0dp</item>
-    </style>
-
-    <style name="ShapePill">
-        <item name="cornerSize">28dp</item>
-    </style>
-
-
-    <style name="OtpBox" parent="@android:style/Widget.EditText">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">48dp</item>
-        <item name="android:layout_weight">1</item>
-        <item name="android:layout_margin">4dp</item>
-        <item name="android:gravity">center</item>
-        <item name="android:background">@drawable/bg_otp_box</item>
-        <item name="android:inputType">number</item>
-        <item name="android:maxLength">1</item>
-        <item name="android:textSize">18sp</item>
+    <!-- ====================================================== -->
+    <!--   Primary CTA Button                                   -->
+    <!-- ====================================================== -->
+    <style name="PrimaryButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">52dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textAllCaps">false</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/ss_on_surface</item>
-        <item name="android:importantForAutofill">no</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="backgroundTint">@color/colorPrimary</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="rippleColor">@color/ss_ripple_light</item>
+        <item name="android:elevation">4dp</item>
     </style>
 
-    <style name="ShapeCircle">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">50%</item>
+    <!-- ====================================================== -->
+    <!--   Outlined Secondary Button                            -->
+    <!-- ====================================================== -->
+    <style name="OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:minHeight">52dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="strokeColor">@color/colorPrimary</item>
+        <item name="strokeWidth">1.5dp</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+    </style>
+
+    <!-- ====================================================== -->
+    <!--   Form TextInputLayout (Outlined, rounded)             -->
+    <!--   Used in dynamic form fields                          -->
+    <!-- ====================================================== -->
+    <style name="Widget.AV.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:layout_marginBottom">14dp</item>
+        <item name="hintTextColor">@color/colorTextSecondary</item>
+        <item name="boxStrokeColor">@color/colorPrimary</item>
+        <item name="boxBackgroundColor">@color/colorSurface</item>
+        <item name="boxCornerRadiusTopStart">14dp</item>
+        <item name="boxCornerRadiusTopEnd">14dp</item>
+        <item name="boxCornerRadiusBottomStart">14dp</item>
+        <item name="boxCornerRadiusBottomEnd">14dp</item>
+        <item name="boxStrokeWidth">1.5dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+    </style>
+
+    <!-- ====================================================== -->
+    <!--   Text Appearances                                     -->
+    <!-- ====================================================== -->
+    <style name="TextAppearance.AV.SectionLabel"
+        parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.10</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextAppearance.AV.CardTitle"
+        parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/colorTextPrimary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <style name="TextAppearance.AV.Price"
+        parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">19sp</item>
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.AV.BodySecondary"
+        parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/colorTextSecondary</item>
+        <item name="android:lineSpacingMultiplier">1.4</item>
     </style>
 
 </resources>

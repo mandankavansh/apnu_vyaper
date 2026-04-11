@@ -3,14 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@color/colorPrimaryDark"
     android:fitsSystemWindows="false">
 
+    <!-- Status bar spacer -->
     <View
         android:id="@+id/viewStatusBarBackground"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:background="#000000"
+        android:background="@color/colorPrimaryDark"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -42,7 +43,34 @@
                 android:paddingTop="@dimen/page_vpad"
                 android:paddingBottom="120dp">
 
-                <!-- Header -->
+                <!-- Brand mark at top of login -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_gravity="start"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="28dp"
+                        android:background="@color/colorSecondary"
+                        android:layout_marginEnd="10dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="apnuvyapar"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.02" />
+                </LinearLayout>
+
+                <!-- Headline -->
                 <TextView
                     android:id="@+id/tvTitle"
                     android:layout_width="match_parent"
@@ -51,8 +79,9 @@
                     android:textSize="@dimen/title_text"
                     android:textStyle="bold"
                     android:textColor="@android:color/white"
-                    android:letterSpacing="0.02"
-                    android:layout_marginTop="40dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.01"
+                    android:layout_marginTop="24dp"
                     android:layout_marginBottom="6dp" />
 
                 <!-- Subtitle -->
@@ -61,21 +90,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Enter your mobile number to continue"
-                    android:textColor="#E6FFFFFF"
-                    android:textSize="13sp"
-                    android:lineSpacingExtra="2dp"
-                    android:layout_marginBottom="18dp" />
+                    android:textColor="#CCE0F4F4"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="3dp"
+                    android:layout_marginBottom="24dp" />
 
-                <androidx.cardview.widget.CardView
+                <!-- Mobile Verification Card -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="14dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="16dp"
                     app:cardUseCompatPadding="true"
-                    app:cardElevation="10dp"
-                    app:cardCornerRadius="22dp"
+                    app:cardElevation="12dp"
+                    app:cardCornerRadius="24dp"
                     app:cardBackgroundColor="@color/colorSurface"
-                    app:strokeColor="@color/colorDivider"
+                    app:strokeColor="@color/colorBorder"
                     app:strokeWidth="1dp">
 
                     <LinearLayout
@@ -84,35 +114,65 @@
                         android:orientation="vertical"
                         android:padding="@dimen/panel_pad">
 
-                        <TextView
-                            android:id="@+id/tvSectionTitle"
+                        <!-- Card header row -->
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Mobile verification"
-                            android:textStyle="bold"
-                            android:textSize="15sp"
-                            android:textColor="@color/colorTextPrimary"
-                            android:layout_marginBottom="6dp" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="14dp">
 
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="We will send an OTP to your mobile number"
-                            android:textColor="@color/colorTextSecondary"
-                            android:textSize="11sp"
-                            android:layout_marginBottom="14dp" />
+                            <FrameLayout
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_marginEnd="12dp"
+                                android:background="@drawable/bg_profile_icon_badge">
+                                <ImageView
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_phone"
+                                    app:tint="@color/colorPrimary" />
+                            </FrameLayout>
 
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tvSectionTitle"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Mobile verification"
+                                    android:textStyle="bold"
+                                    android:textSize="16sp"
+                                    android:textColor="@color/colorTextPrimary"
+                                    android:fontFamily="sans-serif-medium" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="We will send an OTP to verify"
+                                    android:textColor="@color/colorTextSecondary"
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="2dp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Phone input field -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Mobile number"
-                            app:boxStrokeWidth="1dp"
+                            app:boxStrokeWidth="1.5dp"
                             app:boxStrokeWidthFocused="2dp"
-                            app:boxCornerRadiusTopStart="12dp"
-                            app:boxCornerRadiusTopEnd="12dp"
-                            app:boxCornerRadiusBottomStart="12dp"
-                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxCornerRadiusTopStart="14dp"
+                            app:boxCornerRadiusTopEnd="14dp"
+                            app:boxCornerRadiusBottomStart="14dp"
+                            app:boxCornerRadiusBottomEnd="14dp"
                             app:boxBackgroundColor="@color/colorSurface"
                             app:boxStrokeColor="@color/colorDivider"
                             app:hintTextColor="@color/colorTextSecondary"
@@ -127,22 +187,23 @@
                                 android:inputType="phone"
                                 android:maxLength="10"
                                 android:textColor="@color/colorTextPrimary"
-                                android:textSize="14sp"
-                                android:paddingTop="12dp"
-                                android:paddingBottom="12dp" />
+                                android:textSize="16sp"
+                                android:paddingTop="14dp"
+                                android:paddingBottom="14dp" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <TextView
                             android:id="@+id/tvHelper"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="We will send an OTP to your mobile number"
+                            android:text="Enter your 10-digit mobile number"
                             android:textColor="@color/colorTextSecondary"
                             android:textSize="11sp"
-                            android:layout_marginTop="6dp" />
+                            android:layout_marginTop="8dp" />
                     </LinearLayout>
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
+                <!-- Register link -->
                 <TextView
                     android:id="@+id/tvGoRegister"
                     android:layout_width="match_parent"
@@ -153,37 +214,39 @@
                     android:textStyle="bold"
                     android:textSize="13sp"
                     android:letterSpacing="0.02"
-                    android:textColor="@android:color/white" />
+                    android:textColor="#CCFFFFFF" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 
+        <!-- Primary CTA Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSendOtp"
             style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_gravity="bottom"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="18dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
             android:text="Send OTP"
             android:textAllCaps="false"
             android:textStyle="bold"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:letterSpacing="0.02"
             android:elevation="8dp"
             android:backgroundTint="@color/colorSurface"
             android:textColor="@color/colorPrimary"
             app:cornerRadius="20dp"
-            app:rippleColor="@color/colorPrimaryMedium" />
+            app:rippleColor="@color/colorPrimaryLight" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
+    <!-- Nav bar spacer -->
     <View
         android:id="@+id/viewNavBarBackground"
         android:layout_width="0dp"
         android:layout_height="20dp"
-        android:background="#000000"
+        android:background="@color/colorPrimaryDark"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

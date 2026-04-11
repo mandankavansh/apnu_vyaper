@@ -5,14 +5,14 @@
     android:id="@+id/rootContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black">
+    android:background="@color/colorPrimaryDark">
 
     <!-- Top Black Status Bar View -->
     <View
         android:id="@+id/viewStatusBarBackground"
         android:layout_width="0dp"
         android:layout_height="32dp"
-        android:background="@color/black"
+        android:background="@color/colorPrimaryDark"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -33,7 +33,7 @@
             android:id="@+id/main"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/premium_bg">
+            android:background="@color/colorBackground">
 
             <androidx.coordinatorlayout.widget.CoordinatorLayout
                 android:layout_width="match_parent"
@@ -54,7 +54,7 @@
                         <androidx.constraintlayout.widget.ConstraintLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:background="@color/colorPrimaryDark"
+                            android:background="@color/colorPrimary"
                             android:paddingBottom="28dp">
 
                             <!-- ===== TOP ROW: App Brand + Icons ===== -->
@@ -93,7 +93,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:text="LOCAL MARKETPLACE PLATFORM"
-                                        android:textColor="#80FFFFFF"
+                                        android:textColor="@color/colorSecondary"
                                         android:textSize="9sp"
                                         android:fontFamily="sans-serif-medium"
                                         android:letterSpacing="0.12" />
@@ -168,7 +168,7 @@
                                 android:layout_marginStart="20dp"
                                 android:layout_marginEnd="20dp"
                                 android:text="Near You"
-                                android:textColor="@color/colorAccent"
+                                android:textColor="@color/colorSecondary"
                                 android:textSize="34sp"
                                 android:textStyle="italic|bold"
                                 android:fontFamily="sans-serif-medium"
@@ -323,8 +323,8 @@
                                 android:layout_marginEnd="20dp"
                                 android:layout_marginTop="22dp"
                                 app:cardCornerRadius="28dp"
-                                app:cardBackgroundColor="#F0F4F4"
-                                app:cardElevation="6dp"
+                                app:cardBackgroundColor="@color/colorSurface"
+                                app:cardElevation="8dp"
                                 app:strokeWidth="0dp"
                                 app:layout_constraintTop_toBottomOf="@id/statsRow"
                                 app:layout_constraintStart_toStartOf="parent"
@@ -716,7 +716,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="@color/colorSurface"
+            android:background="@color/colorBackground"
             android:fitsSystemWindows="false"
             app:headerLayout="@layout/av_header_main"
             app:menu="@menu/nav_main"
@@ -736,7 +736,7 @@
         android:id="@+id/viewNavBarBackground"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:background="@color/black"
+        android:background="@color/colorPrimaryDark"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

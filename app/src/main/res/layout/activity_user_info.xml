@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@color/colorPrimaryDark"
     android:fitsSystemWindows="false">
 
     <!-- SOLID BLACK TOP STATUS BAR -->
@@ -11,7 +11,7 @@
         android:id="@+id/viewStatusBarBackground"
         android:layout_width="0dp"
         android:layout_height="48dp"
-        android:background="#000000"
+        android:background="@color/colorPrimaryDark"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -518,7 +518,7 @@
         android:id="@+id/viewNavBarBackground"
         android:layout_width="0dp"
         android:layout_height="20dp"
-        android:background="#000000"
+        android:background="@color/colorPrimaryDark"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

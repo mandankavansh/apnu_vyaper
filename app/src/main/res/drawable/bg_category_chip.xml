@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Selected -->
+
+    <!-- Selected state — teal accent -->
     <item android:state_selected="true">
         <shape android:shape="rectangle">
-            <solid android:color="#FFFFFFFF"/>
-            <corners android:radius="14dp"/>
-            <stroke android:width="2dp" android:color="@color/mint"/>
+            <solid android:color="@color/colorSurfaceVariant"/>
+            <corners android:radius="20dp"/>
+            <stroke android:width="2dp" android:color="@color/colorPrimary"/>
         </shape>
     </item>
 
-    <!-- Default -->
+    <!-- Default — white card with subtle border -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FFFFFFFF"/>
-            <corners android:radius="14dp"/>
-            <stroke android:width="1dp" android:color="#33000000"/>
+            <solid android:color="@color/colorSurface"/>
+            <corners android:radius="20dp"/>
+            <stroke android:width="1dp" android:color="@color/colorBorder"/>
         </shape>
     </item>
+
 </selector>

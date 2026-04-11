@@ -5,12 +5,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="2dp"
-    app:cardBackgroundColor="#FFFFFF"
+    android:layout_margin="7dp"
+    app:cardCornerRadius="22dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/colorSurface"
     app:strokeWidth="1dp"
-    app:strokeColor="#10000000"
+    app:strokeColor="@color/colorBorder"
     app:rippleColor="#1A000000">
 
     <LinearLayout
@@ -21,10 +21,10 @@
         <!-- ===== IMAGE SECTION ===== -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:background="#E1ECF5">
+            android:layout_height="175dp"
+            android:background="#E8EFF4">
 
-            <!-- Product Image (single image fallback) -->
+            <!-- Product image (single fallback) -->
             <ImageView
                 android:id="@+id/productImage"
                 android:layout_width="match_parent"
@@ -32,28 +32,15 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_placeholder_circle" />
 
-            <!-- Product Image Slider (for multiple images) -->
+            <!-- Product image slider (multi-image) -->
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/productImageSlider"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="gone" />
 
-            <!-- Status/New Badge -->
-            <!-- <TextView
-                android:id="@+id/tvSoldBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top|start"
-                android:layout_margin="12dp"
-                android:background="@drawable/bg_new_badge"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="4dp"
-                android:text="New"
-                android:textColor="#27AE60"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:elevation="2dp" /> -->
+            <!-- Saffron "NEW" badge top-left -->
+            <!-- Status badge area preserved (hidden by default) -->
 
             <!-- Dot indicator for slider -->
             <LinearLayout
@@ -66,21 +53,28 @@
                 android:visibility="gone"
                 android:elevation="4dp" />
 
-            <!-- Image count badge (hidden by default) -->
+            <!-- Image count badge -->
             <TextView
                 android:id="@+id/tvImageCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
-                android:layout_margin="12dp"
+                android:layout_margin="10dp"
                 android:background="@drawable/bg_image_count_badge"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
                 android:text="1/3"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="10sp"
                 android:visibility="gone"
-                android:elevation="2dp" />
+                android:elevation="3dp" />
+
+            <!-- Bottom gradient scrim for price readability -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/bg_bottom_scrim" />
         </FrameLayout>
 
         <!-- ===== DETAILS SECTION ===== -->
@@ -88,7 +82,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:paddingStart="13dp"
+            android:paddingEnd="13dp"
+            android:paddingTop="11dp"
+            android:paddingBottom="13dp">
 
             <!-- Title -->
             <TextView
@@ -98,27 +95,29 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:text="iPhone 14 Pro Max 256GB"
-                android:textColor="#1F2937"
-                android:textSize="15sp"
+                android:textColor="@color/colorTextPrimary"
+                android:textSize="14sp"
                 android:textStyle="bold"
-                android:lineSpacingMultiplier="1.1" />
+                android:fontFamily="sans-serif-medium"
+                android:lineSpacingMultiplier="1.15" />
 
-            <!-- Price -->
+            <!-- Price — teal accent, prominent -->
             <TextView
                 android:id="@+id/tvPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="7dp"
                 android:text="₹89,000"
-                android:textColor="#004D40"
-                android:textSize="18sp"
-                android:fontFamily="sans-serif-medium" />
+                android:textColor="@color/colorPrimary"
+                android:textSize="17sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold" />
 
             <!-- City and Time row -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="9dp">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -129,21 +128,21 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:layout_width="14dp"
-                        android:layout_height="14dp"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
                         android:src="@drawable/ic_place_24px"
-                        app:tint="#939BA3" />
+                        app:tint="@color/colorTextSecondary" />
 
                     <TextView
                         android:id="@+id/tvCity"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
+                        android:layout_marginStart="3dp"
                         android:ellipsize="end"
                         android:maxLines="1"
                         tools:text="Ahmedabad"
-                        android:textColor="#939BA3"
-                        android:textSize="12sp" />
+                        android:textColor="@color/colorTextSecondary"
+                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <TextView
@@ -152,8 +151,8 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
                     tools:text="2d ago"
-                    android:textColor="#939BA3"
-                    android:textSize="12sp" />
+                    android:textColor="@color/colorTextSecondary"
+                    android:textSize="11sp" />
 
             </RelativeLayout>
 

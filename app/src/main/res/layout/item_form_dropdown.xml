@@ -1,79 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
+<!--  item_form_dropdown.xml — Spinner / select field  -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="1dp"
-    app:cardBackgroundColor="@color/colorBackgroundSoft"
-    app:strokeWidth="1dp"
-    app:strokeColor="@color/colorPrimaryLight">
+    android:orientation="vertical"
+    android:paddingTop="6dp"
+    android:paddingBottom="2dp">
 
+    <!-- Label row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="14dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="7dp">
 
-        <!-- Label with required indicator -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_weight="1"
+            android:text="Select Option"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorTextPrimary"
+            android:fontFamily="sans-serif-medium" />
 
-            <TextView
-                android:id="@+id/tvLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Select Option"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:textColor="@color/colorTextPrimary" />
-
-            <TextView
-                android:id="@+id/tvRequired"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:text="*"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:textColor="#E53935"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <!-- Dropdown container with rounded background -->
-        <FrameLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvRequired"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_dropdown_rounded"
-            android:paddingVertical="4dp">
-
-            <Spinner
-                android:id="@+id/spinner"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="40dp"
-                android:background="@android:color/transparent"
-                android:popupBackground="@color/colorSurface" />
-
-            <!-- Dropdown arrow indicator -->
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="end|center_vertical"
-                android:layout_marginEnd="12dp"
-                android:src="@drawable/ic_dropdown_arrow"
-                android:tint="@color/colorPrimary"
-                android:contentDescription="Dropdown" />
-
-        </FrameLayout>
+            android:text="Required"
+            android:textSize="10sp"
+            android:textColor="@color/colorError"
+            android:background="@drawable/bg_light_teal_pill"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:visibility="gone" />
 
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <!-- Dropdown container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:background="@drawable/bg_dropdown_rounded">
+
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="16dp"
+            android:paddingEnd="44dp"
+            android:background="@android:color/transparent"
+            android:popupBackground="@color/colorSurface" />
+
+        <!-- Dropdown arrow -->
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="14dp"
+            android:src="@drawable/ic_dropdown_arrow"
+            android:tint="@color/colorPrimary"
+            android:contentDescription="@null" />
+
+    </FrameLayout>
+
+</LinearLayout>
