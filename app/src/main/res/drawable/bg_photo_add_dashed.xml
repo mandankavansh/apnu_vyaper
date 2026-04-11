@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Very light teal fill so the camera icon stands out -->
+    <solid android:color="#0D0D6E6E" />
+
+    <!-- Dashed teal border matching colorPrimary (#0D6E6E) -->
+    <stroke
+        android:width="1.5dp"
+        android:color="#0D6E6E"
+        android:dashWidth="6dp"
+        android:dashGap="4dp" />
+
+    <corners android:radius="8dp" />
+
+</shape>
