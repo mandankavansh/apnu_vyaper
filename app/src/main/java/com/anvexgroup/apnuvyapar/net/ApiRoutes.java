@@ -2,7 +2,7 @@ package com.anvexgroup.apnuvyapar.net;
 
 public final class ApiRoutes {
     // अपने सर्वर का बेस URL भरो (trailing slash के बिना)
-    public static final String BASE_URL = "https://highwayhelp24-7.com/shehar_setu_v1/api/";
+    public static final String BASE_URL = "https://highwayhelp24-7.com/shehar_setu_v1/";
 
     public static final String SEND_OTP = BASE_URL + "/send_otp.php";
     public static final String VERIFY_OTP = BASE_URL + "/verify_otp.php";
