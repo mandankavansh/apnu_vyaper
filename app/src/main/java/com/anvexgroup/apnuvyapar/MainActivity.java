@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_FCM_TOKEN = "fcm_token";
     private static final String KEY_LAST_UPLOADED_FCM_TOKEN = "last_uploaded_fcm_token";
 
-    private static final String APP_BRAND = "Shaher Setu";
+    private static final String APP_BRAND = "Apnu Vyapar";
 
     // ===== Views (Header) =====
     private ImageView btnDrawer, btnVoiceSearch;
