@@ -131,14 +131,14 @@
                                     android:textSize="13sp"
                                     android:fontFamily="sans-serif" />
 
-<!--                                <TextView-->
-<!--                                    android:layout_width="wrap_content"-->
-<!--                                    android:layout_height="wrap_content"-->
-<!--                                    android:text="Change"-->
-<!--                                    android:textColor="@color/colorAccent"-->
-<!--                                    android:textSize="13sp"-->
-<!--                                    android:textStyle="bold"-->
-<!--                                    android:fontFamily="sans-serif-medium" />-->
+                                <!--                                <TextView-->
+                                <!--                                    android:layout_width="wrap_content"-->
+                                <!--                                    android:layout_height="wrap_content"-->
+                                <!--                                    android:text="Change"-->
+                                <!--                                    android:textColor="@color/colorAccent"-->
+                                <!--                                    android:textSize="13sp"-->
+                                <!--                                    android:textStyle="bold"-->
+                                <!--                                    android:fontFamily="sans-serif-medium" />-->
 
                             </LinearLayout>
 
@@ -519,7 +519,7 @@
 
                             <!-- Nearby Chip — placed next to Categories header -->
 
-                          
+
                         </LinearLayout>
 
                         <androidx.recyclerview.widget.RecyclerView
@@ -728,12 +728,7 @@
             app:itemVerticalPadding="8dp"
             app:itemBackground="@android:color/transparent"
             app:itemShapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
-        <!-- Bottom black bar area -->
-        <View
-            android:id="@+id/navigationBarInset"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="@color/colorPrimaryDark" />
+
 
     </androidx.drawerlayout.widget.DrawerLayout>
 
