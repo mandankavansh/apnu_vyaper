@@ -174,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isConditionFilterAvailable = false;
     private Integer selectedMinPrice = null;
     private Integer selectedMaxPrice = null;
+    private boolean categoriesLoaded = false;
+    private boolean productsLoaded  = false;
     private void initCachedUserData() {
         cachedUserName = session.getCachedUserName();
         cachedUserPhone = session.getCachedUserPhone();
@@ -871,7 +873,42 @@ public class MainActivity extends AppCompatActivity {
 
         searchHandler.postDelayed(searchRunnable, 500);
     }
+    private void applyWindowChrome() {
+        // Edge-to-edge: let content draw behind system bars
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // Set status bar to exact theme color — NOT transparent.
+            // This prevents the "lighter bar" flash on recreation because the window-level
+            // color is always correct, even before viewStatusBarBackground redraws.
+            int primaryDark = ContextCompat.getColor(this, R.color.colorPrimaryDark);
+            getWindow().setStatusBarColor(primaryDark);
+
+            // Nav bar stays transparent — viewNavBarBackground provides the colored fill.
+            getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        }
+
+        // Android 10+ (API 29): Disable automatic status-bar contrast enforcement.
+        // Without this, Material3 adds a semi-transparent scrim over the status bar on some
+        // devices, making it appear lighter than the intended colorPrimaryDark.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+
+        // Use WindowInsetsController to set icon appearance (dark teal header = white icons)
+        View decorView = getWindow().getDecorView();
+        WindowInsetsControllerCompat ctrl = WindowCompat.getInsetsController(getWindow(), decorView);
+        if (ctrl != null) {
+            ctrl.setAppearanceLightStatusBars(false);      // white icons in status bar
+            ctrl.setAppearanceLightNavigationBars(false);  // white icons in nav bar
+        }
+    }
+    private void hideLoaderIfReady() {
+        if (categoriesLoaded && productsLoaded) {
+            LoadingDialog.hideLoading();
+        }
+    }
     private void applySavedLocale() {
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
         String lang = sp.getString(KEY_LANG, "en");
