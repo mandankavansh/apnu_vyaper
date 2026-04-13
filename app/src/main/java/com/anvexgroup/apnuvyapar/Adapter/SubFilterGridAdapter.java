@@ -59,14 +59,20 @@ public class SubFilterGridAdapter extends RecyclerView.Adapter<SubFilterGridAdap
         }
 
         if (iconRes != 0) {
+            h.img.setScaleType(android.widget.ImageView.ScaleType.CENTER);
+            h.img.setBackgroundResource(R.drawable.bg_all_category_card);
             h.img.setImageResource(iconRes);
         } else if (!TextUtils.isEmpty(iconUrl)) {
+            h.img.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            h.img.setBackgroundColor(0xFFF4F7F8);
             Glide.with(h.img.getContext())
                     .load(iconUrl)
                     .placeholder(placeholderIcon)
                     .error(placeholderIcon)
                     .into(h.img);
         } else {
+            h.img.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            h.img.setBackgroundColor(0xFFF4F7F8);
             h.img.setImageResource(placeholderIcon);
         }
 

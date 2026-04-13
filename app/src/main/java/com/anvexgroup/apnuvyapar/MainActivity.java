@@ -1699,7 +1699,7 @@ public class MainActivity extends AppCompatActivity {
                         Map<String, Object> all = new HashMap<>();
                         all.put("id", 0);
                         all.put("name", I18n.t(this, "All"));
-                        all.put("iconRes", R.drawable.ic_placeholder_circle);
+                        all.put("iconRes", R.drawable.ic_all_listings);
                         all.put("hasNewOld", false);
                         subs.add(all);
 

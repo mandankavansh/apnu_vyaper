@@ -96,7 +96,7 @@ public class CategoryGridAdapter extends RecyclerView.Adapter<CategoryGridAdapte
         // Use Glide to load the image from URL into the ImageView
         Glide.with(h.icon.getContext())
                 .load(c.iconUrl) // Use the icon URL
-                .placeholder(R.drawable.ic_placeholder_circle) // Placeholder image
+                .placeholder(R.drawable.ic_all_listings) // Placeholder image
                 .into(h.icon);
 
         // selection visuals

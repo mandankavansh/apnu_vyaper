@@ -29,7 +29,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.VH> {
     private int selectedId = -1;
 
     @DrawableRes
-    private final int placeholderIcon = R.drawable.ic_placeholder_circle;
+    private final int placeholderIcon = R.drawable.ic_all_listings;
 
     public CategoryAdapter(List<Map<String, Object>> items, OnCategoryClick listener) {
         this.items = items;
@@ -70,15 +70,21 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.VH> {
         // ---- Icon: prefer iconRes; else iconUrl (Glide); else placeholder ----
         if (iconRes != 0) {
             // Static drawable from resources
+            h.icon.setScaleType(android.widget.ImageView.ScaleType.CENTER);
+            h.icon.setBackgroundResource(R.drawable.bg_all_category_card);
             h.icon.setImageResource(iconRes);
         } else if (!TextUtils.isEmpty(iconUrl)) {
             // Load from network using Glide (full URL coming from list_categories.php)
+            h.icon.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            h.icon.setBackgroundColor(0xFFF4F7F8);
             Glide.with(h.icon.getContext())
                     .load(iconUrl)
                     .placeholder(placeholderIcon)
                     .error(placeholderIcon)
                     .into(h.icon);
         } else {
+            h.icon.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            h.icon.setBackgroundColor(0xFFF4F7F8);
             h.icon.setImageResource(placeholderIcon);
         }
 
