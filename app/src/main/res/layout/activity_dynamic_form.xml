@@ -433,6 +433,12 @@
                 app:rippleColor="@color/ss_ripple_light" />
 
         </com.google.android.material.card.MaterialCardView>
+        <!-- Bottom black bar area -->
+        <View
+            android:id="@+id/navigationBarInset"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/colorPrimaryDark" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
@@ -445,5 +451,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

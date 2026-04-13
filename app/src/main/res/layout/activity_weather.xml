@@ -410,6 +410,12 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:visibility="gone" />
+        <!-- Bottom black bar area -->
+        <View
+            android:id="@+id/navigationBarInset"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/colorPrimaryDark" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
