@@ -11,7 +11,7 @@
     <View
         android:id="@+id/viewStatusBarBackground"
         android:layout_width="0dp"
-        android:layout_height="32dp"
+        android:layout_height="0dp"
         android:background="@color/colorPrimaryDark"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
