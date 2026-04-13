@@ -728,6 +728,12 @@
             app:itemVerticalPadding="8dp"
             app:itemBackground="@android:color/transparent"
             app:itemShapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium" />
+        <!-- Bottom black bar area -->
+        <View
+            android:id="@+id/navigationBarInset"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/colorPrimaryDark" />
 
     </androidx.drawerlayout.widget.DrawerLayout>
 
