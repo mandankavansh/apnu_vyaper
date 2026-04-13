@@ -1,21 +1,28 @@
 package com.anvexgroup.apnuvyapar;
 
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.anvexgroup.apnuvyapar.Adapter.I18n;
 import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
+
 import android.widget.AutoCompleteTextView;
 
 import java.util.ArrayList;
@@ -23,48 +30,84 @@ import java.util.List;
 
 public class HelpActivity extends AppCompatActivity {
 
+    private View statusBarInset;
+    private View navigationBarInset;
+    private Toolbar toolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Set status bar color to black
-        getWindow().setStatusBarColor(android.graphics.Color.BLACK);
-        getWindow().setNavigationBarColor(android.graphics.Color.BLACK);
-        new androidx.core.view.WindowInsetsControllerCompat(
-                getWindow(), getWindow().getDecorView()
-        ).setAppearanceLightStatusBars(false);
-        
+
         String langCode = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE)
                 .getString("app_lang_code", "en");
         LanguageManager.apply(this, langCode);
 
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_help);
         LanguageManager.enforceLtr(this);
-        View mainView = findViewById(R.id.main);
-        prefetchAndTranslateViewTree(mainView);
 
-        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
-        if (toolbar != null) {
-            toolbar.setNavigationOnClickListener(v -> finish());
-        }
-
-        // Setup Expandable Cards
+        bindViews();
+        setupBlackSystemBars();
+        prefetchAndTranslateViewTree(findViewById(R.id.main));
+        setupToolbar();
         setupExpandableCard(R.id.cardStep1, R.id.layoutExpand1, R.id.ivChevron1);
         setupExpandableCard(R.id.cardStep2, R.id.layoutExpand2, R.id.ivChevron2);
         setupExpandableCard(R.id.cardStep3, R.id.layoutExpand3, R.id.ivChevron3);
         setupExpandableCard(R.id.cardStep4, R.id.layoutExpand4, R.id.ivChevron4);
 
-        com.google.android.material.button.MaterialButton btnClose = findViewById(R.id.btnClose);
+        MaterialButton btnClose = findViewById(R.id.btnClose);
         if (btnClose != null) {
             btnClose.setOnClickListener(v -> finish());
         }
+    }
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+    private void bindViews() {
+        statusBarInset = findViewById(R.id.statusBarInset);
+        navigationBarInset = findViewById(R.id.navigationBarInset);
+        toolbar = findViewById(R.id.toolbar);
+    }
+
+    private void setupToolbar() {
+        if (toolbar != null) {
+            toolbar.setTitle(I18n.t(this, "App Guide"));
+            toolbar.setNavigationOnClickListener(v -> finish());
+        }
+    }
+
+    private void setupBlackSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+
+        WindowInsetsControllerCompat controller =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        controller.setAppearanceLightStatusBars(false);
+        controller.setAppearanceLightNavigationBars(false);
+
+        View root = findViewById(R.id.main);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            ViewGroup.LayoutParams topParams = statusBarInset.getLayoutParams();
+            if (topParams.height != bars.top) {
+                topParams.height = bars.top;
+                statusBarInset.setLayoutParams(topParams);
+            }
+
+            ViewGroup.LayoutParams bottomParams = navigationBarInset.getLayoutParams();
+            if (bottomParams.height != bars.bottom) {
+                bottomParams.height = bars.bottom;
+                navigationBarInset.setLayoutParams(bottomParams);
+            }
+
             return insets;
         });
+
+        ViewCompat.requestApplyInsets(root);
     }
 
     private void setupExpandableCard(int cardId, int layoutId, int chevronId) {
@@ -75,14 +118,13 @@ public class HelpActivity extends AppCompatActivity {
         if (card != null && layout != null && chevron != null) {
             card.setOnClickListener(v -> {
                 boolean isExpanded = layout.getVisibility() == View.VISIBLE;
-                
-                // Toggle visibility with simple animation
+
                 if (isExpanded) {
                     layout.setVisibility(View.GONE);
-                    chevron.animate().rotation(0).setDuration(200).start();
+                    chevron.animate().rotation(0f).setDuration(200).start();
                 } else {
                     layout.setVisibility(View.VISIBLE);
-                    chevron.animate().rotation(180).setDuration(200).start();
+                    chevron.animate().rotation(180f).setDuration(200).start();
                 }
             });
         }
@@ -104,8 +146,8 @@ public class HelpActivity extends AppCompatActivity {
             if (!TextUtils.isEmpty(hint)) out.add(hint.toString());
         }
 
-        if (view instanceof android.view.ViewGroup) {
-            android.view.ViewGroup vg = (android.view.ViewGroup) view;
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
             for (int i = 0; i < vg.getChildCount(); i++) {
                 collectTranslatableTexts(vg.getChildAt(i), out);
             }
@@ -135,8 +177,8 @@ public class HelpActivity extends AppCompatActivity {
             }
         }
 
-        if (view instanceof android.view.ViewGroup) {
-            android.view.ViewGroup vg = (android.view.ViewGroup) view;
+        if (view instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) view;
             for (int i = 0; i < vg.getChildCount(); i++) {
                 applyTranslationsToViewTree(vg.getChildAt(i));
             }
@@ -145,8 +187,17 @@ public class HelpActivity extends AppCompatActivity {
 
     private void prefetchAndTranslateViewTree(View view) {
         if (view == null) return;
+
         List<String> keys = new ArrayList<>();
         collectTranslatableTexts(view, keys);
-        I18n.prefetch(this, keys, () -> applyTranslationsToViewTree(view), () -> applyTranslationsToViewTree(view));
+        keys.add("App Guide");
+
+        I18n.prefetch(this, keys, () -> {
+            applyTranslationsToViewTree(view);
+            setupToolbar();
+        }, () -> {
+            applyTranslationsToViewTree(view);
+            setupToolbar();
+        });
     }
 }

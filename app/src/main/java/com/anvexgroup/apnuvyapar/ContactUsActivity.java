@@ -2,7 +2,9 @@ package com.anvexgroup.apnuvyapar;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -10,9 +12,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -31,6 +37,7 @@ public class ContactUsActivity extends AppCompatActivity {
     private RecyclerView recyclerSupport;
 
     private TextView tvPageTitle, tvPageSubtitle, tvHeading, tvSubHeading, tvResponseTitle, tvResponseNote;
+    private View statusBarInset, navigationBarInset;
 
     private static final String SUPPORT_EMAIL = "support@apnuvyapar.com";
     private static final String SUPPORT_PHONE = "+916354355617";
@@ -44,10 +51,11 @@ public class ContactUsActivity extends AppCompatActivity {
                 .getString("app_lang_code", "en");
         LanguageManager.apply(this, langCode);
 
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_contact_us);
         LanguageManager.enforceLtr(this);
+
         bindViews();
+        setupBlackSystemBars();
         prefetchStaticTextsAndBuildUi();
     }
 
@@ -61,6 +69,46 @@ public class ContactUsActivity extends AppCompatActivity {
         tvSubHeading = findViewById(R.id.tvSubHeading);
         tvResponseTitle = findViewById(R.id.tvResponseTitle);
         tvResponseNote = findViewById(R.id.tvResponseNote);
+
+        statusBarInset = findViewById(R.id.statusBarInset);
+        navigationBarInset = findViewById(R.id.navigationBarInset);
+    }
+
+    private void setupBlackSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+
+        WindowInsetsControllerCompat controller =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        controller.setAppearanceLightStatusBars(false);
+        controller.setAppearanceLightNavigationBars(false);
+
+        View root = findViewById(R.id.root);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            ViewGroup.LayoutParams topParams = statusBarInset.getLayoutParams();
+            if (topParams.height != bars.top) {
+                topParams.height = bars.top;
+                statusBarInset.setLayoutParams(topParams);
+            }
+
+            ViewGroup.LayoutParams bottomParams = navigationBarInset.getLayoutParams();
+            if (bottomParams.height != bars.bottom) {
+                bottomParams.height = bars.bottom;
+                navigationBarInset.setLayoutParams(bottomParams);
+            }
+
+            return insets;
+        });
+
+        ViewCompat.requestApplyInsets(root);
     }
 
     private void prefetchStaticTextsAndBuildUi() {
