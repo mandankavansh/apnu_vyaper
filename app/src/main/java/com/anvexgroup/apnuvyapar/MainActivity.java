@@ -578,6 +578,10 @@ public class MainActivity extends AppCompatActivity {
             dialog.dismiss();
 
             Toast.makeText(this, I18n.t(this, "Language changed to") + " " + lang[1], Toast.LENGTH_SHORT).show();
+
+// Same as Shaher Setu: re-apply chrome before recreate
+            applyWindowChrome();
+
             recreate();
         });
 
@@ -1056,13 +1060,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doLogout() {
-        getSharedPreferences("user", MODE_PRIVATE).edit().clear().apply();
-        getSharedPreferences(PREFS_FCM, MODE_PRIVATE).edit().clear().apply();
+        // Close drawer first if it is open
+        if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        }
+
+        /*
+         * Correct logout:
+         * Real login/session data is stored in "apnuvyapar_prefs",
+         * not in "user".
+         *
+         * We remove only auth/user data.
+         * We keep language and onboarding so user goes to LoginActivity,
+         * not again to LanguageSelection/UserInfoActivity.
+         */
+        getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE)
+                .edit()
+                .remove(SessionManager.KEY_ACCESS_TOKEN)
+                .remove(SessionManager.KEY_REFRESH_TOKEN)
+                .remove(SplashScreen.KEY_ACCESS_EXP)
+                .remove(SessionManager.KEY_USER_ID)
+                .remove(SessionManager.KEY_USER_NAME)
+                .remove(SessionManager.KEY_USER_PHONE)
+                .putBoolean(SessionManager.KEY_LOGGED_IN, false)
+                .putBoolean(SessionManager.KEY_ONBOARDED, true)
+                .apply();
+
+        /*
+         * Keep current FCM token, but remove last uploaded token.
+         * So after next login, app will upload FCM token again for the new session.
+         */
+        getSharedPreferences(PREFS_FCM, MODE_PRIVATE)
+                .edit()
+                .remove(KEY_LAST_UPLOADED_FCM_TOKEN)
+                .apply();
 
         makeText(this, I18n.t(this, "Logged out"), Toast.LENGTH_SHORT).show();
 
-        Intent i = new Intent(this, LanguageSelection.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        Intent i = new Intent(MainActivity.this, LoginActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(i);
         finish();
     }
