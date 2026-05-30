@@ -1105,6 +1105,7 @@ public class MainActivity extends AppCompatActivity {
 
     // ================= Static text prefetch =================
 
+    @SuppressLint("SetTextI18n")
     private void prefetchAndApplyStaticTexts() {
         Set<String> keys = new LinkedHashSet<>();
 
@@ -2294,6 +2295,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    @SuppressLint("SetTextI18n")
     private void updateKmChipText() {
         if (chipKmFilter == null) return;
 
