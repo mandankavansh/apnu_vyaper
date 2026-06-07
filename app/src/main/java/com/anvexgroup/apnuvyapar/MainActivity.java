@@ -66,6 +66,8 @@ import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.anvexgroup.apnuvyapar.Adapter.ProductAdapter;
 import com.anvexgroup.apnuvyapar.Adapter.SubFilterGridAdapter;
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
+import com.anvexgroup.apnuvyapar.core.LogoutManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
@@ -188,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
 
         applySavedLocale();
         session = new SessionManager(this);
+        session.markActive();
         getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
 
         productCache = new android.util.LruCache<>(20);
@@ -419,7 +422,36 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
 
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                session.markActive();
+            }
+
+            @Override
+            public void onFailure(@NonNull String message, boolean shouldLogout) {
+                if (shouldLogout) {
+                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                    goToLoginAfterSessionClear();
+                    return;
+                }
+
+                /*
+                 * Network/server issue should not logout active user.
+                 * Keep user inside app and retry APIs normally.
+                 */
+                session.markActive();
+            }
+        });
+    }
     private void fetchFcmToken() {
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
@@ -1060,31 +1092,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doLogout() {
-        // Close drawer first if it is open
         if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
         }
 
-        /*
-         * Correct logout:
-         * Real login/session data is stored in "apnuvyapar_prefs",
-         * not in "user".
-         *
-         * We remove only auth/user data.
-         * We keep language and onboarding so user goes to LoginActivity,
-         * not again to LanguageSelection/UserInfoActivity.
-         */
-        getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE)
-                .edit()
-                .remove(SessionManager.KEY_ACCESS_TOKEN)
-                .remove(SessionManager.KEY_REFRESH_TOKEN)
-                .remove(SplashScreen.KEY_ACCESS_EXP)
-                .remove(SessionManager.KEY_USER_ID)
-                .remove(SessionManager.KEY_USER_NAME)
-                .remove(SessionManager.KEY_USER_PHONE)
-                .putBoolean(SessionManager.KEY_LOGGED_IN, false)
-                .putBoolean(SessionManager.KEY_ONBOARDED, true)
-                .apply();
+        LoadingDialog.showLoading(this, I18n.t(this, "Logging out..."));
 
         /*
          * Keep current FCM token, but remove last uploaded token.
@@ -1095,14 +1107,24 @@ public class MainActivity extends AppCompatActivity {
                 .remove(KEY_LAST_UPLOADED_FCM_TOKEN)
                 .apply();
 
-        makeText(this, I18n.t(this, "Logged out"), Toast.LENGTH_SHORT).show();
+        LogoutManager.logout(this, false, () -> {
+            LoadingDialog.hideLoading();
 
-        Intent i = new Intent(MainActivity.this, LoginActivity.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(i);
+            Toast.makeText(
+                    MainActivity.this,
+                    I18n.t(MainActivity.this, "Logged out"),
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            goToLoginAfterSessionClear();
+        });
+    }
+    private void goToLoginAfterSessionClear() {
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
-
     // ================= Static text prefetch =================
 
     @SuppressLint("SetTextI18n")

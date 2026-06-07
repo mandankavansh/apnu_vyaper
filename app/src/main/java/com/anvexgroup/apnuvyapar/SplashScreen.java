@@ -8,6 +8,9 @@ import android.os.Looper;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -16,29 +19,25 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
-import android.widget.ProgressBar;
-import android.widget.TextView;
-
 import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
+import com.anvexgroup.apnuvyapar.core.SessionManager;
 
 public class SplashScreen extends AppCompatActivity {
 
     private static final long SPLASH_DELAY = 1800L; // 1.8s
 
-    public static final String PREFS          = "apnuvyapar_prefs";
-    public static final String KEY_LANG_CODE  = "app_lang_code";
-    public static final String KEY_ONBOARDED  = "onboarding_done";
-    public static final String KEY_ACCESS     = "access_token";
-    public static final String KEY_ACCESS_EXP = "access_expiry_epoch";
+    private SessionManager session;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
 
+        session = new SessionManager(this);
+
         LanguageManager.enforceLtr(this);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-
 
         // Set entirely transparent status bar so gradient shows edge-to-edge
         getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
@@ -56,15 +55,14 @@ public class SplashScreen extends AppCompatActivity {
         });
 
         // ---------- Views ----------
-        View brandContainer  = findViewById(R.id.brandContainer);
+        View brandContainer = findViewById(R.id.brandContainer);
         ProgressBar progress = findViewById(R.id.progress);
-        TextView tvLoading   = findViewById(R.id.tvLoading);
+        TextView tvLoading = findViewById(R.id.tvLoading);
 
         brandContainer.setScaleX(0.85f);
         brandContainer.setScaleY(0.85f);
         brandContainer.setAlpha(0f);
         brandContainer.setTranslationY(20f);
-
 
         progress.setAlpha(0f);
         tvLoading.setAlpha(0f);
@@ -99,40 +97,69 @@ public class SplashScreen extends AppCompatActivity {
     }
 
     private void routeNext() {
-        SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
+        /*
+         * Do not use session.getLangCode() here because it returns "en" as default.
+         * On fresh install we must check real saved value, otherwise LanguageSelection
+         * will be skipped.
+         */
+        SharedPreferences sp = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE);
+        String lang = sp.getString(SessionManager.KEY_LANG_CODE, null);
 
-        // 1) Language selected?
-        String lang = sp.getString(KEY_LANG_CODE, null);
         if (lang == null || lang.trim().isEmpty()) {
             go(LanguageSelection.class);
             return;
         }
 
-        // 2) Valid token?
-        if (hasValidToken(sp)) {
-            go(MainActivity.class);
+        /*
+         * No login/session found.
+         */
+        if (!session.isLoggedIn()
+                && !session.hasRefreshToken()
+                && !session.hasValidAccessToken()) {
+
+            if (session.isOnboarded()) {
+                go(LoginActivity.class);
+            } else {
+                go(UserInfoActivity.class);
+            }
+
             return;
         }
 
-        // 3) Onboarded / registered?
-        boolean onboarded = sp.getBoolean(KEY_ONBOARDED, false);
-        if (onboarded) {
-            go(LoginActivity.class);
-        } else {
-            go(UserInfoActivity.class);
-        }
+        /*
+         * Shaher Setu style session check:
+         * - valid access token: go MainActivity
+         * - expired access token + refresh token: silently refresh
+         * - inactive 30 days: logout and go LoginActivity
+         */
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                go(MainActivity.class);
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                if (shouldLogout) {
+                    Toast.makeText(SplashScreen.this, message, Toast.LENGTH_SHORT).show();
+                    go(LoginActivity.class);
+                    return;
+                }
+
+                /*
+                 * Network/server issue while refreshing token.
+                 * Do not force logout active user.
+                 * Let MainActivity open; protected APIs can retry/handle later.
+                 */
+                go(MainActivity.class);
+            }
+        });
     }
 
     private void go(Class<?> cls) {
-        startActivity(new Intent(this, cls));
+        Intent intent = new Intent(this, cls);
+        startActivity(intent);
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         finish();
-    }
-
-    private boolean hasValidToken(SharedPreferences sp) {
-        String token = sp.getString(KEY_ACCESS, null);
-        long expAt   = sp.getLong(KEY_ACCESS_EXP, 0L);
-        long now     = System.currentTimeMillis() / 1000L;
-        return token != null && expAt > now + 15; // 15s buffer
     }
 }

@@ -66,7 +66,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Apply chosen language before inflating views
         String langCode = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE)
-                .getString("app_lang_code", "en");
+                .getString(SessionManager.KEY_LANG_CODE, "en");
         LanguageManager.apply(this, langCode);
 
         setContentView(R.layout.activity_login);
@@ -99,7 +99,7 @@ public class LoginActivity extends AppCompatActivity {
                 "Enter 6 digits",
                 "Resend in",
                 "Already have an account? Log in"), () -> {
-                    /* no-op: warm cache */ });
+            /* no-op: warm cache */ });
 
         // Translate static labels
         if (tvLangBadge != null) {
@@ -320,46 +320,66 @@ public class LoginActivity extends AppCompatActivity {
                             return;
                         }
 
-                        String access = resp.optString("access_token", null);
-                        String refresh = resp.optString("refresh_token", null);
+                        String access = resp.optString("access_token", "");
+                        String refresh = resp.optString("refresh_token", "");
                         int userId = resp.optInt("user_id", -1);
                         int expiresIn = resp.optInt("expires_in", 0); // seconds
 
-                        if (access != null && refresh != null && userId > 0 && expiresIn > 0) {
-                            session.saveTokens(access, refresh, userId);
-                            saveAuthToPrefs(expiresIn);
-
-                            SharedPreferences userPrefs = getSharedPreferences(SplashScreen.PREFS, MODE_PRIVATE);
-                            userPrefs.edit()
-                                    .putLong("user_id", userId)
-                                    .apply();
-
-                            FirebaseMessaging.getInstance().getToken()
-                                    .addOnCompleteListener(task -> {
-                                        if (!task.isSuccessful()) {
-                                            android.util.Log.e("LoginActivity", "FCM token fetch failed after login", task.getException());
-                                            return;
-                                        }
-
-                                        String fcmToken = task.getResult();
-                                        if (!android.text.TextUtils.isEmpty(fcmToken)) {
-                                            getSharedPreferences("fcm_prefs", MODE_PRIVATE)
-                                                    .edit()
-                                                    .putString("fcm_token", fcmToken)
-                                                    .putString("last_uploaded_fcm_token", "")
-                                                    .apply();
-                                        }
-                                    });
-
-                            if (resendTimer != null) resendTimer.cancel();
-                            if (otpDialog != null) otpDialog.dismiss();
-                            startActivity(new Intent(this, MainActivity.class));
-                            finish();
-                        }
-                        else {
-                            if (errorField != null)
+                        if (access.trim().isEmpty()
+                                || refresh.trim().isEmpty()
+                                || userId <= 0
+                                || expiresIn <= 0) {
+                            if (errorField != null) {
                                 errorField.setText(I18n.t(this, "Login failed"));
+                            }
+                            return;
                         }
+
+                        long accessExpiryEpoch =
+                                (System.currentTimeMillis() / 1000L) + expiresIn;
+
+                        /*
+                         * Shaher Setu style rolling-session save:
+                         * - access token expiry is stored
+                         * - refresh token is stored
+                         * - logged_in = true
+                         * - last_active_epoch is updated
+                         */
+                        session.saveTokens(access, refresh, userId, accessExpiryEpoch);
+                        session.setOnboarded(true);
+                        session.setLoggedIn(true);
+                        session.markActive();
+
+                        JSONObject userObj = resp.optJSONObject("user");
+                        if (userObj != null) {
+                            String name = userObj.optString("full_name", "");
+                            String phone = userObj.optString("phone", mobile);
+                            session.saveUserProfile(name, phone);
+                        }
+
+                        saveCompatibilityAuthPrefs(userId, access, accessExpiryEpoch);
+
+                        FirebaseMessaging.getInstance().getToken()
+                                .addOnCompleteListener(task -> {
+                                    if (!task.isSuccessful()) {
+                                        android.util.Log.e("LoginActivity", "FCM token fetch failed after login", task.getException());
+                                        return;
+                                    }
+
+                                    String fcmToken = task.getResult();
+                                    if (!android.text.TextUtils.isEmpty(fcmToken)) {
+                                        getSharedPreferences("fcm_prefs", MODE_PRIVATE)
+                                                .edit()
+                                                .putString("fcm_token", fcmToken)
+                                                .putString("last_uploaded_fcm_token", "")
+                                                .apply();
+                                    }
+                                });
+
+                        if (resendTimer != null) resendTimer.cancel();
+                        if (otpDialog != null) otpDialog.dismiss();
+                        startActivity(new Intent(this, MainActivity.class));
+                        finish();
                     },
                     err -> {
                         LoadingDialog.hideLoading();
@@ -384,13 +404,23 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void saveAuthToPrefs(int expiresInSeconds) {
-        long expAt = (System.currentTimeMillis() / 1000L) + Math.max(0, expiresInSeconds);
-        SharedPreferences sp = getSharedPreferences(SplashScreen.PREFS, MODE_PRIVATE);
+    /*
+     * Some existing screens still directly read SharedPreferences values.
+     * Keep these values synced so old screens do not break.
+     */
+    private void saveCompatibilityAuthPrefs(int userId, String accessToken, long accessExpiryEpoch) {
+        SharedPreferences sp = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE);
+
         sp.edit()
-                .putString(SplashScreen.KEY_ACCESS, session.getAccessToken())
-                .putLong(SplashScreen.KEY_ACCESS_EXP, expAt)
-                .putBoolean(SplashScreen.KEY_ONBOARDED, true)
+                .putString(SessionManager.KEY_ACCESS_TOKEN, accessToken)
+                .putLong(SessionManager.KEY_ACCESS_EXPIRY_EPOCH, accessExpiryEpoch)
+                .putInt(SessionManager.KEY_USER_ID, userId)
+                .putBoolean(SessionManager.KEY_ONBOARDED, true)
+                .putBoolean(SessionManager.KEY_LOGGED_IN, true)
+                .putLong(
+                        SessionManager.KEY_LAST_ACTIVE_EPOCH,
+                        System.currentTimeMillis() / 1000L
+                )
                 .apply();
     }
 

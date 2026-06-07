@@ -241,7 +241,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             }
         }
 
-        SharedPreferences prefs = getSharedPreferences(SplashScreen.PREFS, MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE);
         userId = prefs.getLong("user_id", 0L);
         rvForm.setLayoutManager(new LinearLayoutManager(this));
 

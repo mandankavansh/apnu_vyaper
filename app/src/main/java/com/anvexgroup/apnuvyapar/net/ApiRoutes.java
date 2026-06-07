@@ -30,7 +30,8 @@ public final class ApiRoutes {
 
     public static final String CREATE_LISTING = BASE_URL + "/create_listing.php";
     public static final String UPDATE_LISTING = BASE_URL + "/update_listing.php";
-
+    public static final String REFRESH_TOKEN = BASE_URL + "/refresh_token.php";
+    public static final String LOGOUT = BASE_URL + "/logout.php";
     // My Listings
     public static final String GET_USER_LISTINGS = BASE_URL + "/get_user_listings.php";
     public static final String MARK_LISTING_SOLD = BASE_URL + "/mark_listing_sold.php";
