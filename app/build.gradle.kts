@@ -80,7 +80,7 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
     implementation("com.google.firebase:firebase-messaging")
-
+    implementation ("com.google.mlkit:translate:17.0.3")
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

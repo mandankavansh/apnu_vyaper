@@ -17,6 +17,10 @@ import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
 public final class AuthRefreshManager {
 
     private static final String TAG = "AuthRefreshManager";
@@ -40,40 +44,33 @@ public final class AuthRefreshManager {
         Context appContext = context.getApplicationContext();
         SessionManager session = new SessionManager(appContext);
 
-        /*
-         * Main rule:
-         * Auto logout only if user is inactive for 30+ days.
-         */
+        if (!session.isLoggedIn()
+                && !session.hasValidAccessToken()
+                && !session.hasRefreshToken()) {
+            session.logout();
+            callback.onFailure("Login session not found.", true);
+            return;
+        }
+
         if (session.isInactiveFor30Days()) {
             session.logout();
             callback.onFailure("Logged out because account was inactive for 30 days.", true);
             return;
         }
 
-        /*
-         * Access token still valid.
-         * User is active, so update local active time.
-         */
         if (session.hasValidAccessToken()) {
             session.markActive();
             callback.onSuccess();
             return;
         }
 
-        /*
-         * Access token expired, but refresh token exists.
-         * Do not logout active user. Refresh silently.
-         */
         if (session.hasRefreshToken()) {
             refreshAccessToken(appContext, callback);
             return;
         }
 
-        /*
-         * No usable session.
-         */
         session.logout();
-        callback.onFailure("Login session not found.", true);
+        callback.onFailure("Login session expired. Please login again.", true);
     }
 
     public static void refreshAccessToken(
@@ -96,8 +93,7 @@ public final class AuthRefreshManager {
         try {
             body.put("refresh_token", refreshToken);
         } catch (JSONException e) {
-            session.logout();
-            callback.onFailure("Could not prepare refresh request.", true);
+            callback.onFailure("Could not prepare refresh request.", false);
             return;
         }
 
@@ -107,7 +103,15 @@ public final class AuthRefreshManager {
                 body,
                 response -> handleRefreshResponse(session, response, callback),
                 error -> handleRefreshError(session, error, callback)
-        );
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                headers.put("Accept", "application/json");
+                return headers;
+            }
+        };
 
         request.setRetryPolicy(new DefaultRetryPolicy(
                 TIMEOUT_MS,
@@ -128,12 +132,11 @@ public final class AuthRefreshManager {
             return;
         }
 
-        boolean ok = response.optBoolean("ok", false);
+        boolean ok = response.optBoolean("ok", response.optBoolean("success", false));
 
         if (!ok) {
             String errorCode = response.optString("error_code", "");
-            String error = response.optString("error", "Session refresh failed.");
-
+            String error = response.optString("error", response.optString("message", "Session refresh failed."));
             boolean shouldLogout = isLogoutError(errorCode);
 
             if (shouldLogout) {
@@ -144,8 +147,10 @@ public final class AuthRefreshManager {
             return;
         }
 
-        String accessToken = response.optString("access_token", "");
+        String accessToken = response.optString("access_token", "").trim();
+        String refreshToken = response.optString("refresh_token", "").trim();
         int expiresIn = response.optInt("expires_in", 0);
+        int userId = response.optInt("user_id", session.getUserId());
 
         if (TextUtils.isEmpty(accessToken) || expiresIn <= 0) {
             callback.onFailure("Invalid refresh response.", false);
@@ -154,19 +159,17 @@ public final class AuthRefreshManager {
 
         long accessExpiryEpoch = (System.currentTimeMillis() / 1000L) + expiresIn;
 
-        session.saveAccessToken(accessToken, accessExpiryEpoch);
+        if (!TextUtils.isEmpty(refreshToken)) {
+            session.saveTokens(accessToken, refreshToken, userId, accessExpiryEpoch);
+        } else {
+            session.saveAccessToken(accessToken, accessExpiryEpoch);
+        }
+
+        session.setLoggedIn(true);
         session.markActive();
 
         JSONObject user = response.optJSONObject("user");
-
-        if (user != null) {
-            String name = user.optString("full_name", session.getCachedUserName());
-            String phone = user.optString("phone", session.getCachedUserPhone());
-
-            if (!TextUtils.isEmpty(name) || !TextUtils.isEmpty(phone)) {
-                session.saveUserProfile(name, phone);
-            }
-        }
+        saveUserCache(session, user);
 
         callback.onSuccess();
     }
@@ -183,40 +186,51 @@ public final class AuthRefreshManager {
         }
 
         String message = "Could not refresh session.";
+        String errorCode = "";
 
         try {
             if (error.networkResponse != null && error.networkResponse.data != null) {
-                String body = new String(error.networkResponse.data);
+                String body = new String(error.networkResponse.data, StandardCharsets.UTF_8);
                 JSONObject json = new JSONObject(body);
 
-                String apiError = json.optString("error", "");
-                String errorCode = json.optString("error_code", "");
-
+                String apiError = json.optString("error", json.optString("message", ""));
                 if (!TextUtils.isEmpty(apiError)) {
                     message = apiError;
                 }
 
-                if (isLogoutError(errorCode)) {
-                    session.logout();
-                    callback.onFailure(message, true);
-                    return;
-                }
+                errorCode = json.optString("error_code", "");
             }
         } catch (Exception e) {
             Log.w(TAG, "Could not parse refresh error body", e);
         }
 
-        /*
-         * 401/403 means session cannot continue.
-         * Network timeout/server down should not instantly logout active user.
-         */
-        if (statusCode == 401 || statusCode == 403) {
+        if (isLogoutError(errorCode) || statusCode == 401 || statusCode == 403) {
             session.logout();
             callback.onFailure(message, true);
             return;
         }
 
         callback.onFailure(message, false);
+    }
+
+    private static void saveUserCache(
+            @NonNull SessionManager session,
+            @Nullable JSONObject user
+    ) {
+        if (user == null) {
+            return;
+        }
+
+        String name = user.optString("full_name", "").trim();
+        if (TextUtils.isEmpty(name)) {
+            name = user.optString("name", "").trim();
+        }
+
+        String phone = user.optString("phone", "").trim();
+
+        if (!TextUtils.isEmpty(name) || !TextUtils.isEmpty(phone)) {
+            session.saveUserProfile(name, phone);
+        }
     }
 
     private static boolean isLogoutError(@Nullable String errorCode) {
@@ -228,8 +242,11 @@ public final class AuthRefreshManager {
                 || "SESSION_EXPIRED".equalsIgnoreCase(errorCode)
                 || "SESSION_REVOKED".equalsIgnoreCase(errorCode)
                 || "INVALID_REFRESH_TOKEN".equalsIgnoreCase(errorCode)
+                || "REFRESH_TOKEN_REQUIRED".equalsIgnoreCase(errorCode)
+                || "INVALID_TOKEN".equalsIgnoreCase(errorCode)
                 || "ACCOUNT_DELETED".equalsIgnoreCase(errorCode)
                 || "ACCOUNT_BLOCKED".equalsIgnoreCase(errorCode)
-                || "ACCOUNT_INACTIVE".equalsIgnoreCase(errorCode);
+                || "ACCOUNT_INACTIVE".equalsIgnoreCase(errorCode)
+                || "ACCOUNT_NOT_ACTIVE".equalsIgnoreCase(errorCode);
     }
 }

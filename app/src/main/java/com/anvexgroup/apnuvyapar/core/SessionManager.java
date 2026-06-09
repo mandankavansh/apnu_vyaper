@@ -2,10 +2,12 @@ package com.anvexgroup.apnuvyapar.core;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 
 public class SessionManager {
+
     public static final String PREFS = "apnuvyapar_prefs";
 
     public static final String KEY_LANG_CODE = "app_lang_code";
@@ -30,36 +32,42 @@ public class SessionManager {
     private final SharedPreferences sp;
 
     public SessionManager(Context ctx) {
-        sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        sp = ctx.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
-    /* ----------------------------- Auth tokens ----------------------------- */
-
     public void saveTokens(String access, String refresh, int userId) {
-        sp.edit()
-                .putString(KEY_ACCESS_TOKEN, access)
-                .putString(KEY_REFRESH_TOKEN, refresh)
-                .putInt(KEY_USER_ID, userId)
-                .putBoolean(KEY_LOGGED_IN, true)
-                .putLong(KEY_LAST_ACTIVE_EPOCH, nowEpochSeconds())
-                .apply();
+        saveTokens(access, refresh, userId, 0L);
     }
 
     public void saveTokens(String access, String refresh, int userId, long accessExpiryEpoch) {
-        sp.edit()
-                .putString(KEY_ACCESS_TOKEN, access)
-                .putString(KEY_REFRESH_TOKEN, refresh)
-                .putInt(KEY_USER_ID, userId)
-                .putLong(KEY_ACCESS_EXPIRY_EPOCH, accessExpiryEpoch)
+        SharedPreferences.Editor editor = sp.edit()
+                .putString(KEY_ACCESS_TOKEN, safe(access))
+                .putString(KEY_REFRESH_TOKEN, safe(refresh))
+                .putLong(KEY_USER_ID, userId)
                 .putBoolean(KEY_LOGGED_IN, true)
-                .putLong(KEY_LAST_ACTIVE_EPOCH, nowEpochSeconds())
-                .apply();
+                .putLong(KEY_LAST_ACTIVE_EPOCH, nowEpochSeconds());
+
+        if (accessExpiryEpoch > 0L) {
+            editor.putLong(KEY_ACCESS_EXPIRY_EPOCH, accessExpiryEpoch);
+        } else {
+            editor.remove(KEY_ACCESS_EXPIRY_EPOCH);
+        }
+
+        editor.apply();
     }
 
     public void saveAccessToken(String access, long accessExpiryEpoch) {
         sp.edit()
-                .putString(KEY_ACCESS_TOKEN, access)
-                .putLong(KEY_ACCESS_EXPIRY_EPOCH, accessExpiryEpoch)
+                .putString(KEY_ACCESS_TOKEN, safe(access))
+                .putLong(KEY_ACCESS_EXPIRY_EPOCH, Math.max(0L, accessExpiryEpoch))
+                .putBoolean(KEY_LOGGED_IN, true)
+                .putLong(KEY_LAST_ACTIVE_EPOCH, nowEpochSeconds())
+                .apply();
+    }
+
+    public void saveRefreshToken(String refresh) {
+        sp.edit()
+                .putString(KEY_REFRESH_TOKEN, safe(refresh))
                 .putBoolean(KEY_LOGGED_IN, true)
                 .putLong(KEY_LAST_ACTIVE_EPOCH, nowEpochSeconds())
                 .apply();
@@ -76,11 +84,21 @@ public class SessionManager {
     }
 
     public long getAccessExpiryEpoch() {
-        return sp.getLong(KEY_ACCESS_EXPIRY_EPOCH, 0L);
+        return readLong(KEY_ACCESS_EXPIRY_EPOCH, 0L);
     }
 
     public int getUserId() {
-        return sp.getInt(KEY_USER_ID, -1);
+        long userId = readLong(KEY_USER_ID, -1L);
+
+        if (userId > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+
+        if (userId < Integer.MIN_VALUE) {
+            return -1;
+        }
+
+        return (int) userId;
     }
 
     public boolean hasValidAccessToken() {
@@ -88,14 +106,16 @@ public class SessionManager {
         long expAt = getAccessExpiryEpoch();
         long now = nowEpochSeconds();
 
-        return token != null
-                && !token.trim().isEmpty()
+        return !TextUtils.isEmpty(token)
                 && expAt > now + 15L;
     }
 
     public boolean hasRefreshToken() {
-        String refresh = getRefreshToken();
-        return refresh != null && !refresh.trim().isEmpty();
+        return !TextUtils.isEmpty(getRefreshToken());
+    }
+
+    public boolean hasAnyAuthToken() {
+        return !TextUtils.isEmpty(getAccessToken()) || !TextUtils.isEmpty(getRefreshToken());
     }
 
     public void clearTokens() {
@@ -104,6 +124,7 @@ public class SessionManager {
                 .remove(KEY_REFRESH_TOKEN)
                 .remove(KEY_ACCESS_EXPIRY_EPOCH)
                 .remove(KEY_USER_ID)
+                .putBoolean(KEY_LOGGED_IN, false)
                 .apply();
     }
 
@@ -120,8 +141,6 @@ public class SessionManager {
                 .apply();
     }
 
-    /* ------------------------- 30 days inactivity -------------------------- */
-
     public void markActive() {
         sp.edit()
                 .putLong(KEY_LAST_ACTIVE_EPOCH, nowEpochSeconds())
@@ -129,20 +148,16 @@ public class SessionManager {
     }
 
     public long getLastActiveEpoch() {
-        return sp.getLong(KEY_LAST_ACTIVE_EPOCH, 0L);
+        return readLong(KEY_LAST_ACTIVE_EPOCH, 0L);
     }
 
     public boolean isInactiveFor30Days() {
-        if (!isLoggedIn()) {
+        if (!isLoggedIn() && !hasAnyAuthToken()) {
             return false;
         }
 
         long lastActive = getLastActiveEpoch();
 
-        /*
-         * Existing installed users may not have this value yet.
-         * Do not logout them instantly. Start tracking from current open.
-         */
         if (lastActive <= 0L) {
             markActive();
             return false;
@@ -154,42 +169,32 @@ public class SessionManager {
 
     public long getInactiveDays() {
         long lastActive = getLastActiveEpoch();
-
-        if (lastActive <= 0L) {
-            return 0L;
-        }
+        if (lastActive <= 0L) return 0L;
 
         long diff = nowEpochSeconds() - lastActive;
-
-        if (diff <= 0L) {
-            return 0L;
-        }
+        if (diff <= 0L) return 0L;
 
         return diff / (24L * 60L * 60L);
     }
 
-    private long nowEpochSeconds() {
-        return System.currentTimeMillis() / 1000L;
-    }
-
-    /* --------------------------- User profile cache ------------------------- */
-
     public void saveUserProfile(String name, String phone) {
         sp.edit()
-                .putString(KEY_USER_NAME, name)
-                .putString(KEY_USER_PHONE, phone)
+                .putString(KEY_USER_NAME, safe(name))
+                .putString(KEY_USER_PHONE, safe(phone))
                 .apply();
     }
 
     public String getCachedUserName() {
-        return sp.getString(KEY_USER_NAME, "User");
+        String name = sp.getString(KEY_USER_NAME, "User");
+        if (TextUtils.isEmpty(name)) return "User";
+        return name;
     }
 
     public String getCachedUserPhone() {
-        return sp.getString(KEY_USER_PHONE, "");
+        String phone = sp.getString(KEY_USER_PHONE, "");
+        if (phone == null) return "";
+        return phone;
     }
-
-    /* ------------------------------ Onboarding ----------------------------- */
 
     public void setOnboarded(boolean v) {
         sp.edit().putBoolean(KEY_ONBOARDED, v).apply();
@@ -200,27 +205,67 @@ public class SessionManager {
     }
 
     public void setLoggedIn(boolean v) {
-        sp.edit().putBoolean(KEY_LOGGED_IN, v).apply();
+        SharedPreferences.Editor editor = sp.edit().putBoolean(KEY_LOGGED_IN, v);
+
+        if (v) {
+            editor.putLong(KEY_LAST_ACTIVE_EPOCH, nowEpochSeconds());
+        }
+
+        editor.apply();
     }
 
     public boolean isLoggedIn() {
         return sp.getBoolean(KEY_LOGGED_IN, false);
     }
 
-    /* -------------------------------- Language ----------------------------- */
-
     public void setLang(String code, String name) {
         sp.edit()
-                .putString(KEY_LANG_CODE, code)
-                .putString(KEY_LANG_NAME, name)
+                .putString(KEY_LANG_CODE, TextUtils.isEmpty(code) ? "en" : code.trim())
+                .putString(KEY_LANG_NAME, TextUtils.isEmpty(name) ? "English" : name.trim())
                 .apply();
     }
 
     public String getLangName() {
-        return sp.getString(KEY_LANG_NAME, "English");
+        String langName = sp.getString(KEY_LANG_NAME, "English");
+        if (TextUtils.isEmpty(langName)) return "English";
+        return langName;
     }
 
     public String getLangCode() {
-        return sp.getString(KEY_LANG_CODE, null);
+        String langCode = sp.getString(KEY_LANG_CODE, "en");
+        if (TextUtils.isEmpty(langCode)) return "en";
+        return langCode;
+    }
+
+    public boolean hasSelectedLanguage() {
+        String langCode = sp.getString(KEY_LANG_CODE, null);
+        return !TextUtils.isEmpty(langCode);
+    }
+
+    private long nowEpochSeconds() {
+        return System.currentTimeMillis() / 1000L;
+    }
+
+    private long readLong(String key, long defaultValue) {
+        Object value = sp.getAll().get(key);
+
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+
+        if (value instanceof String) {
+            try {
+                return Long.parseLong(((String) value).trim());
+            } catch (Exception ignored) {
+                return defaultValue;
+            }
+        }
+
+        return defaultValue;
+    }
+
+    private String safe(String value) {
+        if (value == null) return "";
+        return value.trim();
     }
 }

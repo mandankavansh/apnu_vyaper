@@ -7,17 +7,13 @@ import android.text.Html;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
-import com.android.volley.toolbox.StringRequest;
-import com.anvexgroup.apnuvyapar.net.VolleySingleton;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.mlkit.common.model.DownloadConditions;
+import com.google.mlkit.nl.translate.TranslateLanguage;
+import com.google.mlkit.nl.translate.Translation;
+import com.google.mlkit.nl.translate.Translator;
+import com.google.mlkit.nl.translate.TranslatorOptions;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -28,14 +24,13 @@ public final class I18n {
 
     private static final String TAG = "I18n";
 
-    // Paste your NEW Google Cloud Translation API key here
-    private static final String GOOGLE_TRANSLATE_API_KEY = "AIzaSyDnsoOImrpkqOg8Csq9Tawao6BtPQwcr8A";
+    private static final String APP_PREFS = "apnuvyapar_prefs";
+    private static final String KEY_APP_LANG_CODE = "app_lang_code";
 
-    private static final String G_URL = "https://translation.googleapis.com/language/translate/v2";
-    private static final String SP_NAME = "i18n_cache_v1";
-    private static final int VOLLEY_TIMEOUT = 12000;
+    private static final String SP_NAME = "i18n_cache_mlkit_v1";
 
     private static final int MEM_CACHE_CAP = 500;
+
     private static final Map<String, String> MEM =
             new LinkedHashMap<String, String>(MEM_CACHE_CAP, 0.75f, true) {
                 @Override
@@ -44,50 +39,89 @@ public final class I18n {
                 }
             };
 
-    private I18n() {}
+    private I18n() {
+    }
 
     public static String lang(Context ctx) {
-        SharedPreferences sp = ctx.getSharedPreferences("apnuvyapar_prefs", Context.MODE_PRIVATE);
-        String code = sp.getString("app_lang_code", "en");
-        return (code == null || code.trim().isEmpty()) ? "en" : code.trim();
+        if (ctx == null) return "en";
+
+        SharedPreferences sp = ctx.getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE);
+        String code = sp.getString(KEY_APP_LANG_CODE, "en");
+
+        if (code == null || code.trim().isEmpty()) return "en";
+
+        return normalizeLangCode(code.trim());
     }
 
     public static String t(Context ctx, String key) {
+        if (ctx == null) return key == null ? "" : key;
         if (key == null) return "";
-        key = key.trim();
 
-        String l = lang(ctx);
-        if ("en".equalsIgnoreCase(l) || key.isEmpty()) return key;
+        String cleanKey = key.trim();
+        if (cleanKey.isEmpty()) return "";
 
-        String memKey = "v1|" + l + "|" + key;
+        String targetLang = lang(ctx);
+        if ("en".equalsIgnoreCase(targetLang)) return cleanKey;
+
+        String memKey = buildCacheKey(targetLang, cleanKey);
 
         synchronized (MEM) {
             String cached = MEM.get(memKey);
-            if (cached != null) return cached;
+            if (cached != null && !cached.trim().isEmpty()) {
+                return cached;
+            }
         }
 
         SharedPreferences sp = ctx.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
         String stored = sp.getString(memKey, null);
-        if (stored == null) return key;
+
+        if (stored == null || stored.trim().isEmpty()) {
+            return cleanKey;
+        }
 
         synchronized (MEM) {
             MEM.put(memKey, stored);
         }
+
         return stored;
     }
 
     public static void translateAndApplyText(TextView tv, Context ctx) {
-        if (tv == null) return;
+        if (tv == null || ctx == null) return;
+
         CharSequence now = tv.getText();
-        String translated = t(ctx, now == null ? "" : now.toString());
-        tv.setText(translated);
+        String base = now == null ? "" : now.toString().trim();
+
+        if (base.isEmpty()) {
+            tv.setText("");
+            return;
+        }
+
+        tv.setText(t(ctx, base));
+
+        List<String> list = new ArrayList<>();
+        list.add(base);
+
+        prefetch(ctx, list, () -> tv.setText(t(ctx, base)), () -> tv.setText(base));
     }
 
-    public static void translateAndApplyHint(com.google.android.material.textfield.TextInputLayout til, Context ctx) {
-        if (til == null) return;
+    public static void translateAndApplyHint(TextInputLayout til, Context ctx) {
+        if (til == null || ctx == null) return;
+
         CharSequence hint = til.getHint();
-        String base = hint == null ? "" : hint.toString();
+        String base = hint == null ? "" : hint.toString().trim();
+
+        if (base.isEmpty()) {
+            til.setHint("");
+            return;
+        }
+
         til.setHint(t(ctx, base));
+
+        List<String> list = new ArrayList<>();
+        list.add(base);
+
+        prefetch(ctx, list, () -> til.setHint(t(ctx, base)), () -> til.setHint(base));
     }
 
     public static void prefetch(Context ctx, List<String> keys, Runnable onReady) {
@@ -95,27 +129,38 @@ public final class I18n {
     }
 
     public static void prefetch(Context ctx, List<String> keys, Runnable onReady, Runnable onError) {
-        String targetLang = lang(ctx);
+        if (ctx == null) {
+            runErrorOrReady(onReady, onError);
+            return;
+        }
+
+        Context appCtx = ctx.getApplicationContext();
+        String targetLang = lang(appCtx);
 
         if (keys == null || keys.isEmpty() || "en".equalsIgnoreCase(targetLang)) {
             if (onReady != null) onReady.run();
             return;
         }
 
-        if (GOOGLE_TRANSLATE_API_KEY == null || GOOGLE_TRANSLATE_API_KEY.trim().isEmpty()
-                || "PASTE_YOUR_NEW_API_KEY_HERE".equals(GOOGLE_TRANSLATE_API_KEY)) {
-            Log.e(TAG, "Google Translate API key is missing or not replaced.");
-            if (onError != null) onError.run();
-            else if (onReady != null) onReady.run();
+        String mlKitTargetLang = TranslateLanguage.fromLanguageTag(targetLang);
+
+        if (mlKitTargetLang == null || mlKitTargetLang.trim().isEmpty()) {
+            Log.e(TAG, "Unsupported ML Kit language code: " + targetLang);
+            runErrorOrReady(onReady, onError);
             return;
         }
 
         List<String> unique = new ArrayList<>();
+
         for (String k : keys) {
             if (k == null) continue;
-            k = k.trim();
-            if (k.isEmpty()) continue;
-            if (!unique.contains(k)) unique.add(k);
+
+            String clean = k.trim();
+            if (clean.isEmpty()) continue;
+
+            if (!unique.contains(clean)) {
+                unique.add(clean);
+            }
         }
 
         if (unique.isEmpty()) {
@@ -123,18 +168,18 @@ public final class I18n {
             return;
         }
 
-        SharedPreferences sp = ctx.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
+        SharedPreferences sp = appCtx.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
         List<String> missing = new ArrayList<>();
 
         for (String k : unique) {
-            String memKey = "v1|" + targetLang + "|" + k;
+            String cacheKey = buildCacheKey(targetLang, k);
 
             boolean inMem;
             synchronized (MEM) {
-                inMem = MEM.containsKey(memKey);
+                inMem = MEM.containsKey(cacheKey);
             }
 
-            if (!inMem && sp.getString(memKey, null) == null) {
+            if (!inMem && sp.getString(cacheKey, null) == null) {
                 missing.add(k);
             }
         }
@@ -144,109 +189,199 @@ public final class I18n {
             return;
         }
 
-        final String requestUrl;
-        final String body;
+        TranslatorOptions options = new TranslatorOptions.Builder()
+                .setSourceLanguage(TranslateLanguage.ENGLISH)
+                .setTargetLanguage(mlKitTargetLang)
+                .build();
 
-        try {
-            // IMPORTANT FIX:
-            // API key must be sent in URL, not in request body
-            requestUrl = G_URL + "?key=" + URLEncoder.encode(GOOGLE_TRANSLATE_API_KEY, "UTF-8");
+        Translator translator = Translation.getClient(options);
 
-            StringBuilder sb = new StringBuilder();
-            for (String s : missing) {
-                if (sb.length() > 0) sb.append("&");
-                sb.append("q=").append(URLEncoder.encode(s, "UTF-8"));
-            }
-            sb.append("&target=").append(URLEncoder.encode(targetLang, "UTF-8"));
-            sb.append("&format=text");
+        DownloadConditions conditions = new DownloadConditions.Builder()
+                .build();
 
-            body = sb.toString();
+        Log.d(TAG, "ML Kit translation model download/check started. Target: " + targetLang);
 
-            Log.d(TAG, "Translation request URL: " + requestUrl);
-            Log.d(TAG, "Target language: " + targetLang + ", missing keys: " + missing.size());
+        translator.downloadModelIfNeeded(conditions)
+                .addOnSuccessListener(unused -> {
+                    Log.d(TAG, "ML Kit translation model ready. Missing keys: " + missing.size());
 
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to build translation request", e);
+                    SharedPreferences.Editor editor = sp.edit();
+
+                    translateOneByOne(
+                            translator,
+                            targetLang,
+                            missing,
+                            0,
+                            editor,
+                            () -> {
+                                try {
+                                    editor.apply();
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Failed saving translation cache", e);
+                                }
+
+                                try {
+                                    translator.close();
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Failed closing translator", e);
+                                }
+
+                                Log.d(TAG, "ML Kit translation prefetch success.");
+
+                                if (onReady != null) onReady.run();
+                            },
+                            () -> {
+                                try {
+                                    editor.apply();
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Failed saving partial translation cache", e);
+                                }
+
+                                try {
+                                    translator.close();
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Failed closing translator after error", e);
+                                }
+
+                                runErrorOrReady(onReady, onError);
+                            }
+                    );
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "ML Kit model download failed for target: " + targetLang, e);
+
+                    try {
+                        translator.close();
+                    } catch (Exception closeError) {
+                        Log.e(TAG, "Failed closing translator after model error", closeError);
+                    }
+
+                    runErrorOrReady(onReady, onError);
+                });
+    }
+
+    private static void translateOneByOne(
+            Translator translator,
+            String targetLang,
+            List<String> missing,
+            int index,
+            SharedPreferences.Editor editor,
+            Runnable onDone,
+            Runnable onError
+    ) {
+        if (translator == null || missing == null) {
             if (onError != null) onError.run();
-            else if (onReady != null) onReady.run();
             return;
         }
 
-        StringRequest req = new StringRequest(
-                Request.Method.POST,
-                requestUrl,
-                resp -> {
+        if (index >= missing.size()) {
+            if (onDone != null) onDone.run();
+            return;
+        }
+
+        String original = missing.get(index);
+
+        translator.translate(original)
+                .addOnSuccessListener(translatedText -> {
                     try {
-                        JSONObject root = new JSONObject(resp);
-                        JSONObject data = root.optJSONObject("data");
-                        JSONArray arr = data != null ? data.optJSONArray("translations") : null;
+                        String finalText = cleanTranslatedText(translatedText, original);
 
-                        if (arr == null) {
-                            Log.e(TAG, "Translation response missing translations array: " + resp);
-                            if (onError != null) onError.run();
-                            else if (onReady != null) onReady.run();
-                            return;
+                        String cacheKey = buildCacheKey(targetLang, original);
+                        editor.putString(cacheKey, finalText);
+
+                        synchronized (MEM) {
+                            MEM.put(cacheKey, finalText);
                         }
-
-                        SharedPreferences.Editor ed = sp.edit();
-
-                        for (int i = 0; i < arr.length() && i < missing.size(); i++) {
-                            String original = missing.get(i);
-                            JSONObject item = arr.optJSONObject(i);
-                            if (item == null) continue;
-
-                            String html = item.optString("translatedText", original);
-
-                            @SuppressLint({"NewApi", "LocalSuppress"})
-                            String plain = Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString();
-
-                            String cacheKey = "v1|" + targetLang + "|" + original;
-                            ed.putString(cacheKey, plain);
-
-                            synchronized (MEM) {
-                                MEM.put(cacheKey, plain);
-                            }
-                        }
-
-                        ed.apply();
-                        Log.d(TAG, "Translation prefetch success. Saved " + Math.min(arr.length(), missing.size()) + " items.");
 
                     } catch (Exception e) {
-                        Log.e(TAG, "Failed parsing translation response", e);
+                        Log.e(TAG, "Failed caching translated text at index: " + index, e);
                     }
 
-                    if (onReady != null) onReady.run();
-                },
-                err -> {
-                    try {
-                        if (err != null && err.networkResponse != null && err.networkResponse.data != null) {
-                            String errorBody = new String(err.networkResponse.data, StandardCharsets.UTF_8);
-                            Log.e(TAG, "Translation error code: " + err.networkResponse.statusCode);
-                            Log.e(TAG, "Translation error body: " + errorBody);
-                        } else {
-                            Log.e(TAG, "Translation request failed with no response body", err);
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Failed reading translation error body", e);
+                    translateOneByOne(
+                            translator,
+                            targetLang,
+                            missing,
+                            index + 1,
+                            editor,
+                            onDone,
+                            onError
+                    );
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "ML Kit translation failed for: " + original, e);
+
+                    String cacheKey = buildCacheKey(targetLang, original);
+                    editor.putString(cacheKey, original);
+
+                    synchronized (MEM) {
+                        MEM.put(cacheKey, original);
                     }
 
-                    if (onError != null) onError.run();
-                    else if (onReady != null) onReady.run();
-                }
-        ) {
-            @Override
-            public String getBodyContentType() {
-                return "application/x-www-form-urlencoded; charset=UTF-8";
+                    translateOneByOne(
+                            translator,
+                            targetLang,
+                            missing,
+                            index + 1,
+                            editor,
+                            onDone,
+                            onError
+                    );
+                });
+    }
+
+    private static String buildCacheKey(String lang, String key) {
+        return "mlkit_v1|" + normalizeLangCode(lang) + "|" + key;
+    }
+
+    private static String normalizeLangCode(String code) {
+        if (code == null) return "en";
+
+        String c = code.trim().toLowerCase();
+
+        if (c.isEmpty()) return "en";
+
+        if (c.contains("-")) {
+            c = c.substring(0, c.indexOf("-"));
+        }
+
+        if (c.contains("_")) {
+            c = c.substring(0, c.indexOf("_"));
+        }
+
+        if ("iw".equals(c)) return "he";
+        if ("in".equals(c)) return "id";
+        if ("ji".equals(c)) return "yi";
+
+        return c;
+    }
+
+    private static String cleanTranslatedText(String translatedText, String fallback) {
+        if (translatedText == null) return fallback == null ? "" : fallback;
+
+        String text = translatedText.trim();
+
+        if (text.isEmpty()) return fallback == null ? "" : fallback;
+
+        try {
+            @SuppressLint({"NewApi", "LocalSuppress"})
+            String plain = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY).toString();
+
+            if (plain != null && !plain.trim().isEmpty()) {
+                return plain.trim();
             }
 
-            @Override
-            public byte[] getBody() throws AuthFailureError {
-                return body.getBytes(StandardCharsets.UTF_8);
-            }
-        };
+        } catch (Exception ignored) {
+        }
 
-        req.setRetryPolicy(new DefaultRetryPolicy(VOLLEY_TIMEOUT, 1, 1f));
-        VolleySingleton.getInstance(ctx).add(req);
+        return text;
+    }
+
+    private static void runErrorOrReady(Runnable onReady, Runnable onError) {
+        if (onError != null) {
+            onError.run();
+        } else if (onReady != null) {
+            onReady.run();
+        }
     }
 
     public static List<String> concatUnique(List<String> a, List<String> b) {
@@ -256,13 +391,23 @@ public final class I18n {
 
         if (a != null) {
             for (String s : a) {
-                if (s != null && !out.contains(s)) out.add(s);
+                if (s != null) {
+                    String clean = s.trim();
+                    if (!clean.isEmpty() && !out.contains(clean)) {
+                        out.add(clean);
+                    }
+                }
             }
         }
 
         if (b != null) {
             for (String s : b) {
-                if (s != null && !out.contains(s)) out.add(s);
+                if (s != null) {
+                    String clean = s.trim();
+                    if (!clean.isEmpty() && !out.contains(clean)) {
+                        out.add(clean);
+                    }
+                }
             }
         }
 

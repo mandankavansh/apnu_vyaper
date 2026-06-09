@@ -57,13 +57,13 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+
 
 /**
  * - Shows loader until all static labels/hints are translated.
  * - Fetches States/Districts, translates them, then enables the dropdowns.
  * - Status bar overlap fixed via insets.
- * - OTP/Register/Login logic upgraded for Shaher Setu style session.
+ * - OTP/Register/Login logic with 30-day inactivity session support.
  */
 public class UserInfoActivity extends AppCompatActivity {
 
@@ -78,10 +78,13 @@ public class UserInfoActivity extends AppCompatActivity {
     private MaterialButton btnContinue;
     private TextView tvLangBadge, tvLoginLink, tvTitle;
 
+    // dynamic
     private final ArrayList<String> stateNames = new ArrayList<>();
     private final ArrayList<String> districtNames = new ArrayList<>();
     private final HashMap<String, String> stateIdByName = new HashMap<>();
     private final HashMap<String, String> districtIdByName = new HashMap<>();
+    private final HashMap<String, String> stateEnglishByDisplay = new HashMap<>();
+    private final HashMap<String, String> districtEnglishByDisplay = new HashMap<>();
     private ArrayAdapter<String> stateAdapter;
     private ArrayAdapter<String> districtAdapter;
 
@@ -96,9 +99,11 @@ public class UserInfoActivity extends AppCompatActivity {
     private Dialog loadingDialog;
     private Toast singleToast;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         session = new SessionManager(this);
 
         String langCode = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE)
@@ -115,6 +120,7 @@ public class UserInfoActivity extends AppCompatActivity {
         applyStatusBarInsets();
 
         bindViews();
+        applyPrefillPhoneIfAvailable();
 
         stateAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, stateNames);
         districtAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, districtNames);
@@ -161,8 +167,7 @@ public class UserInfoActivity extends AppCompatActivity {
                 "No states found",
                 "No districts found",
                 "Failed to load states",
-                "Failed to load districts"
-        );
+                "Failed to load districts");
 
         I18n.prefetch(this, staticKeys, () -> {
             tvLangBadge.setText(I18n.t(this, "Language") + ": " + session.getLangName());
@@ -181,9 +186,11 @@ public class UserInfoActivity extends AppCompatActivity {
 
             Chip rbVillage = findViewById(R.id.rbVillage);
             Chip rbCity = findViewById(R.id.rbCity);
+
             if (rbVillage != null) {
                 rbVillage.setText(I18n.t(this, rbVillage.getText().toString()));
             }
+
             if (rbCity != null) {
                 rbCity.setText(I18n.t(this, rbCity.getText().toString()));
             }
@@ -199,21 +206,23 @@ public class UserInfoActivity extends AppCompatActivity {
         spState.setOnItemClickListener((p, v, pos, id) -> {
             String pickedDisplay = stateAdapter.getItem(pos);
             String stateId = stateIdByName.get(pickedDisplay);
+
             if (stateId != null) {
+                spDistrict.setText("", false);
+                districtNames.clear();
+                districtIdByName.clear();
+                districtEnglishByDisplay.clear();
+                districtAdapter.notifyDataSetChanged();
+
                 preloadDistrictUi();
                 fetchDistricts(stateId);
             }
         });
 
-        rgPlaceType.setOnCheckedChangeListener((group, checkedIds) -> {
-            boolean isVillage = new HashSet<>(checkedIds).contains(R.id.rbVillage);
-            String hint = isVillage ? I18n.t(this, "Village name") : I18n.t(this, "City name");
-            ((TextInputLayout) etPlaceName.getParent().getParent()).setHint(hint);
-        });
+        setupPlaceTypeChips();
 
         TextWatcher watcher = new SimpleTextWatcher(() ->
-                btnContinue.setEnabled(isFormBasicsValid() && !isSendingOtp)
-        );
+                btnContinue.setEnabled(isFormBasicsValid() && !isSendingOtp));
 
         etName.addTextChangedListener(watcher);
         etSurname.addTextChangedListener(watcher);
@@ -222,8 +231,7 @@ public class UserInfoActivity extends AppCompatActivity {
         etAddress.addTextChangedListener(watcher);
         etPincode.addTextChangedListener(watcher);
         cbTerms.setOnCheckedChangeListener((b, c) ->
-                btnContinue.setEnabled(isFormBasicsValid() && !isSendingOtp)
-        );
+                btnContinue.setEnabled(isFormBasicsValid() && !isSendingOtp));
 
         tvLoginLink.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
@@ -235,13 +243,24 @@ public class UserInfoActivity extends AppCompatActivity {
             if (!validateAll()) {
                 return;
             }
+
             if (isSendingOtp) {
                 return;
             }
+
             sendOtp(textOf(etMobile));
         });
     }
 
+    private void applyPrefillPhoneIfAvailable() {
+        String prefillPhone = getIntent().getStringExtra("prefill_phone");
+
+        if (!TextUtils.isEmpty(prefillPhone) && prefillPhone.matches("^[6-9]\\d{9}$")) {
+            etMobile.setText(prefillPhone);
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
     private void bindViews() {
         tvLangBadge = findViewById(R.id.tvLangBadge);
         tvLoginLink = findViewById(R.id.tvLoginLink);
@@ -257,11 +276,12 @@ public class UserInfoActivity extends AppCompatActivity {
         etPincode = findViewById(R.id.etPincode);
         cbTerms = findViewById(R.id.cbTerms);
         btnContinue = findViewById(R.id.btnContinue);
-        tvLangBadge.setText(I18n.t(this, "Language") + ": " + session.getLangName());
+        tvLangBadge.setText(I18n.t(this, "Language") + ": " + new SessionManager(this).getLangName());
     }
 
     private void applyStatusBarInsets() {
         final View root = findViewById(R.id.rootUserInfo);
+
         if (root == null) {
             return;
         }
@@ -275,10 +295,64 @@ public class UserInfoActivity extends AppCompatActivity {
         ViewCompat.requestApplyInsets(root);
     }
 
+    /* ------------ dynamic states/districts ----------- */
+    private void setupPlaceTypeChips() {
+        Chip rbVillage = findViewById(R.id.rbVillage);
+        Chip rbCity = findViewById(R.id.rbCity);
+
+        if (rgPlaceType == null || rbVillage == null || rbCity == null) {
+            return;
+        }
+
+        rgPlaceType.setSingleSelection(true);
+        rgPlaceType.setSelectionRequired(true);
+
+        rbVillage.setCheckable(true);
+        rbCity.setCheckable(true);
+
+        rbVillage.setCheckedIconVisible(false);
+        rbCity.setCheckedIconVisible(false);
+
+        if (rgPlaceType.getCheckedChipId() == View.NO_ID) {
+            rbVillage.setChecked(true);
+        }
+
+        updatePlaceNameHint();
+
+        rgPlaceType.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds == null || checkedIds.isEmpty()) {
+                rbVillage.setChecked(true);
+                return;
+            }
+
+            updatePlaceNameHint();
+
+            if (btnContinue != null) {
+                btnContinue.setEnabled(isFormBasicsValid() && !isSendingOtp);
+            }
+        });
+    }
+
+    private void updatePlaceNameHint() {
+        if (etPlaceName == null || rgPlaceType == null) {
+            return;
+        }
+
+        TextInputLayout placeLayout = (TextInputLayout) etPlaceName.getParent().getParent();
+
+        if (rgPlaceType.getCheckedChipId() == R.id.rbCity) {
+            placeLayout.setHint(I18n.t(this, "City name"));
+        } else {
+            placeLayout.setHint(I18n.t(this, "Village name"));
+        }
+    }
     private void preloadStateUi() {
         stateNames.clear();
         stateIdByName.clear();
+        stateEnglishByDisplay.clear();
+
         String loading = I18n.t(this, "Loading states…");
+
         stateNames.add(loading);
         spState.setText(loading, false);
         spState.setEnabled(false);
@@ -288,7 +362,10 @@ public class UserInfoActivity extends AppCompatActivity {
     private void preloadDistrictUi() {
         districtNames.clear();
         districtIdByName.clear();
+        districtEnglishByDisplay.clear();
+
         String loading = I18n.t(this, "Loading districts…");
+
         districtNames.add(loading);
         spDistrict.setText(loading, false);
         spDistrict.setEnabled(false);
@@ -309,6 +386,7 @@ public class UserInfoActivity extends AppCompatActivity {
 
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject it = data.optJSONObject(i);
+
                             if (it == null) {
                                 continue;
                             }
@@ -325,12 +403,15 @@ public class UserInfoActivity extends AppCompatActivity {
                         translateListAsync(enNames, translated -> {
                             stateNames.clear();
                             stateIdByName.clear();
+                            stateEnglishByDisplay.clear();
 
                             for (int i = 0; i < translated.size(); i++) {
                                 String display = translated.get(i);
                                 String id = ids.get(i);
+
                                 stateNames.add(display);
                                 stateIdByName.put(display, id);
+                                stateEnglishByDisplay.put(display, enNames.get(i));
                             }
 
                             spState.setEnabled(true);
@@ -340,12 +421,15 @@ public class UserInfoActivity extends AppCompatActivity {
                         }, () -> {
                             stateNames.clear();
                             stateIdByName.clear();
+                            stateEnglishByDisplay.clear();
 
                             for (int i = 0; i < enNames.size(); i++) {
                                 String display = enNames.get(i);
                                 String id = ids.get(i);
+
                                 stateNames.add(display);
                                 stateIdByName.put(display, id);
+                                stateEnglishByDisplay.put(display, display);
                             }
 
                             spState.setEnabled(true);
@@ -355,6 +439,8 @@ public class UserInfoActivity extends AppCompatActivity {
                         });
                     } else {
                         stateNames.clear();
+                        stateIdByName.clear();
+                        stateEnglishByDisplay.clear();
                         stateNames.add(I18n.t(this, "No states found"));
                         spState.setEnabled(false);
                         stateAdapter.notifyDataSetChanged();
@@ -362,11 +448,20 @@ public class UserInfoActivity extends AppCompatActivity {
                     }
                 },
                 err -> {
+                    String realError = readableVolleyError(err);
+
                     stateNames.clear();
-                    stateNames.add(I18n.t(this, "Failed to load states"));
+                    stateIdByName.clear();
+                    stateEnglishByDisplay.clear();
+
+                    stateNames.add("Failed: " + realError);
+                    spState.setText("", false);
                     spState.setEnabled(false);
+
                     stateAdapter.notifyDataSetChanged();
                     hideLoading();
+
+                    showToast("States API error: " + realError);
                 });
 
         req.setShouldCache(false);
@@ -390,6 +485,7 @@ public class UserInfoActivity extends AppCompatActivity {
 
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject it = data.optJSONObject(i);
+
                             if (it == null) {
                                 continue;
                             }
@@ -406,12 +502,15 @@ public class UserInfoActivity extends AppCompatActivity {
                         translateListAsync(enNames, translated -> {
                             districtNames.clear();
                             districtIdByName.clear();
+                            districtEnglishByDisplay.clear();
 
                             for (int i = 0; i < translated.size(); i++) {
                                 String display = translated.get(i);
                                 String id = ids.get(i);
+
                                 districtNames.add(display);
                                 districtIdByName.put(display, id);
+                                districtEnglishByDisplay.put(display, enNames.get(i));
                             }
 
                             spDistrict.setEnabled(true);
@@ -421,12 +520,15 @@ public class UserInfoActivity extends AppCompatActivity {
                         }, () -> {
                             districtNames.clear();
                             districtIdByName.clear();
+                            districtEnglishByDisplay.clear();
 
                             for (int i = 0; i < enNames.size(); i++) {
                                 String display = enNames.get(i);
                                 String id = ids.get(i);
+
                                 districtNames.add(display);
                                 districtIdByName.put(display, id);
+                                districtEnglishByDisplay.put(display, display);
                             }
 
                             spDistrict.setEnabled(true);
@@ -436,6 +538,8 @@ public class UserInfoActivity extends AppCompatActivity {
                         });
                     } else {
                         districtNames.clear();
+                        districtIdByName.clear();
+                        districtEnglishByDisplay.clear();
                         districtNames.add(I18n.t(this, "No districts found"));
                         spDistrict.setEnabled(false);
                         districtAdapter.notifyDataSetChanged();
@@ -444,6 +548,8 @@ public class UserInfoActivity extends AppCompatActivity {
                 },
                 err -> {
                     districtNames.clear();
+                    districtIdByName.clear();
+                    districtEnglishByDisplay.clear();
                     districtNames.add(I18n.t(this, "Failed to load districts"));
                     spDistrict.setEnabled(false);
                     districtAdapter.notifyDataSetChanged();
@@ -455,13 +561,17 @@ public class UserInfoActivity extends AppCompatActivity {
         VolleySingleton.getInstance(this).add(req);
     }
 
+    /* -------------------------------- validation -------------------------------- */
+
     private boolean isFormBasicsValid() {
         return !TextUtils.isEmpty(etName.getText())
                 && !TextUtils.isEmpty(etSurname.getText())
                 && etMobile.getText() != null
                 && etMobile.getText().toString().trim().matches("^[6-9]\\d{9}$")
                 && !TextUtils.isEmpty(spState.getText())
+                && stateIdByName.containsKey(spState.getText().toString().trim())
                 && !TextUtils.isEmpty(spDistrict.getText())
+                && districtIdByName.containsKey(spDistrict.getText().toString().trim())
                 && !TextUtils.isEmpty(etPlaceName.getText())
                 && !TextUtils.isEmpty(etAddress.getText())
                 && etPincode.getText() != null
@@ -488,13 +598,15 @@ public class UserInfoActivity extends AppCompatActivity {
             return false;
         }
 
-        if (TextUtils.isEmpty(spState.getText())) {
+        String selectedStateDisplay = spState.getText() == null ? "" : spState.getText().toString().trim();
+        if (TextUtils.isEmpty(selectedStateDisplay) || !stateIdByName.containsKey(selectedStateDisplay)) {
             ((TextInputLayout) spState.getParent().getParent()).setError(I18n.t(this, "Select state"));
             spState.requestFocus();
             return false;
         }
 
-        if (TextUtils.isEmpty(spDistrict.getText())) {
+        String selectedDistrictDisplay = spDistrict.getText() == null ? "" : spDistrict.getText().toString().trim();
+        if (TextUtils.isEmpty(selectedDistrictDisplay) || !districtIdByName.containsKey(selectedDistrictDisplay)) {
             ((TextInputLayout) spDistrict.getParent().getParent()).setError(I18n.t(this, "Select district"));
             spDistrict.requestFocus();
             return false;
@@ -534,6 +646,8 @@ public class UserInfoActivity extends AppCompatActivity {
 
         return true;
     }
+
+    /* -------------------------------- register → OTP -------------------------------- */
 
     private void setSending(boolean v) {
         isSendingOtp = v;
@@ -592,6 +706,7 @@ public class UserInfoActivity extends AppCompatActivity {
                 public java.util.Map<String, String> getHeaders() throws AuthFailureError {
                     HashMap<String, String> h = new HashMap<>();
                     h.put("Content-Type", "application/json; charset=utf-8");
+                    h.put("Accept-Language", I18n.lang(UserInfoActivity.this));
                     return h;
                 }
             };
@@ -604,12 +719,17 @@ public class UserInfoActivity extends AppCompatActivity {
         }
     }
 
-    private void verifyOtp(String mobile, String otp) {
+    private void verifyOtp(String mobile, String otp, View btnVerify) {
         if (isVerifyingOtp) {
             return;
         }
 
         isVerifyingOtp = true;
+
+        if (btnVerify != null) {
+            btnVerify.setEnabled(false);
+            btnVerify.setAlpha(0.6f);
+        }
 
         try {
             JSONObject body = new JSONObject();
@@ -624,31 +744,44 @@ public class UserInfoActivity extends AppCompatActivity {
                         boolean ok = resp.optBoolean("ok", false);
 
                         if (!ok) {
+                            if (btnVerify != null) {
+                                btnVerify.setEnabled(true);
+                                btnVerify.setAlpha(1f);
+                            }
                             setOtpInlineError(I18n.t(this, "Invalid/expired OTP"));
                             return;
                         }
 
-                        String access = resp.optString("access_token", "");
-                        String refresh = resp.optString("refresh_token", "");
+                        String access = resp.optString("access_token", null);
+                        String refresh = resp.optString("refresh_token", null);
                         int userId = resp.optInt("user_id", -1);
                         boolean isNew = resp.optBoolean("is_new", true);
                         int expiresIn = resp.optInt("expires_in", 0);
 
-                        if (!TextUtils.isEmpty(access)
-                                && !TextUtils.isEmpty(refresh)
+                        if (access != null
+                                && refresh != null
                                 && userId > 0
                                 && expiresIn > 0) {
 
                             long accessExpiryEpoch =
                                     (System.currentTimeMillis() / 1000L) + expiresIn;
 
+                            /*
+                             * Correct 30-day inactivity session save.
+                             * This stores:
+                             * - access_token
+                             * - refresh_token
+                             * - user_id
+                             * - access_expiry_epoch
+                             * - logged_in = true
+                             * - last_active_epoch = now
+                             */
                             session.saveTokens(access, refresh, userId, accessExpiryEpoch);
                             session.setOnboarded(true);
                             session.setLoggedIn(true);
                             session.markActive();
 
                             JSONObject userObj = resp.optJSONObject("user");
-
                             if (userObj != null) {
                                 String name = userObj.optString("full_name", "");
                                 String phone = userObj.optString("phone", mobile);
@@ -656,13 +789,9 @@ public class UserInfoActivity extends AppCompatActivity {
                                 if (!TextUtils.isEmpty(name) || !TextUtils.isEmpty(phone)) {
                                     session.saveUserProfile(name, phone);
                                 }
-                            } else {
-                                String name = textOf(etName)
-                                        + (TextUtils.isEmpty(textOf(etSurname)) ? "" : " " + textOf(etSurname));
-                                session.saveUserProfile(name.trim(), mobile);
                             }
 
-                            saveAuthToPrefs(userId, access, accessExpiryEpoch);
+                            saveAuthToPrefs(expiresIn);
 
                             if (resendTimer != null) {
                                 resendTimer.cancel();
@@ -680,11 +809,19 @@ public class UserInfoActivity extends AppCompatActivity {
                                 finish();
                             }
                         } else {
+                            if (btnVerify != null) {
+                                btnVerify.setEnabled(true);
+                                btnVerify.setAlpha(1f);
+                            }
                             setOtpInlineError(I18n.t(this, "Login failed: bad response"));
                         }
                     },
                     err -> {
                         isVerifyingOtp = false;
+                        if (btnVerify != null) {
+                            btnVerify.setEnabled(true);
+                            btnVerify.setAlpha(1f);
+                        }
                         setOtpInlineError(I18n.t(this, "Network error"));
                     }) {
                 @Override
@@ -693,6 +830,7 @@ public class UserInfoActivity extends AppCompatActivity {
                     h.put("Content-Type", "application/json; charset=utf-8");
 
                     String token = session.getAccessToken();
+
                     if (token != null) {
                         h.put("Authorization", "Bearer " + token);
                     }
@@ -705,6 +843,10 @@ public class UserInfoActivity extends AppCompatActivity {
             VolleySingleton.getInstance(this).add(req);
         } catch (JSONException e) {
             isVerifyingOtp = false;
+            if (btnVerify != null) {
+                btnVerify.setEnabled(true);
+                btnVerify.setAlpha(1f);
+            }
             setOtpInlineError("JSON error");
         }
     }
@@ -722,8 +864,8 @@ public class UserInfoActivity extends AppCompatActivity {
             String surname = textOf(etSurname);
             String full = name + (isBlank(surname) ? "" : (" " + surname));
             String phone = textOf(etMobile);
-            String state = spState.getText() == null ? "" : spState.getText().toString().trim();
-            String dist = spDistrict.getText() == null ? "" : spDistrict.getText().toString().trim();
+            String state = getSelectedStateEnglish();
+            String dist = getSelectedDistrictEnglish();
             String place = textOf(etPlaceName);
             String addr = textOf(etAddress);
             String pin = textOf(etPincode);
@@ -757,8 +899,7 @@ public class UserInfoActivity extends AppCompatActivity {
             if (!isBlank(pin) && !pin.matches("^\\d{6}$")) {
                 isSavingProfile = false;
                 hideLoading();
-                ((TextInputLayout) etPincode.getParent().getParent())
-                        .setError(I18n.t(this, "Enter 6-digit pincode"));
+                ((TextInputLayout) etPincode.getParent().getParent()).setError(I18n.t(this, "Enter 6-digit pincode"));
                 etPincode.requestFocus();
                 return;
             }
@@ -786,18 +927,13 @@ public class UserInfoActivity extends AppCompatActivity {
                         boolean ok = resp.optBoolean("ok", false);
 
                         if (!ok) {
-                            String msg = firstNonEmpty(
-                                    resp.optString("message", "").trim(),
-                                    resp.optString("error", "Profile save failed").trim()
-                            );
-
+                            String msg = firstNonEmpty(resp.optString("message", "").trim(),
+                                    resp.optString("error", "Profile save failed").trim());
                             showToast(I18n.t(this, msg.isEmpty() ? "Profile save failed" : msg));
                             return;
                         }
 
                         session.saveUserProfile(full.trim(), phone);
-                        session.setOnboarded(true);
-                        session.setLoggedIn(true);
                         session.markActive();
 
                         startActivity(new Intent(this, MainActivity.class));
@@ -815,6 +951,7 @@ public class UserInfoActivity extends AppCompatActivity {
                     h.put("Content-Type", "application/json; charset=utf-8");
 
                     String token = session.getAccessToken();
+
                     if (token != null) {
                         h.put("Authorization", "Bearer " + token);
                     }
@@ -825,12 +962,15 @@ public class UserInfoActivity extends AppCompatActivity {
 
             req.setRetryPolicy(new DefaultRetryPolicy(15000, 0, 1.0f));
             VolleySingleton.getInstance(this).add(req);
+
         } catch (JSONException e) {
             isSavingProfile = false;
             hideLoading();
             showToast("JSON error: " + e.getMessage());
         }
     }
+
+    /* --------------------------- OTP bottom sheet --------------------------- */
 
     @SuppressLint("SetTextI18n")
     private void showOtpSheet(String mobile) {
@@ -842,10 +982,13 @@ public class UserInfoActivity extends AppCompatActivity {
             resendTimer.cancel();
         }
 
+        isVerifyingOtp = false;
+
         otpDialog = new BottomSheetDialog(this,
                 com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
-
+        @SuppressLint("InflateParams")
         View sheet = LayoutInflater.from(this).inflate(R.layout.sheet_otp, null, false);
+
         otpDialog.setContentView(sheet);
         otpDialog.setCancelable(false);
         otpDialog.setCanceledOnTouchOutside(false);
@@ -869,7 +1012,7 @@ public class UserInfoActivity extends AppCompatActivity {
         startResendTimer(tvTimer, tvResend);
 
         tvResend.setOnClickListener(v -> {
-            if (!tvResend.isEnabled()) {
+            if (!tvResend.isEnabled() || isSendingOtp || isVerifyingOtp) {
                 return;
             }
 
@@ -883,6 +1026,10 @@ public class UserInfoActivity extends AppCompatActivity {
         });
 
         btnVerify.setOnClickListener(v -> {
+            if (isVerifyingOtp) {
+                return;
+            }
+
             String code = get(d1) + get(d2) + get(d3) + get(d4) + get(d5) + get(d6);
 
             if (code.length() != 6) {
@@ -891,13 +1038,18 @@ public class UserInfoActivity extends AppCompatActivity {
                 return;
             }
 
-            verifyOtp(mobile, code);
+            verifyOtp(mobile, code, btnVerify);
         });
 
         btnClose.setOnClickListener(v -> {
+            if (isVerifyingOtp) {
+                return;
+            }
+
             if (resendTimer != null) {
                 resendTimer.cancel();
             }
+
             otpDialog.dismiss();
         });
 
@@ -905,11 +1057,12 @@ public class UserInfoActivity extends AppCompatActivity {
         d1.requestFocus();
 
         if (otpDialog.getWindow() != null) {
-            otpDialog.getWindow().clearFlags(
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                            | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
+            otpDialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+            otpDialog.getWindow().setSoftInputMode(
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+                            | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
             );
-            otpDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
     }
 
@@ -930,10 +1083,7 @@ public class UserInfoActivity extends AppCompatActivity {
             final int index = i;
             EditText et = boxes[i];
 
-            et.setFilters(new android.text.InputFilter[]{
-                    new android.text.InputFilter.LengthFilter(1)
-            });
-
+            et.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(1)});
             et.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
 
             et.addTextChangedListener(new TextWatcher() {
@@ -959,7 +1109,6 @@ public class UserInfoActivity extends AppCompatActivity {
                         && et.getText() != null
                         && et.getText().length() == 0
                         && index > 0) {
-
                     boxes[index - 1].requestFocus();
                     boxes[index - 1].setText("");
                     return true;
@@ -979,6 +1128,7 @@ public class UserInfoActivity extends AppCompatActivity {
         }
 
         resendTimer = new CountDownTimer(30_000, 1000) {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onTick(long ms) {
                 tvTimer.setText(I18n.t(UserInfoActivity.this, "Resend in") + " " + (ms / 1000) + "s");
@@ -992,6 +1142,20 @@ public class UserInfoActivity extends AppCompatActivity {
             }
         }.start();
     }
+
+    private String getSelectedStateEnglish() {
+        String display = spState.getText() == null ? "" : spState.getText().toString().trim();
+        String english = stateEnglishByDisplay.get(display);
+        return english == null ? display : english;
+    }
+
+    private String getSelectedDistrictEnglish() {
+        String display = spDistrict.getText() == null ? "" : spDistrict.getText().toString().trim();
+        String english = districtEnglishByDisplay.get(display);
+        return english == null ? display : english;
+    }
+
+    /* -------------------------------- utils -------------------------------- */
 
     private static void clearOtp(EditText... boxes) {
         for (EditText e : boxes) {
@@ -1014,6 +1178,7 @@ public class UserInfoActivity extends AppCompatActivity {
     private static void jsonPutIfNotBlank(JSONObject o, String key, String val) throws JSONException {
         if (val != null) {
             String t = val.trim();
+
             if (!t.isEmpty()) {
                 o.put(key, t);
             }
@@ -1043,10 +1208,7 @@ public class UserInfoActivity extends AppCompatActivity {
 
             try {
                 JSONObject o = new JSONObject(body);
-                String msg = firstNonEmpty(
-                        o.optString("message", "").trim(),
-                        o.optString("error", "").trim()
-                );
+                String msg = firstNonEmpty(o.optString("message", "").trim(), o.optString("error", "").trim());
                 String codeStr = o.optString("error_code", "");
 
                 if ("ALREADY_REGISTERED".equalsIgnoreCase(codeStr)) {
@@ -1059,6 +1221,11 @@ public class UserInfoActivity extends AppCompatActivity {
 
                 if ("RATE_LIMITED".equalsIgnoreCase(codeStr)) {
                     return msg.isEmpty() ? "Too many OTP requests. Please wait." : msg;
+                }
+
+                if ("INACTIVE_30_DAYS".equalsIgnoreCase(codeStr)) {
+                    session.logout();
+                    return "Logged out because account was inactive for 30 days.";
                 }
 
                 if (!msg.isEmpty()) {
@@ -1129,19 +1296,19 @@ public class UserInfoActivity extends AppCompatActivity {
         finish();
     }
 
-    private void saveAuthToPrefs(int userId, String accessToken, long accessExpiryEpoch) {
+    private void saveAuthToPrefs(int expiresInSeconds) {
+        long expAt = (System.currentTimeMillis() / 1000L) + Math.max(0, expiresInSeconds);
+
         SharedPreferences sp = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE);
 
         sp.edit()
-                .putString(SessionManager.KEY_ACCESS_TOKEN, accessToken)
-                .putLong(SessionManager.KEY_ACCESS_EXPIRY_EPOCH, accessExpiryEpoch)
-                .putInt(SessionManager.KEY_USER_ID, userId)
+                .putString(SessionManager.KEY_ACCESS_TOKEN, session.getAccessToken())
+                .putString(SessionManager.KEY_REFRESH_TOKEN, session.getRefreshToken())
+                .putInt(SessionManager.KEY_USER_ID, session.getUserId())
+                .putLong(SessionManager.KEY_ACCESS_EXPIRY_EPOCH, expAt)
                 .putBoolean(SessionManager.KEY_ONBOARDED, true)
                 .putBoolean(SessionManager.KEY_LOGGED_IN, true)
-                .putLong(
-                        SessionManager.KEY_LAST_ACTIVE_EPOCH,
-                        System.currentTimeMillis() / 1000L
-                )
+                .putLong(SessionManager.KEY_LAST_ACTIVE_EPOCH, System.currentTimeMillis() / 1000L)
                 .apply();
     }
 
@@ -1171,6 +1338,8 @@ public class UserInfoActivity extends AppCompatActivity {
             }
         }
     }
+
+    /* =================== Translation helpers for lists =================== */
 
     @SuppressLint("NewApi")
     private void translateListAsync(
@@ -1217,6 +1386,7 @@ public class UserInfoActivity extends AppCompatActivity {
                 if (body.length() > 0) {
                     body.append("&");
                 }
+
                 body.append("q=").append(URLEncoder.encode(s, "UTF-8"));
             }
 
@@ -1234,6 +1404,7 @@ public class UserInfoActivity extends AppCompatActivity {
             return;
         }
 
+        @SuppressLint({"NewApi", "LocalSuppress"})
         StringRequest req = new StringRequest(
                 Request.Method.POST,
                 G_TRANSLATE_URL,
@@ -1269,6 +1440,7 @@ public class UserInfoActivity extends AppCompatActivity {
                             String plain = Html.fromHtml(translated, Html.FROM_HTML_MODE_LEGACY).toString();
 
                             Integer pos = indexMap.get(en);
+
                             if (pos != null) {
                                 result.set(pos, plain);
                             }
