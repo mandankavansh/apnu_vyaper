@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.card.MaterialCardView;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,11 +76,7 @@ public class SubcategoryGridAdapter extends RecyclerView.Adapter<SubcategoryGrid
         Item s = data.get(position);
         h.title.setText(s.name);
 
-        // Use Glide to load the image from URL into the ImageView
-        Glide.with(h.icon.getContext())
-                .load(s.iconUrl) // Use the icon URL
-                .placeholder(R.drawable.ic_placeholder_circle) // Placeholder image
-                .into(h.icon);
+        WaveImageLoader.load(h.icon, s.iconUrl, R.drawable.ic_placeholder_circle);
 
         boolean isSel = position == selected;
         @ColorInt int stroke = ContextCompat.getColor(h.card.getContext(), R.color.greenPrimary);

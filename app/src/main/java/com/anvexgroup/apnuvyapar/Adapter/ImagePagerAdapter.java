@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.List;
 
@@ -43,11 +44,7 @@ public class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.VH
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
         Object src = sources.get(position);
-        Glide.with(h.iv)
-                .load(src)
-                .placeholder(R.drawable.ic_placeholder_circle)
-                .error(R.drawable.ic_placeholder_circle)
-                .into(h.iv);
+        WaveImageLoader.load(h.iv, src, R.drawable.ic_placeholder_circle);
 
         h.itemView.setOnClickListener(v -> {
             if (listener != null)

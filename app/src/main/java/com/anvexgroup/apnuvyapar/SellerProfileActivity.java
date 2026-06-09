@@ -30,6 +30,7 @@ import com.anvexgroup.apnuvyapar.core.SessionManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -222,10 +223,7 @@ public class SellerProfileActivity extends AppCompatActivity {
         String ava = p.optString("avatar_url", "");
         if (!TextUtils.isEmpty(ava)) {
             ivSellerAvatar.setVisibility(View.VISIBLE);
-            Glide.with(this)
-                    .load(ava)
-                    .placeholder(R.drawable.ic_placeholder_circle)
-                    .into(ivSellerAvatar);
+            WaveImageLoader.loadCircleCrop(ivSellerAvatar, ava, R.drawable.ic_placeholder_circle);
         } else {
             ivSellerAvatar.setVisibility(View.INVISIBLE);
         }

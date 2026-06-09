@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 // Enable Glide for loading subcategory icons from backend
 import com.bumptech.glide.Glide;
 
@@ -65,11 +66,7 @@ public class SubFilterGridAdapter extends RecyclerView.Adapter<SubFilterGridAdap
         } else if (!TextUtils.isEmpty(iconUrl)) {
             h.img.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
             h.img.setBackgroundColor(0xFFF4F7F8);
-            Glide.with(h.img.getContext())
-                    .load(iconUrl)
-                    .placeholder(placeholderIcon)
-                    .error(placeholderIcon)
-                    .into(h.img);
+            WaveImageLoader.load(h.img, iconUrl, placeholderIcon);
         } else {
             h.img.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
             h.img.setBackgroundColor(0xFFF4F7F8);

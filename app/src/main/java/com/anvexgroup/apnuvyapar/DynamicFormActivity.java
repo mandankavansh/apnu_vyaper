@@ -42,6 +42,7 @@ import com.anvexgroup.apnuvyapar.Adapter.DynamicFormAdapter;
 import com.anvexgroup.apnuvyapar.Adapter.I18n;
 import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
@@ -91,6 +92,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
     private String pendingLocationFieldKey;
 
     private FusedLocationProviderClient fused;
+    private SessionManager session;
 
     private SettingsClient settingsClient;
     private LocationSettingsRequest locationSettingsRequest;
@@ -161,6 +163,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        session = new SessionManager(this);
 
         String langCode = getSharedPreferences(SessionManager.PREFS, MODE_PRIVATE)
                 .getString("app_lang_code", "en");
@@ -173,7 +176,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         tvTitle = findViewById(R.id.tvTitle);
         rvForm = findViewById(R.id.rvForm);
         btnSubmit = findViewById(R.id.btnSubmit);
-    
+
         // Bind location fields
         etAddress = findViewById(R.id.etAddress);
         etVillageCity = findViewById(R.id.etVillageCity);
@@ -527,7 +530,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                             Log.w(TAG, "Empty schema received from server. Applying fallback schema.");
 
                         }
-                        
+
                         translateSchemaAndBind(schema);
 
                     } catch (Exception e) {
@@ -813,6 +816,17 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
      * Actually send the listing to the backend (called after geocoding if needed)
      */
     private void doSubmitListing(JSONObject formResult, String addressText, String villageCityText) {
+        btnSubmit.setEnabled(false);
+        runWithValidSession(
+                accessToken -> doSubmitListingWithToken(formResult, addressText, villageCityText, accessToken),
+                (message, shouldLogout) -> {
+                    LoadingDialog.hideLoading();
+                    btnSubmit.setEnabled(true);
+                }
+        );
+    }
+
+    private void doSubmitListingWithToken(JSONObject formResult, String addressText, String villageCityText, String accessToken) {
         try {
             JSONObject payload = new JSONObject();
             payload.put("user_id", userId);
@@ -965,12 +979,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                     headers.put("Accept", "application/json");
                     headers.put("Content-Type", "application/json");
 
-                    // JWT Authorization for secure listing creation
-                    SessionManager sm = new SessionManager(DynamicFormActivity.this);
-                    String token = sm.getAccessToken();
-                    if (token != null && !token.isEmpty()) {
-                        headers.put("Authorization", "Bearer " + token);
-                    }
+                    headers.put("Authorization", "Bearer " + accessToken);
                     return headers;
                 }
             };
@@ -1488,4 +1497,78 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
             }
         });
     }
+
+    private interface ProtectedApiAction {
+        void run(String accessToken);
+    }
+
+    private interface ProtectedApiFailure {
+        void onFailure(String message, boolean shouldLogout);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action) {
+        runWithValidSession(action, null);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action, ProtectedApiFailure failureAction) {
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    String accessToken = session.getAccessToken();
+                    if (TextUtils.isEmpty(accessToken)) {
+                        handleSessionFailure(
+                                "Login session expired. Please login again.",
+                                true,
+                                failureAction
+                        );
+                        return;
+                    }
+
+                    session.markActive();
+                    action.run(accessToken);
+                });
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                runOnUiThread(() -> handleSessionFailure(message, shouldLogout, failureAction));
+            }
+        });
+    }
+
+    private void handleSessionFailure(String message, boolean shouldLogout, ProtectedApiFailure failureAction) {
+        if (failureAction != null) {
+            failureAction.onFailure(message, shouldLogout);
+        }
+
+        if (shouldLogout) {
+            if (session != null) {
+                session.logout();
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            goToLoginAfterSessionExpired();
+            return;
+        }
+
+        if (!TextUtils.isEmpty(message)) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void goToLoginAfterSessionExpired() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
 }

@@ -47,6 +47,7 @@ import com.anvexgroup.apnuvyapar.Adapter.SimilarAdapter;
 import com.anvexgroup.apnuvyapar.Adapter.ThumbAdapter;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -445,10 +446,7 @@ public class ProductDetail extends AppCompatActivity {
                             if (pdpSellerAvatar != null) {
                                 if (!avatarUrl.isEmpty()) {
                                     pdpSellerAvatar.setVisibility(View.VISIBLE);
-                                    Glide.with(ProductDetail.this)
-                                            .load(avatarUrl)
-                                            .placeholder(R.drawable.ic_placeholder_circle)
-                                            .into(pdpSellerAvatar);
+                                    WaveImageLoader.loadCircleCrop(pdpSellerAvatar, avatarUrl, R.drawable.ic_placeholder_circle);
                                 } else {
                                     pdpSellerAvatar.setVisibility(View.INVISIBLE);
                                 }

@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.card.MaterialCardView;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,11 +94,7 @@ public class CategoryGridAdapter extends RecyclerView.Adapter<CategoryGridAdapte
         Item c = data.get(position);
         h.title.setText(c.name);
 
-        // Use Glide to load the image from URL into the ImageView
-        Glide.with(h.icon.getContext())
-                .load(c.iconUrl) // Use the icon URL
-                .placeholder(R.drawable.ic_all_listings) // Placeholder image
-                .into(h.icon);
+        WaveImageLoader.load(h.icon, c.iconUrl, R.drawable.ic_all_listings);
 
         // selection visuals
         boolean isSelected = (position == selectedPos);

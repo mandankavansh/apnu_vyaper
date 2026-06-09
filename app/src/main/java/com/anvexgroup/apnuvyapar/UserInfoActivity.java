@@ -46,6 +46,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.anvexgroup.apnuvyapar.Adapter.I18n;
 import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 
@@ -829,12 +830,6 @@ public class UserInfoActivity extends AppCompatActivity {
                     HashMap<String, String> h = new HashMap<>();
                     h.put("Content-Type", "application/json; charset=utf-8");
 
-                    String token = session.getAccessToken();
-
-                    if (token != null) {
-                        h.put("Authorization", "Bearer " + token);
-                    }
-
                     return h;
                 }
             };
@@ -919,55 +914,60 @@ public class UserInfoActivity extends AppCompatActivity {
             jsonPutIfNotBlank(body, "address", addr);
             jsonPutIfNotBlank(body, "pincode", pin);
 
-            JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, ApiRoutes.SAVE_PROFILE, body,
-                    resp -> {
+            runWithValidSession(
+                    accessToken -> saveProfileWithToken(body, full.trim(), phone, accessToken),
+                    (message, shouldLogout) -> {
                         isSavingProfile = false;
                         hideLoading();
-
-                        boolean ok = resp.optBoolean("ok", false);
-
-                        if (!ok) {
-                            String msg = firstNonEmpty(resp.optString("message", "").trim(),
-                                    resp.optString("error", "Profile save failed").trim());
-                            showToast(I18n.t(this, msg.isEmpty() ? "Profile save failed" : msg));
-                            return;
-                        }
-
-                        session.saveUserProfile(full.trim(), phone);
-                        session.markActive();
-
-                        startActivity(new Intent(this, MainActivity.class));
-                        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-                        finish();
-                    },
-                    err -> {
-                        isSavingProfile = false;
-                        hideLoading();
-                        showToast(I18n.t(this, readableVolleyError(err)));
-                    }) {
-                @Override
-                public java.util.Map<String, String> getHeaders() throws AuthFailureError {
-                    HashMap<String, String> h = new HashMap<>();
-                    h.put("Content-Type", "application/json; charset=utf-8");
-
-                    String token = session.getAccessToken();
-
-                    if (token != null) {
-                        h.put("Authorization", "Bearer " + token);
                     }
-
-                    return h;
-                }
-            };
-
-            req.setRetryPolicy(new DefaultRetryPolicy(15000, 0, 1.0f));
-            VolleySingleton.getInstance(this).add(req);
+            );
 
         } catch (JSONException e) {
             isSavingProfile = false;
             hideLoading();
             showToast("JSON error: " + e.getMessage());
         }
+    }
+
+
+    private void saveProfileWithToken(JSONObject body, String fullName, String phone, String accessToken) {
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, ApiRoutes.SAVE_PROFILE, body,
+                resp -> {
+                    isSavingProfile = false;
+                    hideLoading();
+
+                    boolean ok = resp.optBoolean("ok", false);
+
+                    if (!ok) {
+                        String msg = firstNonEmpty(resp.optString("message", "").trim(),
+                                resp.optString("error", "Profile save failed").trim());
+                        showToast(I18n.t(this, msg.isEmpty() ? "Profile save failed" : msg));
+                        return;
+                    }
+
+                    session.saveUserProfile(fullName, phone);
+                    session.markActive();
+
+                    startActivity(new Intent(this, MainActivity.class));
+                    overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+                    finish();
+                },
+                err -> {
+                    isSavingProfile = false;
+                    hideLoading();
+                    showToast(I18n.t(this, readableVolleyError(err)));
+                }) {
+            @Override
+            public java.util.Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> h = new HashMap<>();
+                h.put("Content-Type", "application/json; charset=utf-8");
+                h.put("Authorization", "Bearer " + accessToken);
+                return h;
+            }
+        };
+
+        req.setRetryPolicy(new DefaultRetryPolicy(15000, 0, 1.0f));
+        VolleySingleton.getInstance(this).add(req);
     }
 
     /* --------------------------- OTP bottom sheet --------------------------- */
@@ -1490,4 +1490,78 @@ public class UserInfoActivity extends AppCompatActivity {
         req.setRetryPolicy(new DefaultRetryPolicy(12000, 1, 1.0f));
         VolleySingleton.getInstance(this).add(req);
     }
+
+    private interface ProtectedApiAction {
+        void run(String accessToken);
+    }
+
+    private interface ProtectedApiFailure {
+        void onFailure(String message, boolean shouldLogout);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action) {
+        runWithValidSession(action, null);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action, ProtectedApiFailure failureAction) {
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    String accessToken = session.getAccessToken();
+                    if (TextUtils.isEmpty(accessToken)) {
+                        handleSessionFailure(
+                                "Login session expired. Please login again.",
+                                true,
+                                failureAction
+                        );
+                        return;
+                    }
+
+                    session.markActive();
+                    action.run(accessToken);
+                });
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                runOnUiThread(() -> handleSessionFailure(message, shouldLogout, failureAction));
+            }
+        });
+    }
+
+    private void handleSessionFailure(String message, boolean shouldLogout, ProtectedApiFailure failureAction) {
+        if (failureAction != null) {
+            failureAction.onFailure(message, shouldLogout);
+        }
+
+        if (shouldLogout) {
+            if (session != null) {
+                session.logout();
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            goToLoginAfterSessionExpired();
+            return;
+        }
+
+        if (!TextUtils.isEmpty(message)) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void goToLoginAfterSessionExpired() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
 }

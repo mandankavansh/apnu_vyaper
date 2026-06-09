@@ -35,6 +35,7 @@ import com.anvexgroup.apnuvyapar.Adapter.LanguageAdapter;
 import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
@@ -544,14 +545,19 @@ public class ProfileActivity extends AppCompatActivity {
      * Fetch user profile from API
      */
     private void fetchUserProfile() {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) {
-            showPlaceholderData();
-            return;
-        }
+        runWithValidSession(
+                this::fetchUserProfileWithToken,
+                (message, shouldLogout) -> {
+                    LoadingDialog.hideLoading();
+                    if (!shouldLogout) {
+                        showPlaceholderData();
+                    }
+                }
+        );
+    }
 
+    private void fetchUserProfileWithToken(String accessToken) {
         String url = ApiRoutes.GET_USER_PROFILE;
-        // Show loading dialog
         LoadingDialog.showLoading(this, I18n.t(this, "Loading profile..."));
 
         JsonObjectRequest req = new JsonObjectRequest(
@@ -795,14 +801,27 @@ public class ProfileActivity extends AppCompatActivity {
             String fullName, String surname, String address, String villageName,
             String district, String placeType, String state, String pincode,
             BottomSheetDialog dialog, MaterialButton btnSave) {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) {
-            showError(I18n.t(this, "Not logged in. Please login again."));
-            return;
-        }
+        btnSave.setEnabled(false);
+        btnSave.setText(I18n.t(this, "Checking session..."));
 
+        runWithValidSession(
+                accessToken -> updateUserProfileWithToken(
+                        fullName, surname, address, villageName,
+                        district, placeType, state, pincode,
+                        dialog, btnSave, accessToken
+                ),
+                (message, shouldLogout) -> {
+                    btnSave.setEnabled(true);
+                    btnSave.setText(I18n.t(this, "Save changes"));
+                }
+        );
+    }
+
+    private void updateUserProfileWithToken(
+            String fullName, String surname, String address, String villageName,
+            String district, String placeType, String state, String pincode,
+            BottomSheetDialog dialog, MaterialButton btnSave, String accessToken) {
         String url = ApiRoutes.UPDATE_USER_PROFILE;
-        // Build request body
         JSONObject body = new JSONObject();
         try {
             body.put("full_name", fullName);
@@ -814,12 +833,13 @@ public class ProfileActivity extends AppCompatActivity {
             body.put("state", state);
             body.put("pincode", pincode);
         } catch (JSONException e) {
+            btnSave.setEnabled(true);
+            btnSave.setText(I18n.t(this, "Save changes"));
             Log.e(TAG, "Error building request body: " + e.getMessage());
             showError(I18n.t(this, "Error preparing update request"));
             return;
         }
 
-        // Disable save button while updating
         btnSave.setEnabled(false);
         btnSave.setText(I18n.t(this, "Saving..."));
 
@@ -881,6 +901,80 @@ public class ProfileActivity extends AppCompatActivity {
                 0, // No retries
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         VolleySingleton.getInstance(this).add(req);
+    }
+
+
+    private interface ProtectedApiAction {
+        void run(String accessToken);
+    }
+
+    private interface ProtectedApiFailure {
+        void onFailure(String message, boolean shouldLogout);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action) {
+        runWithValidSession(action, null);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action, ProtectedApiFailure failureAction) {
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    String accessToken = session.getAccessToken();
+                    if (TextUtils.isEmpty(accessToken)) {
+                        handleSessionFailure(
+                                "Login session expired. Please login again.",
+                                true,
+                                failureAction
+                        );
+                        return;
+                    }
+
+                    session.markActive();
+                    action.run(accessToken);
+                });
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                runOnUiThread(() -> handleSessionFailure(message, shouldLogout, failureAction));
+            }
+        });
+    }
+
+    private void handleSessionFailure(String message, boolean shouldLogout, ProtectedApiFailure failureAction) {
+        if (failureAction != null) {
+            failureAction.onFailure(message, shouldLogout);
+        }
+
+        if (shouldLogout) {
+            if (session != null) {
+                session.logout();
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            goToLoginAfterSessionExpired();
+            return;
+        }
+
+        if (!TextUtils.isEmpty(message)) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void goToLoginAfterSessionExpired() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
 }

@@ -489,19 +489,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void uploadFcmTokenToServer(@NonNull String token) {
-        String accessToken = session != null ? session.getAccessToken() : null;
-
-        if (TextUtils.isEmpty(accessToken)) {
-            Log.d(TAG, "Skipping FCM upload: user not logged in");
-            return;
-        }
-
         String lastUploaded = getLastUploadedFcmToken();
         if (token.equals(lastUploaded)) {
             Log.d(TAG, "Skipping FCM upload: same token already uploaded");
             return;
         }
 
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        runWithValidSession(
+                accessToken -> uploadFcmTokenWithAccessToken(token, accessToken),
+                (message, shouldLogout) -> Log.d(TAG, "Skipping FCM upload: " + message)
+        );
+    }
+
+    private void uploadFcmTokenWithAccessToken(@NonNull String token, @NonNull String accessToken) {
         JSONObject body = new JSONObject();
         try {
             body.put("token", token);
@@ -1107,7 +1111,7 @@ public class MainActivity extends AppCompatActivity {
                 .remove(KEY_LAST_UPLOADED_FCM_TOKEN)
                 .apply();
 
-        LogoutManager.logout(this, false, () -> {
+        LogoutManager .logout(this, false, () -> {
             LoadingDialog.hideLoading();
 
             Toast.makeText(
@@ -2492,14 +2496,17 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("SetTextI18n")
     private void fetchUserProfile(TextView tvUserName, TextView tvUserPhone) {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) {
-            if (tvUserName != null) tvUserName.setText(I18n.t(this, "Guest User"));
-            if (tvUserPhone != null) tvUserPhone.setText("");
-            return;
-        }
+        runWithValidSession(
+                accessToken -> fetchUserProfileWithToken(tvUserName, tvUserPhone, accessToken),
+                (message, shouldLogout) -> {
+                    if (tvUserName != null) tvUserName.setText(I18n.t(this, "Guest User"));
+                    if (tvUserPhone != null) tvUserPhone.setText("");
+                }
+        );
+    }
 
-        String url = ApiRoutes.BASE_URL + "/get_user_profile.php";
+    private void fetchUserProfileWithToken(TextView tvUserName, TextView tvUserPhone, String accessToken) {
+        String url = ApiRoutes.GET_USER_PROFILE;
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.GET,
                 url,
@@ -2549,14 +2556,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchUserProfileOnStartup() {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) {
-            cachedUserName = I18n.t(this, "Guest User");
-            cachedUserPhone = "";
-            return;
-        }
+        runWithValidSession(
+                this::fetchUserProfileOnStartupWithToken,
+                (message, shouldLogout) -> {
+                    cachedUserName = I18n.t(this, "Guest User");
+                    cachedUserPhone = "";
+                }
+        );
+    }
 
-        String url = ApiRoutes.BASE_URL + "/get_user_profile.php";
+    private void fetchUserProfileOnStartupWithToken(String accessToken) {
+        String url = ApiRoutes.GET_USER_PROFILE;
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.GET,
                 url,
@@ -2852,4 +2862,78 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    private interface ProtectedApiAction {
+        void run(String accessToken);
+    }
+
+    private interface ProtectedApiFailure {
+        void onFailure(String message, boolean shouldLogout);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action) {
+        runWithValidSession(action, null);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action, ProtectedApiFailure failureAction) {
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    String accessToken = session.getAccessToken();
+                    if (TextUtils.isEmpty(accessToken)) {
+                        handleSessionFailure(
+                                "Login session expired. Please login again.",
+                                true,
+                                failureAction
+                        );
+                        return;
+                    }
+
+                    session.markActive();
+                    action.run(accessToken);
+                });
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                runOnUiThread(() -> handleSessionFailure(message, shouldLogout, failureAction));
+            }
+        });
+    }
+
+    private void handleSessionFailure(String message, boolean shouldLogout, ProtectedApiFailure failureAction) {
+        if (failureAction != null) {
+            failureAction.onFailure(message, shouldLogout);
+        }
+
+        if (shouldLogout) {
+            if (session != null) {
+                session.logout();
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            goToLoginAfterSessionExpired();
+            return;
+        }
+
+        if (!TextUtils.isEmpty(message)) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void goToLoginAfterSessionExpired() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
 }

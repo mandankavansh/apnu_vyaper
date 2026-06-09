@@ -21,6 +21,7 @@ import com.bumptech.glide.Glide;
 import com.anvexgroup.apnuvyapar.ProductDetail;
 import com.anvexgroup.apnuvyapar.R;
 import com.anvexgroup.apnuvyapar.utils.TimeUtils;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -188,12 +189,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.VH> {
             h.productImage.setVisibility(View.VISIBLE);
 
             if (!TextUtils.isEmpty(singleImageUrl)) {
-                Glide.with(h.productImage.getContext())
-                        .load(singleImageUrl)
-                        .placeholder(placeholderIcon)
-                        .error(placeholderIcon)
-                        .centerCrop()
-                        .into(h.productImage);
+                WaveImageLoader.loadCenterCrop(h.productImage, singleImageUrl, placeholderIcon);
             } else {
                 h.productImage.setImageResource(placeholderIcon);
             }

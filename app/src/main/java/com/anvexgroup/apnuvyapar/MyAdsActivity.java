@@ -29,6 +29,7 @@ import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.anvexgroup.apnuvyapar.Adapter.MyAdsAdapter;
 import com.anvexgroup.apnuvyapar.Adapter.MyListingsAdapter;
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
@@ -212,12 +213,19 @@ public class MyAdsActivity extends AppCompatActivity implements MyAdsAdapter.OnA
     // ==================== DATA LOADING ====================
 
     private void fetchMyAds() {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) {
-            showEmptyState();
-            return;
-        }
+        runWithValidSession(
+                this::fetchMyAdsWithToken,
+                (message, shouldLogout) -> {
+                    LoadingDialog.hideLoading();
+                    swipeRefresh.setRefreshing(false);
+                    if (!shouldLogout) {
+                        showEmptyState();
+                    }
+                }
+        );
+    }
 
+    private void fetchMyAdsWithToken(String accessToken) {
         if (!swipeRefresh.isRefreshing()) {
             LoadingDialog.showLoading(this, I18n.t(this, "Loading your ads..."));
         }
@@ -335,10 +343,13 @@ public class MyAdsActivity extends AppCompatActivity implements MyAdsAdapter.OnA
     // ==================== API CALLS ====================
 
     private void doMarkSold(int listingId, boolean markAsSold) {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken))
-            return;
+        runWithValidSession(
+                accessToken -> doMarkSoldWithToken(listingId, markAsSold, accessToken),
+                (message, shouldLogout) -> LoadingDialog.hideLoading()
+        );
+    }
 
+    private void doMarkSoldWithToken(int listingId, boolean markAsSold, String accessToken) {
         LoadingDialog.showLoading(this, markAsSold ? I18n.t(this, "Marking as sold...") : I18n.t(this, "Marking as available..."));
 
         StringRequest req = new StringRequest(
@@ -391,10 +402,13 @@ public class MyAdsActivity extends AppCompatActivity implements MyAdsAdapter.OnA
     }
 
     private void doRepost(int listingId) {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken))
-            return;
+        runWithValidSession(
+                accessToken -> doRepostWithToken(listingId, accessToken),
+                (message, shouldLogout) -> LoadingDialog.hideLoading()
+        );
+    }
 
+    private void doRepostWithToken(int listingId, String accessToken) {
         LoadingDialog.showLoading(this, I18n.t(this, "Reposting..."));
 
         StringRequest req = new StringRequest(
@@ -454,10 +468,13 @@ public class MyAdsActivity extends AppCompatActivity implements MyAdsAdapter.OnA
     }
 
     private void doDelete(int listingId) {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken))
-            return;
+        runWithValidSession(
+                accessToken -> doDeleteWithToken(listingId, accessToken),
+                (message, shouldLogout) -> LoadingDialog.hideLoading()
+        );
+    }
 
+    private void doDeleteWithToken(int listingId, String accessToken) {
         LoadingDialog.showLoading(this, I18n.t(this, "Deleting..."));
 
         StringRequest req = new StringRequest(
@@ -507,4 +524,78 @@ public class MyAdsActivity extends AppCompatActivity implements MyAdsAdapter.OnA
         req.setRetryPolicy(new DefaultRetryPolicy(10000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         VolleySingleton.getInstance(this).add(req);
     }
+
+    private interface ProtectedApiAction {
+        void run(String accessToken);
+    }
+
+    private interface ProtectedApiFailure {
+        void onFailure(String message, boolean shouldLogout);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action) {
+        runWithValidSession(action, null);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action, ProtectedApiFailure failureAction) {
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    String accessToken = session.getAccessToken();
+                    if (TextUtils.isEmpty(accessToken)) {
+                        handleSessionFailure(
+                                "Login session expired. Please login again.",
+                                true,
+                                failureAction
+                        );
+                        return;
+                    }
+
+                    session.markActive();
+                    action.run(accessToken);
+                });
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                runOnUiThread(() -> handleSessionFailure(message, shouldLogout, failureAction));
+            }
+        });
+    }
+
+    private void handleSessionFailure(String message, boolean shouldLogout, ProtectedApiFailure failureAction) {
+        if (failureAction != null) {
+            failureAction.onFailure(message, shouldLogout);
+        }
+
+        if (shouldLogout) {
+            if (session != null) {
+                session.logout();
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            goToLoginAfterSessionExpired();
+            return;
+        }
+
+        if (!TextUtils.isEmpty(message)) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void goToLoginAfterSessionExpired() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
 }

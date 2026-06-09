@@ -13,6 +13,7 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 // Enable Glide for loading network images
 import com.bumptech.glide.Glide;
@@ -77,11 +78,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.VH> {
             // Load from network using Glide (full URL coming from list_categories.php)
             h.icon.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
             h.icon.setBackgroundColor(0xFFF4F7F8);
-            Glide.with(h.icon.getContext())
-                    .load(iconUrl)
-                    .placeholder(placeholderIcon)
-                    .error(placeholderIcon)
-                    .into(h.icon);
+            WaveImageLoader.load(h.icon, iconUrl, placeholderIcon);
         } else {
             h.icon.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
             h.icon.setBackgroundColor(0xFFF4F7F8);

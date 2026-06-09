@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.List;
 
@@ -47,12 +48,7 @@ public class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.
     public void onBindViewHolder(@NonNull SliderVH holder, int position) {
         String url = imageUrls.get(position);
 
-        Glide.with(holder.itemView.getContext())
-                .load(url)
-                .placeholder(R.drawable.ic_placeholder_circle)
-                .error(R.drawable.ic_placeholder_circle)
-                .centerCrop()
-                .into(holder.img);
+        WaveImageLoader.loadCenterCrop(holder.img, url, R.drawable.ic_placeholder_circle);
 
         holder.itemView.setOnClickListener(v -> {
             if (onItemClick != null)

@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -1049,30 +1050,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             if (isRemotePhoto(token)) {
                 final String imageUrl = token;
-                vh.iv.setImageResource(R.drawable.ic_launcher_foreground);
-                vh.iv.setTag(imageUrl);
-
-                new Thread(() -> {
-                    try {
-                        java.net.URL url = new java.net.URL(imageUrl);
-                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                        conn.setDoInput(true);
-                        conn.setConnectTimeout(5000);
-                        conn.setReadTimeout(5000);
-                        conn.connect();
-                        java.io.InputStream is = conn.getInputStream();
-                        Bitmap bmp = BitmapFactory.decodeStream(is);
-                        is.close();
-
-                        if (bmp != null && imageUrl.equals(vh.iv.getTag())) {
-                            vh.iv.post(() -> vh.iv.setImageBitmap(bmp));
-                        } else if (bmp == null) {
-                            Log.w(TAG, "bindThumbImage: decoded null bitmap from URL=" + imageUrl);
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "bindThumbImage: failed URL load " + imageUrl, e);
-                    }
-                }).start();
+                vh.iv.setTag(null);
+                WaveImageLoader.loadCenterCrop(vh.iv, imageUrl, R.drawable.ic_placeholder_circle);
                 return;
             }
 

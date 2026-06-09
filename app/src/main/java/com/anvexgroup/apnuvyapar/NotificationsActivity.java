@@ -27,6 +27,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.anvexgroup.apnuvyapar.Adapter.I18n;
 import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -176,13 +177,18 @@ public class NotificationsActivity extends AppCompatActivity
     // ─── Fetch ────────────────────────────────────────────────────────────
 
     private void fetchNotifications() {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) {
-            showEmpty();
-            stopRefreshing();
-            return;
-        }
+        runWithValidSession(
+                this::fetchNotificationsWithToken,
+                (message, shouldLogout) -> {
+                    stopRefreshing();
+                    if (!shouldLogout) {
+                        showEmpty();
+                    }
+                }
+        );
+    }
 
+    private void fetchNotificationsWithToken(String accessToken) {
         JsonObjectRequest req = new JsonObjectRequest(
                 Request.Method.GET,
                 ApiRoutes.LIST_NOTIFICATIONS,
@@ -275,9 +281,12 @@ public class NotificationsActivity extends AppCompatActivity
     }
 
     private void markSingleNotificationRead(int position, @NonNull NotificationItem item) {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) return;
+        runWithValidSession(
+                accessToken -> markSingleNotificationReadWithToken(position, item, accessToken)
+        );
+    }
 
+    private void markSingleNotificationReadWithToken(int position, @NonNull NotificationItem item, String accessToken) {
         // Optimistic update – update immediately for responsive feel
         item.markRead();
         adapter.notifyItemChanged(position);
@@ -323,9 +332,12 @@ public class NotificationsActivity extends AppCompatActivity
     // ─── Mark all read ────────────────────────────────────────────────────
 
     private void markAllNotificationsRead() {
-        String accessToken = session.getAccessToken();
-        if (TextUtils.isEmpty(accessToken)) return;
+        runWithValidSession(
+                this::markAllNotificationsReadWithToken
+        );
+    }
 
+    private void markAllNotificationsReadWithToken(String accessToken) {
         // Optimistic update
         for (NotificationItem item : notifications) {
             item.markRead();
@@ -458,4 +470,78 @@ public class NotificationsActivity extends AppCompatActivity
         String lang = sp.getString(com.anvexgroup.apnuvyapar.LanguageSelection.KEY_LANG_CODE, "en");
         com.anvexgroup.apnuvyapar.Adapter.LanguageManager.apply(this, lang);
     }
+
+    private interface ProtectedApiAction {
+        void run(String accessToken);
+    }
+
+    private interface ProtectedApiFailure {
+        void onFailure(String message, boolean shouldLogout);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action) {
+        runWithValidSession(action, null);
+    }
+
+    private void runWithValidSession(ProtectedApiAction action, ProtectedApiFailure failureAction) {
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
+        AuthRefreshManager.ensureValidSession(this, new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    String accessToken = session.getAccessToken();
+                    if (TextUtils.isEmpty(accessToken)) {
+                        handleSessionFailure(
+                                "Login session expired. Please login again.",
+                                true,
+                                failureAction
+                        );
+                        return;
+                    }
+
+                    session.markActive();
+                    action.run(accessToken);
+                });
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                runOnUiThread(() -> handleSessionFailure(message, shouldLogout, failureAction));
+            }
+        });
+    }
+
+    private void handleSessionFailure(String message, boolean shouldLogout, ProtectedApiFailure failureAction) {
+        if (failureAction != null) {
+            failureAction.onFailure(message, shouldLogout);
+        }
+
+        if (shouldLogout) {
+            if (session != null) {
+                session.logout();
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            goToLoginAfterSessionExpired();
+            return;
+        }
+
+        if (!TextUtils.isEmpty(message)) {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void goToLoginAfterSessionExpired() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
 }

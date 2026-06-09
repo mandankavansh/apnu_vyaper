@@ -15,6 +15,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.anvexgroup.apnuvyapar.Adapter.LanguageManager;
 import com.bumptech.glide.Glide;
 import com.anvexgroup.apnuvyapar.utils.TouchImageView;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.ArrayList;
 
@@ -73,9 +74,7 @@ public class FullScreenImageActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull VH h, int position) {
             // Load high quality image
             String url = images.get(position);
-            Glide.with(h.itemView)
-                    .load(url)
-                    .into((TouchImageView) h.itemView);
+            WaveImageLoader.load((TouchImageView) h.itemView, url, R.drawable.ic_placeholder_circle);
 
             // Allow ViewPager2 swipe even when zoomed (TouchImageView handles scaling)
             // But TouchImageView can conflict with scrolling if not handled carefully.

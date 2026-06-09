@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,12 +106,7 @@ public class MyAdsAdapter extends RecyclerView.Adapter<MyAdsAdapter.ViewHolder> 
         MyListingsAdapter.ListingItem item = items.get(position);
 
         if (!TextUtils.isEmpty(item.imageUrl)) {
-            Glide.with(context)
-                    .load(item.imageUrl)
-                    .placeholder(R.drawable.ic_placeholder_circle)
-                    .error(R.drawable.ic_placeholder_circle)
-                    .centerCrop()
-                    .into(holder.imgListing);
+            WaveImageLoader.loadCenterCrop(holder.imgListing, item.imageUrl, R.drawable.ic_placeholder_circle);
         } else {
             holder.imgListing.setImageResource(R.drawable.ic_placeholder_circle);
         }

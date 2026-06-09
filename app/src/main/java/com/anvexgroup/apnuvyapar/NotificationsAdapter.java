@@ -17,6 +17,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.card.MaterialCardView;
 import com.anvexgroup.apnuvyapar.utils.TimeUtils;
 
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 import java.util.List;
 
 /**
@@ -86,16 +87,9 @@ public final class NotificationsAdapter
 
         // Optional image
         if (item.hasImage() && h.ivNotifIcon != null) {
-            Glide.with(ctx)
-                    .load(item.getImageUrl())
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_bell_vector)
-                    .error(R.drawable.ic_bell_vector)
-                    .into(h.ivNotifIcon);
+            WaveImageLoader.loadCircleCropCached(h.ivNotifIcon, item.getImageUrl(), R.drawable.ic_bell_vector);
         } else if (h.ivNotifIcon != null) {
-            Glide.with(ctx).clear(h.ivNotifIcon);
-            h.ivNotifIcon.setImageResource(R.drawable.ic_bell_vector);
+            WaveImageLoader.clearToFallback(h.ivNotifIcon, R.drawable.ic_bell_vector);
         }
 
         // Click

@@ -22,6 +22,7 @@ import com.android.volley.Request;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.anvexgroup.apnuvyapar.core.SessionManager;
+import com.anvexgroup.apnuvyapar.core.AuthRefreshManager;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.net.VolleySingleton;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -146,20 +147,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             return;
         }
 
-        SessionManager session = new SessionManager(this);
-        String accessToken = session.getAccessToken();
-
-        if (TextUtils.isEmpty(accessToken)) {
-            Log.d(TAG, "Access token missing, FCM token saved locally for later upload");
-            return;
-        }
-
         String alreadyUploaded = getLastUploadedToken();
         if (token.equals(alreadyUploaded)) {
             Log.d(TAG, "FCM token already uploaded, skipping");
             return;
         }
 
+        SessionManager session = new SessionManager(this);
+        runWithValidSessionForService(
+                session,
+                accessToken -> uploadTokenWithAccessToken(token, accessToken),
+                (message, shouldLogout) -> Log.d(TAG, "FCM token saved locally for later upload: " + message)
+        );
+    }
+
+    private void uploadTokenWithAccessToken(@NonNull String token, @NonNull String accessToken) {
         try {
             JSONObject body = new JSONObject();
             body.put("token", token);
@@ -338,4 +340,60 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         return sb.toString();
     }
+
+    private interface ServiceProtectedApiAction {
+        void run(String accessToken);
+    }
+
+    private interface ServiceProtectedApiFailure {
+        void onFailure(String message, boolean shouldLogout);
+    }
+
+    private void runWithValidSessionForService(
+            SessionManager session,
+            ServiceProtectedApiAction action,
+            ServiceProtectedApiFailure failureAction
+    ) {
+        AuthRefreshManager.ensureValidSession(getApplicationContext(), new AuthRefreshManager.Callback() {
+            @Override
+            public void onSuccess() {
+                String accessToken = session.getAccessToken();
+                if (TextUtils.isEmpty(accessToken)) {
+                    handleServiceSessionFailure(
+                            session,
+                            "Login session expired. Please login again.",
+                            true,
+                            failureAction
+                    );
+                    return;
+                }
+
+                session.markActive();
+                action.run(accessToken);
+            }
+
+            @Override
+            public void onFailure(String message, boolean shouldLogout) {
+                handleServiceSessionFailure(session, message, shouldLogout, failureAction);
+            }
+        });
+    }
+
+    private void handleServiceSessionFailure(
+            SessionManager session,
+            String message,
+            boolean shouldLogout,
+            ServiceProtectedApiFailure failureAction
+    ) {
+        if (failureAction != null) {
+            failureAction.onFailure(message, shouldLogout);
+        }
+
+        if (shouldLogout) {
+            session.logout();
+        }
+
+        Log.w(TAG, message + " shouldLogout=" + shouldLogout);
+    }
+
 }

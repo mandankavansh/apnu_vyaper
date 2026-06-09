@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.anvexgroup.apnuvyapar.ProductDetail;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,13 +76,7 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.VH> {
 
         // Load image with Glide
         if (!TextUtils.isEmpty(imageUrl)) {
-            Glide.with(context)
-                    .load(imageUrl)
-                    .placeholder(R.drawable.ic_placeholder_circle)
-                    .error(R.drawable.ic_placeholder_circle)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(h.image);
+            WaveImageLoader.loadCenterCropCrossFade(h.image, imageUrl, R.drawable.ic_placeholder_circle);
         } else {
             h.image.setImageResource(R.drawable.ic_placeholder_circle);
         }

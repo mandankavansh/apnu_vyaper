@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.anvexgroup.apnuvyapar.R;
+import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.List;
 
@@ -49,12 +50,7 @@ public class ThumbAdapter extends RecyclerView.Adapter<ThumbAdapter.VH> {
     public void onBindViewHolder(@NonNull VH h, int position) {
         Object src = sources.get(position);
 
-        // context को holder.itemView से लें; यह कभी null नहीं होगा
-        Glide.with(h.itemView)
-                .load(src)
-                .placeholder(R.drawable.ic_placeholder_circle)
-                .error(R.drawable.ic_placeholder_circle)
-                .into(h.iv);
+        WaveImageLoader.load(h.iv, src, R.drawable.ic_placeholder_circle);
 
         // selection visual
         h.itemView.setAlpha(position == selected ? 1.0f : 0.7f);
