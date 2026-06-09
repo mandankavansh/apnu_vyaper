@@ -11,7 +11,7 @@ public class termsandcondition extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         startActivity(new Intent(Intent.ACTION_VIEW,
-                Uri.parse("https://anvexgroup.com/Terms_and_condition.php")));
+                Uri.parse("https://anvexgroup.com/apnu_vypara_term_and_condition.php")));
         finish();
 
 
