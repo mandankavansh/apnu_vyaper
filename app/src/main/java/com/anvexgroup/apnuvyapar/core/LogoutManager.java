@@ -45,7 +45,7 @@ public final class LogoutManager {
         logout(context, true, callback);
     }
 
-    private static void logout(
+    public static void logout(
             @NonNull Context context,
             boolean logoutAll,
             @NonNull Callback callback
