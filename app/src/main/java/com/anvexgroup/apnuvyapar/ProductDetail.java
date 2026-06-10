@@ -47,7 +47,6 @@ import com.anvexgroup.apnuvyapar.Adapter.SimilarAdapter;
 import com.anvexgroup.apnuvyapar.Adapter.ThumbAdapter;
 import com.anvexgroup.apnuvyapar.net.ApiRoutes;
 import com.anvexgroup.apnuvyapar.utils.LoadingDialog;
-import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -77,7 +76,7 @@ public class ProductDetail extends AppCompatActivity {
     private GridLayout pdpChips;
     private Chip pdpSoldChip;
     private ImageView pdpSellerAvatar;
-    private TextView pdpSellerName, pdpSellerMeta, tvSellerAvatarLetter;
+    private TextView pdpSellerName, pdpSellerMeta, tvSellerAvatarLetter, pdpSellerListingCount;
     private MaterialButton pdpViewProfile;
 
     private MaterialButton pdpCall, pdpCallWhatsapp, pdpViewLocation;
@@ -186,6 +185,7 @@ public class ProductDetail extends AppCompatActivity {
         tvSellerAvatarLetter = findViewById(R.id.tvSellerAvatarLetter);
         pdpSellerName = findViewById(R.id.pdpSellerName);
         pdpSellerMeta = findViewById(R.id.pdpSellerMeta);
+        pdpSellerListingCount = findViewById(R.id.pdpSellerListingCount);
         pdpViewProfile = findViewById(R.id.pdpViewProfile);
 
         pdpCall = findViewById(R.id.pdpCall);
@@ -208,6 +208,7 @@ public class ProductDetail extends AppCompatActivity {
         keys.add("Failed");
         keys.add("Seller");
         keys.add("Member since");
+        keys.add("listing");
         keys.add("listings");
         keys.add("Status");
         keys.add("Verified Listing");
@@ -257,6 +258,17 @@ public class ProductDetail extends AppCompatActivity {
         if (tvSellerAvatarLetter != null) tvSellerAvatarLetter.setText("S");
         pdpSellerName.setText(I18n.t(this, "Seller"));
         pdpSellerMeta.setText("");
+        setSellerListingCount(0);
+    }
+
+    private void setSellerListingCount(int count) {
+        if (pdpSellerListingCount == null) {
+            return;
+        }
+
+        int safeCount = Math.max(0, count);
+        String label = safeCount == 1 ? I18n.t(this, "listing") : I18n.t(this, "listings");
+        pdpSellerListingCount.setText(safeCount + " " + label);
     }
 
     private void setupGalleryShell() {
@@ -434,11 +446,7 @@ public class ProductDetail extends AppCompatActivity {
                                 mem = I18n.t(this, "Member since") + " " + seller.optString("member_since");
                             }
                             int cnt = seller.optInt("listings_count", 0);
-                            if (cnt > 0) {
-                                mem = mem.isEmpty()
-                                        ? (cnt + " " + I18n.t(this, "listings"))
-                                        : (mem + " • " + cnt + " " + I18n.t(this, "listings"));
-                            }
+                            setSellerListingCount(cnt);
                             pdpSellerMeta.setText(mem);
                             sellerPhone = seller.optString("phone", "");
 
@@ -446,7 +454,10 @@ public class ProductDetail extends AppCompatActivity {
                             if (pdpSellerAvatar != null) {
                                 if (!avatarUrl.isEmpty()) {
                                     pdpSellerAvatar.setVisibility(View.VISIBLE);
-                                    WaveImageLoader.loadCircleCrop(pdpSellerAvatar, avatarUrl, R.drawable.ic_placeholder_circle);
+                                    Glide.with(ProductDetail.this)
+                                            .load(avatarUrl)
+                                            .placeholder(R.drawable.ic_placeholder_circle)
+                                            .into(pdpSellerAvatar);
                                 } else {
                                     pdpSellerAvatar.setVisibility(View.INVISIBLE);
                                 }
@@ -470,19 +481,25 @@ public class ProductDetail extends AppCompatActivity {
 
                         pdpChips.removeAllViews();
                         JSONArray attrs = d.optJSONArray("attributes");
+                        int detailsAdded = 0;
                         if (attrs != null && attrs.length() > 0) {
                             for (int i = 0; i < attrs.length(); i++) {
-                                JSONObject a = attrs.getJSONObject(i);
-                                String label = a.optString("label", "");
-                                String val = a.optString("value", "");
-                                String unit = a.optString("unit", "");
+                                JSONObject a = attrs.optJSONObject(i);
+                                if (a == null) continue;
+
+                                String label = cleanDisplayText(a.optString("label", ""));
+                                String val = cleanDisplayText(a.optString("display_value", ""));
+                                if (val.isEmpty()) val = cleanDisplayText(a.optString("formatted_value", ""));
+                                if (val.isEmpty()) val = cleanDisplayText(a.optString("value", ""));
+                                String unit = cleanDisplayText(a.optString("unit", ""));
 
                                 if (!label.isEmpty() && !val.isEmpty()) {
-                                    String displayText = val + (unit.isEmpty() ? "" : " " + unit);
-                                    addDetailCard(label, displayText);
+                                    addDetailCard(label, formatAttributeValue(val, unit));
+                                    detailsAdded++;
                                 }
                             }
-                        } else {
+                        }
+                        if (detailsAdded == 0) {
                             addDetailCard("Status", I18n.t(this, "Verified Listing"));
                         }
 
@@ -508,6 +525,21 @@ public class ProductDetail extends AppCompatActivity {
         );
 
         com.anvexgroup.apnuvyapar.net.VolleySingleton.queue(this).add(req);
+    }
+
+    private String cleanDisplayText(String raw) {
+        if (raw == null) return "";
+        String text = raw.trim();
+        if (text.isEmpty() || "null".equalsIgnoreCase(text)) return "";
+        return text;
+    }
+
+    private String formatAttributeValue(String value, String unit) {
+        String cleanValue = cleanDisplayText(value);
+        String cleanUnit = cleanDisplayText(unit);
+        if (cleanUnit.isEmpty()) return cleanValue;
+        if (cleanValue.toLowerCase().endsWith(cleanUnit.toLowerCase())) return cleanValue;
+        return cleanValue + " " + cleanUnit;
     }
 
     private void addDetailCard(String label, String value) {

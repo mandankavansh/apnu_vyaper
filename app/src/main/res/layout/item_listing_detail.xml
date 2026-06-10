@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="0dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_columnWeight="1"
     android:layout_margin="6dp"
     android:background="@drawable/bg_detail_card_outline"
     android:orientation="vertical"
@@ -10,7 +9,7 @@
 
     <TextView
         android:id="@+id/tvDetailLabel"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAllCaps="true"
         android:textColor="#3E838C"
@@ -20,10 +19,11 @@
 
     <TextView
         android:id="@+id/tvDetailValue"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:textColor="@color/colorTextPrimary"
         android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:lineSpacingExtra="2dp" />
 </LinearLayout>

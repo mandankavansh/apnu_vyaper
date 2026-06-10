@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,11 +24,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.anvexgroup.apnuvyapar.R;
-import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -59,7 +60,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     private final List<Map<String, Object>> fields;
     private final Map<String, Object> answers = new HashMap<>();
-    private final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+    private final SimpleDateFormat displayDateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+    private final SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     private final Callbacks callbacks;
     private final Context adapterContext;
     private boolean isBinding = false; // Suppress listener callbacks during bind
@@ -85,19 +87,16 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         for (Map<String, Object> f : this.fields) {
             String key = s(f.get("key"));
             String type = s(f.get("type")).toUpperCase(Locale.ROOT);
-            switch (type) {
+            switch (normalizeType(type)) {
                 case "CHECKBOX":
-                    // default OFF
+                case "SWITCH":
+                case "BOOLEAN": {
                     answers.put(key, false);
                     break;
-                case "SWITCH": {
-                    // ✅ All switches default OFF (false).
-                    // "is_new" bhi yahi se OFF se start karega (Used by default).
-                    boolean defaultVal = false;
-                    answers.put(key, defaultVal);
-                    break;
                 }
-                case "PHOTOS": {
+                case "PHOTOS":
+                case "IMAGE":
+                case "FILE": {
                     Map<String, Object> ph = new HashMap<>();
                     ph.put("cover", ""); // Base64 string
                     ph.put("more", new ArrayList<String>()); // List<Base64>
@@ -117,15 +116,20 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @Override
     public int getItemViewType(int position) {
-        String t = s(fields.get(position).get("type")).toUpperCase(Locale.ROOT);
+        String t = normalizeType(s(fields.get(position).get("type")));
         switch (t) {
             case "DATE":
+            case "DATETIME":
                 return T_DATE;
             case "DROPDOWN":
+            case "SELECT":
+            case "MULTISELECT":
+            case "RADIO":
                 return T_DROPDOWN;
             case "CHECKBOX":
                 return T_CHECKBOX;
             case "SWITCH":
+            case "BOOLEAN":
                 return T_SWITCH;
             case "TEXTAREA":
                 return T_TEXTAREA;
@@ -134,6 +138,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             case "LOCATION":
                 return T_LOCATION;
             case "PHOTOS":
+            case "IMAGE":
+            case "FILE":
                 return T_PHOTOS;
             default:
                 return T_TEXT;
@@ -170,7 +176,7 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         String key = s(f.get("key"));
         String label = tr(s(f.get("label")));
         String hint = tr(s(f.get("hint")));
-        String type = s(f.get("type"));
+        String type = normalizeType(s(f.get("type")));
         isBinding = true;
         if (h instanceof VHText) {
             VHText vh = (VHText) h;
@@ -186,20 +192,18 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 vh.etValue.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
             }
             vh.etValue.setText(s(answers.get(key)));
-            vh.etValue.addTextChangedListener(new SimpleTextWatcher(s -> {
-                if (!isBinding)
-                    answers.put(key, s);
-            }));
+            attachTextWatcher(vh.etValue, value -> {
+                if (!isBinding) answers.put(key, value);
+            });
 
         } else if (h instanceof VHTextArea) {
             VHTextArea vh = (VHTextArea) h;
             vh.tvLabel.setText(label + (req(f) ? " *" : ""));
             vh.etValue.setHint(hint);
             vh.etValue.setText(s(answers.get(key)));
-            vh.etValue.addTextChangedListener(new SimpleTextWatcher(s -> {
-                if (!isBinding)
-                    answers.put(key, s);
-            }));
+            attachTextWatcher(vh.etValue, value -> {
+                if (!isBinding) answers.put(key, value);
+            });
 
         } else if (h instanceof VHCurrencies) {
             VHCurrencies vh = (VHCurrencies) h;
@@ -207,10 +211,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.etValue.setHint(hint);
             vh.etValue.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
             vh.etValue.setText(s(answers.get(key)));
-            vh.etValue.addTextChangedListener(new SimpleTextWatcher(s -> {
-                if (!isBinding)
-                    answers.put(key, s);
-            }));
+            attachTextWatcher(vh.etValue, value -> {
+                if (!isBinding) answers.put(key, value);
+            });
 
         } else if (h instanceof VHDate) {
             VHDate vh = (VHDate) h;
@@ -222,14 +225,14 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         (view, year, month, day) -> {
                             Calendar chosen = Calendar.getInstance();
                             chosen.set(year, month, day, 0, 0, 0);
-                            String val = df.format(chosen.getTime());
-                            vh.etDate.setText(val);
-                            answers.put(key, val);
+                            String apiValue = apiDateFormat.format(chosen.getTime());
+                            vh.etDate.setText(displayDate(apiValue));
+                            answers.put(key, apiValue);
                         },
                         c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
                 dlg.show();
             });
-            vh.etDate.setText(s(answers.get(key)));
+            vh.etDate.setText(displayDate(s(answers.get(key))));
 
         } else if (h instanceof VHDropdown) {
             VHDropdown vh = (VHDropdown) h;
@@ -301,10 +304,18 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             ad.setDropDownViewResource(R.layout.spinner_dropdown_item);
             vh.spinner.setAdapter(ad);
 
-            String saved = s(answers.get(key));
-            int idxSaved = finalValues.indexOf(saved);
-            if (idxSaved < 0)
-                idxSaved = 0;
+            String saved = s(answers.get(key)).trim();
+            int idxSaved = 0;
+
+            for (int i = 0; i < finalValues.size(); i++) {
+                String optionValue = s(finalValues.get(i)).trim();
+                String optionLabel = s(finalDisplay.get(i)).trim();
+
+                if (optionValue.equalsIgnoreCase(saved) || optionLabel.equalsIgnoreCase(saved)) {
+                    idxSaved = i;
+                    break;
+                }
+            }
             vh.spinner.setOnItemSelectedListener(null); // Prevent listener fire during setSelection
             vh.spinner.setSelection(idxSaved);
             vh.spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -364,10 +375,9 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             vh.tvLabel.setText(label + (req(f) ? " *" : ""));
             vh.etLocation.setHint(hint);
             vh.etLocation.setText(s(answers.get(key)));
-            vh.etLocation.addTextChangedListener(new SimpleTextWatcher(s -> {
-                if (!isBinding)
-                    answers.put(key, s);
-            }));
+            attachTextWatcher(vh.etLocation, value -> {
+                if (!isBinding) answers.put(key, value);
+            });
 
             vh.btnUseMyLocation.setOnClickListener(v -> {
                 if (callbacks != null)
@@ -541,30 +551,50 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
      */
     @SuppressLint("NotifyDataSetChanged")
     public void prefillAnswers(Map<String, String> values) {
-        // Build a map of key -> field type for proper type handling
+        if (values == null || values.isEmpty()) {
+            return;
+        }
+
         Map<String, String> fieldTypes = new HashMap<>();
+
         for (Map<String, Object> f : fields) {
             String key = s(f.get("key"));
-            String type = s(f.get("type")).toUpperCase(Locale.ROOT);
-            fieldTypes.put(key, type);
+            String type = normalizeType(s(f.get("type")));
+
+            if (!TextUtils.isEmpty(key)) {
+                fieldTypes.put(key, type);
+            }
         }
 
         for (Map.Entry<String, String> entry : values.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-            if (key == null || key.isEmpty())
+
+            if (TextUtils.isEmpty(key)) {
                 continue;
+            }
 
             String fieldType = fieldTypes.get(key);
-            if ("SWITCH".equals(fieldType) || "CHECKBOX".equals(fieldType)) {
-                // Convert string value to Boolean
-                boolean boolVal = "1".equals(value) || "true".equalsIgnoreCase(value)
-                        || "yes".equalsIgnoreCase(value) || "new".equalsIgnoreCase(value);
+            String cleanValue = s(value).trim();
+
+            if ("SWITCH".equals(fieldType) || "CHECKBOX".equals(fieldType) || "BOOLEAN".equals(fieldType)) {
+                boolean boolVal = "1".equals(cleanValue)
+                        || "true".equalsIgnoreCase(cleanValue)
+                        || "yes".equalsIgnoreCase(cleanValue)
+                        || "new".equalsIgnoreCase(cleanValue)
+                        || "on".equalsIgnoreCase(cleanValue);
+
                 answers.put(key, boolVal);
+
+            } else if ("DATE".equals(fieldType) || "DATETIME".equals(fieldType)) {
+                String apiDate = normalizeDateForApi(cleanValue);
+                answers.put(key, TextUtils.isEmpty(apiDate) ? cleanValue : apiDate);
+
             } else {
-                answers.put(key, value == null ? "" : value);
+                answers.put(key, cleanValue);
             }
         }
+
         notifyDataSetChanged();
     }
 
@@ -739,8 +769,8 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
      */
     public String getPhotosFieldKey() {
         for (Map<String, Object> f : fields) {
-            String type = s(f.get("type")).toUpperCase(Locale.ROOT);
-            if ("PHOTOS".equals(type)) {
+            String type = normalizeType(s(f.get("type")));
+            if ("PHOTOS".equals(type) || "IMAGE".equals(type) || "FILE".equals(type)) {
                 return s(f.get("key"));
             }
         }
@@ -830,23 +860,16 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 Object val = answers.get(key);
                 String sval = val == null ? "" : String.valueOf(val);
                 if (required) {
-                    if ("CHECKBOX".equalsIgnoreCase(type) || "SWITCH".equalsIgnoreCase(type)) {
-                        // ✅ Special case: "is_new" switch is never forced to ON.
-                        // Required ka matlab yahan sirf "field exist hai", jo hamare paas hamesha hai.
-                        if (!"is_new".equalsIgnoreCase(key)) {
-                            if (!(val instanceof Boolean) || !((Boolean) val)) {
-                                toast("Please enable: " + label);
-                                Log.e(TAG, "Validation failed: checkbox/switch not enabled for " + key);
-                                return null;
-                            }
-                        }
-                    } else if ("DROPDOWN".equalsIgnoreCase(type)) {
+                    if ("CHECKBOX".equalsIgnoreCase(type) || "SWITCH".equalsIgnoreCase(type) || "BOOLEAN".equalsIgnoreCase(type)) {
+                        // Boolean fields are valid both ways. Required means the field is present, not that it must be ON.
+                    } else if ("DROPDOWN".equalsIgnoreCase(type) || "SELECT".equalsIgnoreCase(type)
+                            || "MULTISELECT".equalsIgnoreCase(type) || "RADIO".equalsIgnoreCase(type)) {
                         if (TextUtils.isEmpty(sval)) {
                             toast("Please select " + label);
                             Log.e(TAG, "Validation failed: dropdown empty for " + key);
                             return null;
                         }
-                    } else if ("PHOTOS".equalsIgnoreCase(type)) {
+                    } else if ("PHOTOS".equalsIgnoreCase(type) || "IMAGE".equalsIgnoreCase(type) || "FILE".equalsIgnoreCase(type)) {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> ph = (Map<String, Object>) val;
                         String cover = ph == null ? "" : s(ph.get("cover"));
@@ -870,6 +893,60 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     }
                 }
 
+                if (!TextUtils.isEmpty(sval) && ("NUMBER".equalsIgnoreCase(type) || "CURRENCY".equalsIgnoreCase(type))) {
+                    String clean = sval.replaceAll("[^0-9.\\-]", "");
+                    if (TextUtils.isEmpty(clean) || !clean.matches("-?\\d+(\\.\\d+)?")) {
+                        toast(label + " must be a valid number");
+                        Log.e(TAG, "Validation failed: invalid number for key=" + key);
+                        return null;
+                    }
+                    try {
+                        double n = Double.parseDouble(clean);
+                        Double min = doubleOrNull(f.get("min_value"));
+                        Double max = doubleOrNull(f.get("max_value"));
+                        if (min != null && n < min) {
+                            toast(label + " is below minimum value");
+                            return null;
+                        }
+                        if (max != null && n > max) {
+                            toast(label + " is above maximum value");
+                            return null;
+                        }
+                    } catch (Exception ignored) {
+                        toast(label + " must be a valid number");
+                        return null;
+                    }
+                }
+
+                if (!TextUtils.isEmpty(sval) && ("DATE".equalsIgnoreCase(type) || "DATETIME".equalsIgnoreCase(type))) {
+                    String normalizedDate = normalizeDateForApi(sval);
+                    if (TextUtils.isEmpty(normalizedDate)) {
+                        toast(label + " must be a valid date");
+                        return null;
+                    }
+                    answers.put(key, normalizedDate);
+                }
+                String pattern = cleanPattern(f.get("pattern"));
+                if (!TextUtils.isEmpty(sval) && shouldValidatePattern(key, type, pattern)) {
+                    try {
+                        if (!java.util.regex.Pattern.compile(pattern).matcher(sval.trim()).matches()) {
+                            Log.e(TAG, "Validation failed: pattern mismatch"
+                                    + " key=" + key
+                                    + " label=" + label
+                                    + " type=" + type
+                                    + " value=" + sval
+                                    + " pattern=" + pattern);
+
+                            toast(label + " format is invalid");
+                            return null;
+                        }
+                    } catch (java.util.regex.PatternSyntaxException e) {
+                        Log.w(TAG, "Skipping invalid backend regex"
+                                + " key=" + key
+                                + " label=" + label
+                                + " pattern=" + pattern, e);
+                    }
+                }
                 if ("EMAIL".equalsIgnoreCase(type) && !TextUtils.isEmpty(sval) &&
                         !android.util.Patterns.EMAIL_ADDRESS.matcher(sval).matches()) {
                     toast("Please enter a valid Email");
@@ -1050,8 +1127,30 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             if (isRemotePhoto(token)) {
                 final String imageUrl = token;
-                vh.iv.setTag(null);
-                WaveImageLoader.loadCenterCrop(vh.iv, imageUrl, R.drawable.ic_placeholder_circle);
+                vh.iv.setImageResource(R.drawable.ic_launcher_foreground);
+                vh.iv.setTag(imageUrl);
+
+                new Thread(() -> {
+                    try {
+                        java.net.URL url = new java.net.URL(imageUrl);
+                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setDoInput(true);
+                        conn.setConnectTimeout(5000);
+                        conn.setReadTimeout(5000);
+                        conn.connect();
+                        java.io.InputStream is = conn.getInputStream();
+                        Bitmap bmp = BitmapFactory.decodeStream(is);
+                        is.close();
+
+                        if (bmp != null && imageUrl.equals(vh.iv.getTag())) {
+                            vh.iv.post(() -> vh.iv.setImageBitmap(bmp));
+                        } else if (bmp == null) {
+                            Log.w(TAG, "bindThumbImage: decoded null bitmap from URL=" + imageUrl);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "bindThumbImage: failed URL load " + imageUrl, e);
+                    }
+                }).start();
                 return;
             }
 
@@ -1223,11 +1322,158 @@ public class DynamicFormAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
     }
 
-    /* ================= Utils ================= */
-    private static String s(Object o) {
-        return o == null ? "" : String.valueOf(o);
+    private void attachTextWatcher(EditText editText, OnText callback) {
+        Object old = editText.getTag();
+
+        if (old instanceof TextWatcher) {
+            editText.removeTextChangedListener((TextWatcher) old);
+        }
+
+        SimpleTextWatcher watcher = new SimpleTextWatcher(callback);
+        editText.addTextChangedListener(watcher);
+        editText.setTag(watcher);
     }
 
+    private String displayDate(String value) {
+        String api = normalizeDateForApi(value);
+        if (TextUtils.isEmpty(api)) return value == null ? "" : value;
+        try {
+            Date d = apiDateFormat.parse(api);
+            return d == null ? value : displayDateFormat.format(d);
+        } catch (Exception e) {
+            return value == null ? "" : value;
+        }
+    }
+
+    private String normalizeDateForApi(String value) {
+        if (value == null) return "";
+
+        String text = value.trim();
+
+        if (text.isEmpty() || "null".equalsIgnoreCase(text)) {
+            return "";
+        }
+
+        text = text.replace(",", " ").replaceAll("\\s+", " ").trim();
+
+        String[] patterns = {
+                "yyyy-MM-dd",
+                "dd-MM-yyyy",
+                "d-MM-yyyy",
+                "dd-M-yyyy",
+                "d-M-yyyy",
+                "dd/MM/yyyy",
+                "d/MM/yyyy",
+                "dd/M/yyyy",
+                "d/M/yyyy",
+                "yyyy/MM/dd",
+                "dd.MM.yyyy",
+                "d.MM.yyyy",
+                "dd MMM yyyy",
+                "d MMM yyyy",
+                "dd MMMM yyyy",
+                "d MMMM yyyy"
+        };
+
+        for (String pattern : patterns) {
+            try {
+                SimpleDateFormat f = new SimpleDateFormat(pattern, Locale.US);
+                f.setLenient(false);
+
+                Date d = f.parse(text);
+
+                if (d != null) {
+                    return apiDateFormat.format(d);
+                }
+            } catch (ParseException ignored) {
+            }
+        }
+
+        return "";
+    }
+
+    private static Double doubleOrNull(Object value) {
+        if (value == null) return null;
+        try {
+            String s = String.valueOf(value).trim();
+            if (s.isEmpty() || "null".equalsIgnoreCase(s)) return null;
+            return Double.parseDouble(s);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    private static String cleanPattern(Object raw) {
+        if (raw == null || raw == JSONObject.NULL) {
+            return "";
+        }
+
+        String pattern = String.valueOf(raw).trim();
+
+        if (pattern.isEmpty()
+                || "null".equalsIgnoreCase(pattern)
+                || "NULL".equals(pattern)) {
+            return "";
+        }
+
+        return pattern;
+    }
+
+    private static boolean shouldValidatePattern(String key, String type, String pattern) {
+        pattern = cleanPattern(pattern);
+        if (TextUtils.isEmpty(pattern)) {
+            return false;
+        }
+
+        String k = key == null ? "" : key.trim().toLowerCase(Locale.ROOT);
+        String t = normalizeType(type);
+
+        // These already have Android/native validation or backend validation.
+        // Do not blindly apply regex to normal marketplace text fields like brand/model/title.
+        if ("EMAIL".equals(t) || "PHONE".equals(t) || "URL".equals(t)) {
+            return true;
+        }
+
+        // Only strict common fields should use regex on Android.
+        if ("year".equals(k)
+                || k.endsWith("_year")
+                || k.contains("manufacturing_year")
+                || "pincode".equals(k)
+                || "pin_code".equals(k)
+                || k.contains("phone")
+                || k.contains("mobile")
+                || k.contains("gst")) {
+            return true;
+        }
+
+        return false;
+    }
+    private static String normalizeType(String type) {
+        String t = type == null ? "" : type.trim().toUpperCase(Locale.ROOT);
+        if ("TEXT".equals(t) || "NUMBER".equals(t) || "DATE".equals(t) || "DATETIME".equals(t)
+                || "DROPDOWN".equals(t) || "SELECT".equals(t) || "MULTISELECT".equals(t) || "RADIO".equals(t)
+                || "CHECKBOX".equals(t) || "SWITCH".equals(t) || "BOOLEAN".equals(t)
+                || "TEXTAREA".equals(t) || "CURRENCY".equals(t) || "LOCATION".equals(t)
+                || "PHOTOS".equals(t) || "IMAGE".equals(t) || "FILE".equals(t)
+                || "PHONE".equals(t) || "EMAIL".equals(t) || "URL".equals(t)) {
+            return t;
+        }
+        return "TEXT";
+    }
+
+    /* ================= Utils ================= */
+    private static String s(Object o) {
+        if (o == null || o == JSONObject.NULL) {
+            return "";
+        }
+
+        String value = String.valueOf(o);
+
+        if ("null".equalsIgnoreCase(value.trim())) {
+            return "";
+        }
+
+        return value;
+    }
     private static boolean req(Map<String, Object> f) {
         Object r = f.get("required");
         if (r instanceof Boolean) {

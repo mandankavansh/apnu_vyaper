@@ -102,6 +102,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
     private long subcategoryId;
 
     private String categoryName;
+    private String selectedConditionFromCategory;
 
 
     // Edit mode
@@ -210,6 +211,7 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         setupLocationSettings();
 
         Intent intent = getIntent();
+        selectedConditionFromCategory = safeTrim(intent.getStringExtra("condition"));
 
         // category name (UI only)
         String category = intent.getStringExtra(EXTRA_CATEGORY);
@@ -490,9 +492,13 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                             String key = field.optString("key", "");
                             String label = field.optString("label", "");
                             String hint = field.optString("hint", "");
-                            String type = field.optString("type", "TEXT");
+                            String type = normalizeFieldType(field.optString("type", "TEXT"));
                             boolean required = field.optBoolean("required", false);
                             String unit = field.optString("unit", "");
+                            String defaultValue = field.optString("default_value", "");
+                            String minValue = field.optString("min_value", "");
+                            String maxValue = field.optString("max_value", "");
+                            String pattern = field.optString("pattern", "");
 
                             if ("is_new".equalsIgnoreCase(key) && !supportsCondition) {
                                 continue;
@@ -505,6 +511,10 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                             m.put("type", type);
                             m.put("required", required);
                             m.put("unit", unit);
+                            m.put("default_value", defaultValue);
+                            m.put("min_value", minValue);
+                            m.put("max_value", maxValue);
+                            m.put("pattern", pattern);
 
                             JSONArray optsArr = field.optJSONArray("options");
                             if (optsArr != null && optsArr.length() > 0) {
@@ -935,7 +945,13 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
                         String message = response.optString("message",
                                 success ? defaultMsg : failMsg);
 
-                        toast(message);
+                        if (!success) {
+                            String detailed = extractBackendErrorMessage(response, message);
+                            toast(detailed);
+                            Log.e(TAG, "Server validation failed: " + detailed);
+                        } else {
+                            toast(message);
+                        }
                         Log.d(TAG, "Server response: " + response.toString());
 
                         // Log photo debug info from server
@@ -999,34 +1015,68 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
         }
     }
 
+    private String extractBackendErrorMessage(JSONObject response, String fallback) {
+        if (response == null) return fallback == null ? "Server error" : fallback;
+        try {
+            JSONArray fieldErrors = response.optJSONArray("field_errors");
+            if (fieldErrors == null) {
+                fieldErrors = response.optJSONArray("errors");
+            }
+            if (fieldErrors != null && fieldErrors.length() > 0) {
+                return fieldErrors.optString(0, fallback);
+            }
+
+            JSONObject data = response.optJSONObject("data");
+            if (data != null) {
+                JSONArray nestedErrors = data.optJSONArray("field_errors");
+                if (nestedErrors != null && nestedErrors.length() > 0) {
+                    return nestedErrors.optString(0, fallback);
+                }
+                String errorCode = safeTrim(data.optString("error_code", ""));
+                if (!errorCode.isEmpty()) {
+                    return fallback + " (" + errorCode + ")";
+                }
+            }
+
+            String errorCode = safeTrim(response.optString("error_code", ""));
+            if (!errorCode.isEmpty()) {
+                return fallback + " (" + errorCode + ")";
+            }
+        } catch (Exception ignored) { }
+        return fallback == null || fallback.trim().isEmpty() ? "Server error" : fallback;
+    }
+
     private String buildTitleFromForm(JSONObject form) {
         try {
-            String brand = form.optString("brand", "").trim();
-            String model = form.optString("model", "").trim();
-            String year = form.optString("year", "").trim();
-            String product = form.optString("product", "").trim();
+            String[] directTitleKeys = {
+                    "product", "title", "listing_title", "vehicle_title", "property_title",
+                    "machine_title", "scrap_title", "item_title", "name"
+            };
+            for (String key : directTitleKeys) {
+                String value = safeTrim(form.optString(key, ""));
+                if (!value.isEmpty()) {
+                    return value.length() > 150 ? value.substring(0, 150) : value;
+                }
+            }
+
+            String brand = safeTrim(form.optString("brand", ""));
+            String model = safeTrim(form.optString("model", ""));
+            String year = safeTrim(form.optString("year", ""));
+            String machineType = safeTrim(form.optString("machine_type", ""));
+            String materialType = safeTrim(form.optString("material_type", ""));
 
             StringBuilder sb = new StringBuilder();
-            if (!brand.isEmpty())
-                sb.append(brand);
-            if (!model.isEmpty()) {
-                if (sb.length() > 0)
-                    sb.append(" ");
-                sb.append(model);
-            }
-            if (!year.isEmpty()) {
-                if (sb.length() > 0)
-                    sb.append(" ");
-                sb.append(year);
-            }
-            if (sb.length() == 0 && !product.isEmpty()) {
-                sb.append(product);
+            for (String part : new String[]{brand, model, machineType, materialType, year}) {
+                if (!TextUtils.isEmpty(part) && sb.indexOf(part) < 0) {
+                    if (sb.length() > 0) sb.append(" ");
+                    sb.append(part);
+                }
             }
             if (sb.length() == 0) {
                 sb.append("Listing");
             }
-            String title = sb.toString();
-            return title;
+            String title = sb.toString().trim();
+            return title.length() > 150 ? title.substring(0, 150) : title;
         } catch (Exception e) {
             Log.e(TAG, "buildTitleFromForm error", e);
             return "Listing";
@@ -1454,12 +1504,51 @@ public class DynamicFormActivity extends AppCompatActivity implements DynamicFor
 
         adapter = new DynamicFormAdapter(schema, DynamicFormActivity.this);
         rvForm.setAdapter(adapter);
+        applyDefaultValuesToAdapter(schema);
+        if (!isEditMode) {
+            applyConditionFromCategoryToAdapter();
+        }
         btnSubmit.setEnabled(true);
         LoadingDialog.hideLoading();
 
         if (isEditMode) {
             fetchAndPrefillListingData(editListingId);
         }
+    }
+
+    private void applyDefaultValuesToAdapter(List<Map<String, Object>> schema) {
+        if (adapter == null || schema == null || schema.isEmpty()) return;
+        Map<String, String> defaults = new HashMap<>();
+        for (Map<String, Object> field : schema) {
+            String key = safeTrim(String.valueOf(field.get("key")));
+            String defaultValue = safeTrim(String.valueOf(field.get("default_value")));
+            if (!key.isEmpty() && !defaultValue.isEmpty() && !"null".equalsIgnoreCase(defaultValue)) {
+                defaults.put(key, defaultValue);
+            }
+        }
+        if (!defaults.isEmpty()) {
+            adapter.prefillAnswers(defaults);
+        }
+    }
+
+    private void applyConditionFromCategoryToAdapter() {
+        if (adapter == null || TextUtils.isEmpty(selectedConditionFromCategory)) return;
+        boolean isNew = "new".equalsIgnoreCase(selectedConditionFromCategory)
+                || "1".equals(selectedConditionFromCategory)
+                || "true".equalsIgnoreCase(selectedConditionFromCategory);
+        Map<String, String> values = new HashMap<>();
+        values.put("is_new", isNew ? "1" : "0");
+        values.put("is_new_item", isNew ? "1" : "0");
+        adapter.prefillAnswers(values);
+    }
+
+    private String normalizeFieldType(String raw) {
+        String t = safeTrim(raw).toUpperCase(Locale.ROOT);
+        if ("SELECT".equals(t) || "RADIO".equals(t) || "MULTISELECT".equals(t)) return "DROPDOWN";
+        if ("BOOLEAN".equals(t) || "CHECKBOX".equals(t)) return "SWITCH";
+        if ("IMAGE".equals(t) || "FILE".equals(t)) return "PHOTOS";
+        if (TextUtils.isEmpty(t)) return "TEXT";
+        return t;
     }
 
     private void setupLocationSettings() {
