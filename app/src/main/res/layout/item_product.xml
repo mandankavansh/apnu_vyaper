@@ -13,36 +13,34 @@
     app:strokeColor="@color/colorBorder"
     app:rippleColor="#1A000000">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
-        <!-- ===== IMAGE SECTION ===== -->
         <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="175dp"
-            android:background="#E8EFF4">
+            android:id="@+id/productImageContainer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="#E8EFF4"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintDimensionRatio="4:3">
 
-            <!-- Product image (single fallback) -->
             <ImageView
                 android:id="@+id/productImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
                 android:src="@drawable/ic_placeholder_circle" />
 
-            <!-- Product image slider (multi-image) -->
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/productImageSlider"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="gone" />
 
-            <!-- Saffron "NEW" badge top-left -->
-            <!-- Status badge area preserved (hidden by default) -->
-
-            <!-- Dot indicator for slider -->
             <LinearLayout
                 android:id="@+id/dotIndicator"
                 android:layout_width="wrap_content"
@@ -53,7 +51,6 @@
                 android:visibility="gone"
                 android:elevation="4dp" />
 
-            <!-- Image count badge -->
             <TextView
                 android:id="@+id/tvImageCount"
                 android:layout_width="wrap_content"
@@ -61,33 +58,38 @@
                 android:layout_gravity="bottom|end"
                 android:layout_margin="10dp"
                 android:background="@drawable/bg_image_count_badge"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
                 android:text="1/3"
                 android:textColor="@color/white"
                 android:textSize="10sp"
                 android:visibility="gone"
                 android:elevation="3dp" />
 
-            <!-- Bottom gradient scrim for price readability -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="54dp"
                 android:layout_gravity="bottom"
                 android:background="@drawable/bg_bottom_scrim" />
+
         </FrameLayout>
 
-        <!-- ===== DETAILS SECTION ===== -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/productDetailsContainer"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="13dp"
-            android:paddingEnd="13dp"
-            android:paddingTop="11dp"
-            android:paddingBottom="13dp">
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="13dp"
+            app:layout_constraintTop_toBottomOf="@id/productImageContainer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
-            <!-- Title -->
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
@@ -99,33 +101,35 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium"
-                android:lineSpacingMultiplier="1.15" />
+                android:lineSpacingMultiplier="1.12" />
 
-            <!-- Price — teal accent, prominent -->
             <TextView
                 android:id="@+id/tvPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
+                android:layout_marginTop="6dp"
                 android:text="₹89,000"
                 android:textColor="@color/colorPrimary"
-                android:textSize="17sp"
+                android:textSize="16sp"
                 android:fontFamily="sans-serif-medium"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
 
-            <!-- City and Time row -->
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="9dp">
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_toStartOf="@+id/tvPosted"
+                    android:layout_weight="1"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:minWidth="0dp">
 
                     <ImageView
                         android:layout_width="12dp"
@@ -135,28 +139,30 @@
 
                     <TextView
                         android:id="@+id/tvCity"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="3dp"
+                        android:layout_weight="1"
                         android:ellipsize="end"
                         android:maxLines="1"
                         tools:text="Ahmedabad"
                         android:textColor="@color/colorTextSecondary"
                         android:textSize="11sp" />
+
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvPosted"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
+                    android:layout_marginStart="6dp"
                     tools:text="2d ago"
                     android:textColor="@color/colorTextSecondary"
-                    android:textSize="11sp" />
+                    android:textSize="11sp"
+                    android:maxLines="1" />
 
-            </RelativeLayout>
+            </LinearLayout>
 
-            <!-- Hidden elements to preserve adapter logic -->
             <View
                 android:id="@+id/btnContact"
                 android:layout_width="0dp"
@@ -165,6 +171,6 @@
 
         </LinearLayout>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

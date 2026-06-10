@@ -13,7 +13,6 @@
         android:layout_height="match_parent"
         android:background="#F8FDFB">
 
-        <!-- Status bar tint -->
         <View
             android:id="@+id/viewStatusBarBackground"
             android:layout_width="0dp"
@@ -31,11 +30,10 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <!-- Hero AppBar -->
             <com.google.android.material.appbar.AppBarLayout
                 android:id="@+id/appBar"
                 android:layout_width="match_parent"
-                android:layout_height="360dp"
+                android:layout_height="300dp"
                 android:fitsSystemWindows="false"
                 android:background="@color/colorPrimaryDark"
                 app:elevation="0dp">
@@ -53,7 +51,6 @@
                         android:background="@color/colorPrimaryDark"
                         app:layout_collapseMode="parallax">
 
-                        <!-- FULL HERO IMAGE -->
                         <androidx.viewpager2.widget.ViewPager2
                             android:id="@+id/pdpImagePager"
                             android:layout_width="0dp"
@@ -65,39 +62,33 @@
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintEnd_toEndOf="parent" />
 
-                        <!-- Premium top overlay for toolbar readability -->
                         <View
                             android:layout_width="0dp"
-                            android:layout_height="120dp"
+                            android:layout_height="88dp"
                             android:background="@drawable/bg_toolbar_gradient"
                             app:layout_constraintTop_toTopOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintEnd_toEndOf="parent" />
 
-                        <!-- Premium bottom overlay for dots readability -->
                         <View
                             android:layout_width="0dp"
-                            android:layout_height="150dp"
+                            android:layout_height="100dp"
                             android:background="@drawable/bg_toolbar_gradient"
                             android:rotation="180"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintEnd_toEndOf="parent" />
 
-                        <!-- Soft middle tint -->
-
-                        <!-- Dots over image -->
                         <LinearLayout
                             android:id="@+id/pdpDots"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:layout_marginBottom="24dp"
+                            android:layout_marginBottom="14dp"
                             android:paddingStart="10dp"
                             android:paddingTop="6dp"
                             android:paddingEnd="10dp"
                             android:paddingBottom="6dp"
-
                             android:elevation="8dp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -105,7 +96,6 @@
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
-                    <!-- Toolbar pinned OVER image -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
@@ -153,20 +143,20 @@
                 </com.google.android.material.appbar.CollapsingToolbarLayout>
             </com.google.android.material.appbar.AppBarLayout>
 
-            <!-- Scrollable Body -->
             <androidx.core.widget.NestedScrollView
                 android:id="@+id/scroll"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:clipToPadding="false"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:paddingBottom="100dp">
+                    android:paddingBottom="112dp">
 
-                    <!-- Meta Tags Row (Category, Time, ID) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -212,7 +202,6 @@
                             android:textSize="11sp" />
                     </LinearLayout>
 
-                    <!-- Title -->
                     <TextView
                         android:id="@+id/pdpTitle"
                         android:layout_width="match_parent"
@@ -226,7 +215,6 @@
                         android:textStyle="bold"
                         android:lineSpacingExtra="4dp" />
 
-                    <!-- PRICE BELOW TITLE -->
                     <LinearLayout
                         android:id="@+id/priceRow"
                         android:layout_width="match_parent"
@@ -289,31 +277,6 @@
 
                     </LinearLayout>
 
-                    <!-- Title & Location -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginTop="10dp">
-
-                        <!--                        <ImageView-->
-                        <!--                            android:layout_width="16dp"-->
-                        <!--                            android:layout_height="16dp"-->
-                        <!--                            android:src="@drawable/ic_location_24"-->
-                        <!--                            app:tint="@color/colorPrimary" />-->
-
-                        <!--                        <TextView-->
-                        <!--                            android:layout_width="wrap_content"-->
-                        <!--                            android:layout_height="wrap_content"-->
-                        <!--                            android:layout_marginStart="6dp"-->
-                        <!--                            android:text="Usmanpura, Ahmedabad, Gujarat"-->
-                        <!--                            android:textColor="@color/colorTextSecondary"-->
-                        <!--                            android:textSize="14sp" />-->
-                    </LinearLayout>
-
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
@@ -322,7 +285,6 @@
                         android:layout_marginEnd="20dp"
                         android:layout_marginTop="20dp" />
 
-                    <!-- Listing Details (Grid of Attributes) -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -344,7 +306,6 @@
                         android:columnCount="1"
                         android:alignmentMode="alignMargins" />
 
-                    <!-- Description -->
                     <TextView
                         android:id="@+id/pdpDesc"
                         android:layout_width="match_parent"
@@ -364,7 +325,6 @@
                         android:layout_marginEnd="20dp"
                         android:layout_marginTop="20dp" />
 
-                    <!-- Posted By -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -376,7 +336,6 @@
                         android:textStyle="bold"
                         android:letterSpacing="0.05" />
 
-                    <!-- Seller Card -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -470,19 +429,16 @@
                                         android:paddingVertical="3dp" />
 
                                     <TextView
-
+                                        android:id="@+id/pdpSellerListingCount"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_marginStart="6dp"
                                         android:background="@drawable/bg_light_gray_pill"
-                                        android:text="0 Listings"
+                                        android:text="3 Listings"
                                         android:textColor="@color/colorTextSecondary"
                                         android:textSize="10sp"
                                         android:paddingHorizontal="8dp"
-                                        android:paddingVertical="3dp"
-                                        android:id="@+id/pdpSellerListingCount"
-                                        />
-
+                                        android:paddingVertical="3dp" />
                                 </LinearLayout>
                             </LinearLayout>
 
@@ -504,7 +460,6 @@
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- Similar Listings -->
                     <TextView
                         android:id="@+id/labelSimilar"
                         android:layout_width="wrap_content"
@@ -537,7 +492,6 @@
                 </LinearLayout>
             </androidx.core.widget.NestedScrollView>
 
-            <!-- Bottom Action Bar -->
             <LinearLayout
                 android:id="@+id/bottomBar"
                 android:layout_width="match_parent"
@@ -548,21 +502,22 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:paddingTop="12dp"
-                android:paddingBottom="24dp"
+                android:paddingBottom="18dp"
                 android:gravity="center"
                 android:elevation="16dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/pdpCall"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
                     android:text="Call"
                     android:textAllCaps="false"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:fontFamily="sans-serif-medium"
                     android:textColor="@color/colorTextPrimary"
+                    android:minWidth="0dp"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     app:icon="@drawable/ic_phone_24px"
@@ -575,17 +530,18 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/pdpCallWhatsapp"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
+                    android:layout_height="50dp"
                     android:layout_weight="1.2"
                     android:layout_marginEnd="8dp"
                     android:text="WhatsApp"
                     android:textAllCaps="false"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:fontFamily="sans-serif-medium"
+                    android:minWidth="0dp"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"
+                    android:paddingStart="2dp"
+                    android:paddingEnd="2dp"
                     app:icon="@drawable/ic_whatsapp_clean"
                     app:iconGravity="textStart"
                     app:iconTint="@null"
@@ -596,13 +552,14 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/pdpViewLocation"
                     android:layout_width="0dp"
-                    android:layout_height="52dp"
+                    android:layout_height="50dp"
                     android:layout_weight="1"
                     android:text="Location"
                     android:textAllCaps="false"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:fontFamily="sans-serif-medium"
                     android:textColor="@color/colorTextPrimary"
+                    android:minWidth="0dp"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     app:icon="@drawable/ic_location_24"
@@ -614,7 +571,6 @@
 
             </LinearLayout>
 
-            <!-- Loading overlay -->
             <FrameLayout
                 android:id="@+id/loadingOverlay"
                 android:layout_width="match_parent"
@@ -641,7 +597,6 @@
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-        <!-- Nav bar tint -->
         <View
             android:id="@+id/viewNavBarBackground"
             android:layout_width="0dp"

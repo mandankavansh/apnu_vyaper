@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
@@ -28,6 +29,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.core.widget.NestedScrollView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -78,6 +80,8 @@ public class UserInfoActivity extends AppCompatActivity {
     private MaterialCheckBox cbTerms;
     private MaterialButton btnContinue;
     private TextView tvLangBadge, tvLoginLink, tvTitle;
+    private NestedScrollView scrollUserInfo;
+    private View bottomActionBar;
 
     // dynamic
     private final ArrayList<String> stateNames = new ArrayList<>();
@@ -114,13 +118,17 @@ public class UserInfoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_info);
         LanguageManager.enforceLtr(this);
 
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
-        getWindow().setStatusBarColor(Color.BLACK);
-        new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView())
-                .setAppearanceLightStatusBars(false);
-        applyStatusBarInsets();
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        WindowInsetsControllerCompat controller =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        controller.setAppearanceLightStatusBars(false);
+        controller.setAppearanceLightNavigationBars(false);
 
         bindViews();
+        applySystemInsetsAndKeyboardFix();
         applyPrefillPhoneIfAvailable();
 
         stateAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, stateNames);
@@ -266,6 +274,8 @@ public class UserInfoActivity extends AppCompatActivity {
         tvLangBadge = findViewById(R.id.tvLangBadge);
         tvLoginLink = findViewById(R.id.tvLoginLink);
         tvTitle = findViewById(R.id.tvTitle);
+        scrollUserInfo = findViewById(R.id.scrollUserInfo);
+        bottomActionBar = findViewById(R.id.bottomActionBar);
         etName = findViewById(R.id.etName);
         etSurname = findViewById(R.id.etSurname);
         etMobile = findViewById(R.id.etMobile);
@@ -280,20 +290,81 @@ public class UserInfoActivity extends AppCompatActivity {
         tvLangBadge.setText(I18n.t(this, "Language") + ": " + new SessionManager(this).getLangName());
     }
 
-    private void applyStatusBarInsets() {
+    private void applySystemInsetsAndKeyboardFix() {
         final View root = findViewById(R.id.rootUserInfo);
 
-        if (root == null) {
+        if (root == null || scrollUserInfo == null) {
             return;
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets bar = insets.getInsets(WindowInsetsCompat.Type.statusBars());
-            v.setPadding(v.getPaddingLeft(), bar.top, v.getPaddingRight(), v.getPaddingBottom());
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            boolean keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    systemBars.top,
+                    v.getPaddingRight(),
+                    0
+            );
+
+            if (bottomActionBar != null) {
+                bottomActionBar.setVisibility(keyboardVisible ? View.GONE : View.VISIBLE);
+            }
+
+            int bottomPadding;
+
+            if (keyboardVisible) {
+                bottomPadding = ime.bottom + (int) dpToPx(28);
+            } else {
+                int bottomBarHeight = bottomActionBar == null ? (int) dpToPx(96) : bottomActionBar.getHeight();
+
+                if (bottomBarHeight <= 0) {
+                    bottomBarHeight = (int) dpToPx(96);
+                }
+
+                bottomPadding = bottomBarHeight + systemBars.bottom + (int) dpToPx(24);
+            }
+
+            scrollUserInfo.setClipToPadding(false);
+            scrollUserInfo.setPadding(
+                    scrollUserInfo.getPaddingLeft(),
+                    scrollUserInfo.getPaddingTop(),
+                    scrollUserInfo.getPaddingRight(),
+                    bottomPadding
+            );
+
+            if (keyboardVisible) {
+                keepFocusedInputAboveKeyboard();
+            }
+
             return insets;
         });
 
         ViewCompat.requestApplyInsets(root);
+    }
+
+    private void keepFocusedInputAboveKeyboard() {
+        View focused = getCurrentFocus();
+
+        if (focused == null || scrollUserInfo == null) {
+            return;
+        }
+
+        focused.postDelayed(() -> {
+            Rect rect = new Rect(
+                    0,
+                    0,
+                    focused.getWidth(),
+                    focused.getHeight() + (int) dpToPx(170)
+            );
+            focused.requestRectangleOnScreen(rect, true);
+        }, 180L);
+    }
+
+    private float dpToPx(float dp) {
+        return dp * getResources().getDisplayMetrics().density;
     }
 
     /* ------------ dynamic states/districts ----------- */

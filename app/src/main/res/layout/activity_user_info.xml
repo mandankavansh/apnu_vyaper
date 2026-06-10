@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimaryDark"
+    android:background="@drawable/bg_splash"
     android:fitsSystemWindows="false">
 
-    <!-- SOLID BLACK TOP STATUS BAR -->
     <View
         android:id="@+id/viewStatusBarBackground"
         android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:background="@color/colorPrimaryDark"
+        android:layout_height="0dp"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -21,28 +21,30 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@drawable/bg_splash"
-        app:layout_constraintTop_toBottomOf="@id/viewStatusBarBackground"
-        app:layout_constraintBottom_toTopOf="@id/viewNavBarBackground"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollUserInfo"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
+            android:clipToPadding="false"
             android:overScrollMode="ifContentScrolls"
-            android:clipToPadding="false">
+            android:paddingBottom="118dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:paddingTop="40dp"
-                android:paddingBottom="120dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="32dp"
+                android:paddingBottom="24dp">
 
-                <!-- Language Badge -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -59,12 +61,14 @@
                         android:text="Language: English"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:textSize="12sp"/>
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:textSize="12sp" />
+
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Header -->
                 <TextView
                     android:id="@+id/tvTitle"
                     android:layout_width="match_parent"
@@ -74,25 +78,25 @@
                     android:textStyle="bold"
                     android:textColor="@android:color/white"
                     android:letterSpacing="0.02"
-                    android:lineSpacingExtra="4dp"/>
+                    android:lineSpacingExtra="4dp" />
 
                 <TextView
+                    android:id="@+id/tvSubtitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Please provide your details to continue."
                     android:textSize="14sp"
                     android:textColor="#E6FFFFFF"
                     android:layout_marginTop="6dp"
-                    android:lineSpacingExtra="2dp"/>
+                    android:lineSpacingExtra="2dp" />
 
-                <!-- Premium Card Panel -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="22dp"
                     android:layout_marginBottom="12dp"
                     app:cardUseCompatPadding="true"
-                    app:cardElevation="8dp"
+                    app:cardElevation="7dp"
                     app:cardCornerRadius="22dp"
                     app:cardBackgroundColor="@color/colorSurface"
                     app:strokeColor="@color/colorDivider"
@@ -102,12 +106,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:paddingStart="20dp"
-                        android:paddingEnd="20dp"
-                        android:paddingTop="20dp"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:paddingTop="18dp"
                         android:paddingBottom="20dp">
 
-                        <!-- Section Header -->
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -115,7 +118,7 @@
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/colorTextPrimary"
-                            android:layout_marginBottom="4dp"/>
+                            android:layout_marginBottom="4dp" />
 
                         <TextView
                             android:layout_width="match_parent"
@@ -123,9 +126,8 @@
                             android:text="Tell us a bit about yourself."
                             android:textSize="12sp"
                             android:textColor="@color/colorTextSecondary"
-                            android:layout_marginBottom="16dp"/>
+                            android:layout_marginBottom="16dp" />
 
-                        <!-- Name -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
@@ -147,12 +149,14 @@
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/colorTextPrimary"
                                 android:singleLine="true"
+                                android:inputType="textPersonName|textCapWords"
+                                android:imeOptions="actionNext"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- Surname -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
@@ -175,12 +179,14 @@
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/colorTextPrimary"
                                 android:singleLine="true"
+                                android:inputType="textPersonName|textCapWords"
+                                android:imeOptions="actionNext"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- Mobile -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
@@ -205,20 +211,20 @@
                                 android:singleLine="true"
                                 android:inputType="phone"
                                 android:maxLength="10"
+                                android:imeOptions="actionNext"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- Divider between sections -->
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
                             android:layout_marginTop="22dp"
                             android:layout_marginBottom="18dp"
-                            android:background="@color/colorDivider"/>
+                            android:background="@color/colorDivider" />
 
-                        <!-- Location Section Header -->
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -226,7 +232,7 @@
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/colorTextPrimary"
-                            android:layout_marginBottom="4dp"/>
+                            android:layout_marginBottom="4dp" />
 
                         <TextView
                             android:layout_width="match_parent"
@@ -234,9 +240,8 @@
                             android:text="This helps us show relevant content around you."
                             android:textSize="12sp"
                             android:textColor="@color/colorTextSecondary"
-                            android:layout_marginBottom="16dp"/>
+                            android:layout_marginBottom="16dp" />
 
-                        <!-- State -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                             android:layout_width="match_parent"
@@ -257,13 +262,17 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/colorTextPrimary"
+                                android:textColorHint="@color/colorTextSecondary"
                                 android:inputType="none"
+                                android:singleLine="true"
+                                android:completionThreshold="0"
+                                android:imeOptions="actionNext"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- District -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                             android:layout_width="match_parent"
@@ -285,13 +294,17 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/colorTextPrimary"
+                                android:textColorHint="@color/colorTextSecondary"
                                 android:inputType="none"
+                                android:singleLine="true"
+                                android:completionThreshold="0"
+                                android:imeOptions="actionNext"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- Village / City Selection -->
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -299,7 +312,7 @@
                             android:textSize="14sp"
                             android:textColor="@color/colorTextSecondary"
                             android:layout_marginTop="20dp"
-                            android:layout_marginBottom="8dp"/>
+                            android:layout_marginBottom="8dp" />
 
                         <com.google.android.material.chip.ChipGroup
                             android:id="@+id/rgPlaceType"
@@ -307,34 +320,38 @@
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="8dp"
                             app:singleSelection="true"
-                            app:selectionRequired="true">
+                            app:selectionRequired="true"
+                            app:chipSpacingHorizontal="10dp"
+                            app:chipSpacingVertical="8dp">
 
                             <com.google.android.material.chip.Chip
                                 android:id="@+id/rbVillage"
                                 style="@style/Widget.Material3.Chip.Filter"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:minHeight="44dp"
                                 android:text="Village"
-                                app:chipBackgroundColor="#E8EDE4"
+                                android:textColor="@color/toggle_text_tint"
+                                app:chipBackgroundColor="@color/chip_bg"
                                 app:chipStrokeColor="@color/colorPrimary"
                                 app:chipStrokeWidth="1dp"
-                                app:checkedIcon="@null"
-                                app:chipSurfaceColor="@color/colorSurface"/>
+                                app:chipSurfaceColor="@color/colorSurface" />
 
                             <com.google.android.material.chip.Chip
                                 android:id="@+id/rbCity"
                                 style="@style/Widget.Material3.Chip.Filter"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:minHeight="44dp"
                                 android:text="City"
-                                app:chipBackgroundColor="#E8EDE4"
+                                android:textColor="@color/toggle_text_tint"
+                                app:chipBackgroundColor="@color/chip_bg"
                                 app:chipStrokeColor="@color/colorPrimary"
                                 app:chipStrokeWidth="1dp"
-                                app:checkedIcon="@null"
-                                app:chipSurfaceColor="@color/colorSurface"/>
+                                app:chipSurfaceColor="@color/colorSurface" />
+
                         </com.google.android.material.chip.ChipGroup>
 
-                        <!-- Place name -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
@@ -357,12 +374,14 @@
                                 android:layout_height="wrap_content"
                                 android:textColor="@color/colorTextPrimary"
                                 android:singleLine="true"
+                                android:inputType="textCapWords"
+                                android:imeOptions="actionNext"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- Address -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
@@ -382,16 +401,18 @@
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etAddress"
                                 android:layout_width="match_parent"
-                                android:layout_height="120dp"
+                                android:layout_height="wrap_content"
+                                android:minHeight="96dp"
                                 android:gravity="top|start"
-                                android:inputType="textMultiLine"
+                                android:inputType="textMultiLine|textCapSentences"
+                                android:maxLines="5"
                                 android:textColor="@color/colorTextPrimary"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- Pincode -->
                         <com.google.android.material.textfield.TextInputLayout
                             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                             android:layout_width="match_parent"
@@ -414,13 +435,15 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="number"
                                 android:maxLength="6"
+                                android:singleLine="true"
+                                android:imeOptions="actionDone"
                                 android:textColor="@color/colorTextPrimary"
                                 android:textSize="16sp"
                                 android:paddingTop="14dp"
-                                android:paddingBottom="14dp"/>
+                                android:paddingBottom="14dp" />
+
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <!-- Terms -->
                         <com.google.android.material.card.MaterialCardView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -428,7 +451,7 @@
                             android:layout_marginBottom="4dp"
                             app:cardCornerRadius="12dp"
                             app:cardElevation="0dp"
-                            app:cardBackgroundColor="#E8EDE4">
+                            app:cardBackgroundColor="@color/colorSurfaceVariant">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -441,7 +464,7 @@
                                     android:id="@+id/cbTerms"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:buttonTint="@color/colorPrimary"/>
+                                    android:buttonTint="@color/colorPrimary" />
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -451,33 +474,38 @@
                                     android:text="I agree to the Terms and Conditions"
                                     android:textColor="@color/colorTextPrimary"
                                     android:textSize="14sp"
-                                    android:lineSpacingExtra="2dp"/>
+                                    android:lineSpacingExtra="2dp" />
+
                             </LinearLayout>
+
                         </com.google.android.material.card.MaterialCardView>
+
                     </LinearLayout>
+
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Login Link -->
                 <TextView
                     android:id="@+id/tvLoginLink"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:text="Already have an account? Log in"
                     android:gravity="center"
                     android:textStyle="bold"
                     android:textColor="@android:color/white"
                     android:textSize="15sp"
-                    android:paddingVertical="8dp"/>
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp" />
+
             </LinearLayout>
+
         </androidx.core.widget.NestedScrollView>
 
-        <!-- Premium Sticky CTA -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bottomActionBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:layout_margin="0dp"
             app:cardCornerRadius="0dp"
             app:cardElevation="10dp"
             app:cardBackgroundColor="@color/colorSurface"
@@ -491,7 +519,7 @@
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
                 android:paddingTop="10dp"
-                android:paddingBottom="20dp">
+                android:paddingBottom="18dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnContinue"
@@ -504,21 +532,26 @@
                     android:enabled="false"
                     android:textSize="16sp"
                     android:textStyle="bold"
+                    android:minHeight="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
                     app:cornerRadius="18dp"
                     app:icon="@drawable/ic_arrow_forward_24px"
                     app:iconGravity="textEnd"
                     app:iconTint="@color/colorSurface"
-                    app:rippleColor="@color/colorPrimaryMedium"/>
+                    app:rippleColor="@color/colorPrimaryMedium" />
+
             </LinearLayout>
+
         </com.google.android.material.card.MaterialCardView>
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <!-- SOLID BLACK BOTTOM NAV BAR -->
     <View
         android:id="@+id/viewNavBarBackground"
         android:layout_width="0dp"
-        android:layout_height="20dp"
-        android:background="@color/colorPrimaryDark"
+        android:layout_height="0dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

@@ -2,8 +2,8 @@ package com.anvexgroup.apnuvyapar;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.net.Uri;
@@ -57,23 +57,17 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
     private final List<String[]> languages = new ArrayList<>();
     private LanguageAdapter adapter;
 
-    // current selected language
     private String[] selectedLanguage = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Status bar: black background, white icons
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
-        getWindow().setStatusBarColor(Color.BLACK);
-        new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView())
-                .setAppearanceLightStatusBars(false);
+        setupSystemBars();
 
-        // If language already chosen, skip this screen
         SharedPreferences sp = getSharedPreferences(PREFS, MODE_PRIVATE);
         String saved = sp.getString(KEY_LANG_CODE, null);
-        if (saved != null) {
+        if (saved != null && !saved.trim().isEmpty()) {
             LanguageManager.apply(this, saved);
             goNext();
             return;
@@ -81,20 +75,23 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
 
         setContentView(R.layout.activity_language_selection);
         LanguageManager.enforceLtr(this);
+
         rv = findViewById(R.id.rvLanguages);
         progress = findViewById(R.id.progressLanguages);
         btnContinue = findViewById(R.id.btnContinue);
 
-        // Java से professional rounded background
         setupContinueButtonBackground();
+        setupRecyclerView();
 
-        // Button दिखाई देगा लेकिन शुरू में disabled रहेगा (faded green)
         btnContinue.setEnabled(false);
 
         btnContinue.setOnClickListener(v -> {
-            if (selectedLanguage == null) return;
+            if (selectedLanguage == null) {
+                return;
+            }
 
-            // lang[0] = code, lang[1] = native_name
+            btnContinue.setEnabled(false);
+
             getSharedPreferences(PREFS, MODE_PRIVATE).edit()
                     .putString(KEY_LANG_CODE, selectedLanguage[0])
                     .putString(KEY_LANG_NAME, selectedLanguage[1])
@@ -104,49 +101,73 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
             goNext();
         });
 
-        // Grid layout for languages
-        GridLayoutManager glm = new GridLayoutManager(this, 3);
-        rv.setLayoutManager(glm);
-        rv.setHasFixedSize(true);
-        rv.setClipToPadding(false);
-        rv.setPadding(
-                0,
-                (int) dpToPx(4),
-                0,
-                (int) dpToPx(4)
-        );
-
-        // GAP between language cards (professional spacing)
-        rv.addItemDecoration(new GridSpacingItemDecoration(
-                3,                               // span count
-                (int) dpToPx(12),                // spacing between cards
-                true                             // include edge
-        ));
-
-        adapter = new LanguageAdapter(languages, this);
-        rv.setAdapter(adapter);
         fetchLanguages();
     }
 
-    /** Continue button का stateful rounded background Java से बनाना */
-    private void setupContinueButtonBackground() {
-        float radius = dpToPx(24); // थोड़ा ज्यादा rounded pill look
+    private void setupSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
 
-        // Disabled (#6696A78D)
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        WindowInsetsControllerCompat controller =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+
+        controller.setAppearanceLightStatusBars(false);
+        controller.setAppearanceLightNavigationBars(false);
+    }
+
+    private void setupRecyclerView() {
+        int spanCount = calculateSpanCount();
+
+        GridLayoutManager glm = new GridLayoutManager(this, spanCount);
+        rv.setLayoutManager(glm);
+
+        rv.setHasFixedSize(false);
+        rv.setClipToPadding(false);
+        rv.setNestedScrollingEnabled(false);
+        rv.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+        rv.setPadding(
+                (int) dpToPx(2),
+                (int) dpToPx(4),
+                (int) dpToPx(2),
+                (int) dpToPx(10)
+        );
+
+        adapter = new LanguageAdapter(languages, this);
+        rv.setAdapter(adapter);
+    }
+
+    private int calculateSpanCount() {
+        int screenWidthDp = getResources().getConfiguration().screenWidthDp;
+
+        if (screenWidthDp >= 720) {
+            return 5;
+        } else if (screenWidthDp >= 600) {
+            return 4;
+        } else if (screenWidthDp < 360) {
+            return 2;
+        } else {
+            return 3;
+        }
+    }
+
+    private void setupContinueButtonBackground() {
+        float radius = dpToPx(24);
+
         GradientDrawable disabled = new GradientDrawable();
         disabled.setShape(GradientDrawable.RECTANGLE);
         disabled.setCornerRadius(radius);
         disabled.setColor(Color.parseColor("#6696A78D"));
         disabled.setStroke((int) dpToPx(1), Color.parseColor("#33FFFFFF"));
 
-        // Pressed (#7A96A78D)
         GradientDrawable pressed = new GradientDrawable();
         pressed.setShape(GradientDrawable.RECTANGLE);
         pressed.setCornerRadius(radius);
         pressed.setColor(Color.parseColor("#7A96A78D"));
         pressed.setStroke((int) dpToPx(1), Color.parseColor("#80B6CEB4"));
 
-        // Enabled normal (#96A78D)
         GradientDrawable enabled = new GradientDrawable();
         enabled.setShape(GradientDrawable.RECTANGLE);
         enabled.setCornerRadius(radius);
@@ -154,14 +175,12 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         enabled.setStroke((int) dpToPx(1), Color.parseColor("#B6CEB4"));
 
         StateListDrawable stateList = new StateListDrawable();
-        // order important: disabled, pressed, default
         stateList.addState(new int[]{-android.R.attr.state_enabled}, disabled);
         stateList.addState(new int[]{android.R.attr.state_pressed}, pressed);
         stateList.addState(new int[]{}, enabled);
 
         btnContinue.setBackground(stateList);
         btnContinue.setTextColor(Color.WHITE);
-        // हल्की elevation ताकि button background से ऊपर लगे
         btnContinue.setElevation(dpToPx(4));
     }
 
@@ -173,7 +192,7 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         showLoading(true);
 
         final String url = ApiRoutes.GET_LANGUAGES;
-        final String origin = buildOriginFromUrl(url); // e.g. https://domain.com
+        final String origin = buildOriginFromUrl(url);
         final String referer = origin + "/";
 
         StringRequest req = new StringRequest(
@@ -181,9 +200,11 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                 url,
                 response -> {
                     String cleaned = response == null ? "" : response.trim();
-                    // Handle BOM if present
-                    if (cleaned.startsWith("\uFEFF")) cleaned = cleaned.substring(1).trim();
-                    // If server/WAF returns HTML instead of JSON
+
+                    if (cleaned.startsWith("\uFEFF")) {
+                        cleaned = cleaned.substring(1).trim();
+                    }
+
                     if (cleaned.startsWith("<!DOCTYPE") || cleaned.startsWith("<html") || cleaned.startsWith("<")) {
                         Toast.makeText(this, "Blocked/HTML response from server. Check WAF/ModSecurity.", Toast.LENGTH_LONG).show();
                         showLoading(false);
@@ -194,6 +215,7 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                         JSONObject resp = new JSONObject(cleaned);
 
                         languages.clear();
+
                         boolean ok = resp.optBoolean("ok", false);
                         if (!ok) {
                             String errMsg = resp.optString("error", "ok=false");
@@ -204,7 +226,7 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
 
                         JSONArray arr = resp.optJSONArray("data");
                         if (arr == null || arr.length() == 0) {
-                            Toast.makeText(this, "No languages found (empty data)", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "No languages found", Toast.LENGTH_SHORT).show();
                             showLoading(false);
                             return;
                         }
@@ -213,16 +235,22 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
 
                         for (int i = 0; i < arr.length(); i++) {
                             JSONObject o = arr.optJSONObject(i);
-                            if (o == null) continue;
+                            if (o == null) {
+                                continue;
+                            }
 
                             int enabled = o.optInt("enabled", 1);
-                            if (enabled != 1) continue;
+                            if (enabled != 1) {
+                                continue;
+                            }
 
                             String code = o.optString("code", "").trim();
                             String nativeName = o.optString("native_name", "").trim();
                             String englishName = o.optString("english_name", "").trim();
 
-                            if (code.isEmpty() || nativeName.isEmpty()) continue;
+                            if (code.isEmpty() || nativeName.isEmpty()) {
+                                continue;
+                            }
 
                             languages.add(new String[]{code, nativeName, englishName});
 
@@ -232,18 +260,18 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
                         }
 
                         if (languages.isEmpty()) {
-                            Toast.makeText(this, "No enabled languages after parsing", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "No enabled languages found", Toast.LENGTH_SHORT).show();
                             showLoading(false);
                             return;
                         }
 
-                        // English ko top pe shift karo
                         if (englishIndex > 0) {
                             String[] en = languages.remove(englishIndex);
                             languages.add(0, en);
                         }
 
                         adapter.notifyDataSetChanged();
+
                     } catch (Exception e) {
                         Log.e(TAG, "Parse error in fetchLanguages", e);
                         Toast.makeText(this, "Parse error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -262,22 +290,20 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> h = new HashMap<>();
 
-                // GET request => don't send Content-Type
                 h.put("Accept", "application/json");
 
                 String current = getSharedPreferences(PREFS, MODE_PRIVATE)
                         .getString(KEY_LANG_CODE, "en");
                 h.put("Accept-Language", (current == null || current.trim().isEmpty()) ? "en" : current);
 
-                // Browser-like headers to avoid Hostinger/WAF blocking
                 h.put("User-Agent",
                         "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
                 h.put("Referer", referer);
                 h.put("Origin", origin);
+
                 return h;
             }
 
-            // Ensure charset decoding based on response headers (avoids weird parsing issues)
             @Override
             protected Response<String> parseNetworkResponse(NetworkResponse response) {
                 try {
@@ -293,8 +319,8 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
 
         req.setShouldCache(false);
         req.setRetryPolicy(new DefaultRetryPolicy(
-                20000,  // timeout ms
-                0,      // no retries (avoid duplicate)
+                20000,
+                0,
                 1.0f
         ));
 
@@ -306,34 +332,50 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
             Uri u = Uri.parse(url);
             String scheme = u.getScheme();
             String host = u.getHost();
-            if (scheme == null || host == null) return "https://magenta-owl-444153.hostingersite.com";
+
+            if (scheme == null || host == null) {
+                return "https://magenta-owl-444153.hostingersite.com";
+            }
+
             return scheme + "://" + host;
+
         } catch (Exception e) {
             return "https://magenta-owl-444153.hostingersite.com";
         }
     }
 
     private String buildVolleyErrorMessage(VolleyError err) {
-        if (err == null) return "Network error";
+        if (err == null) {
+            return "Network error";
+        }
 
         try {
             if (err.networkResponse != null) {
                 int code = err.networkResponse.statusCode;
                 String body = "";
+
                 if (err.networkResponse.data != null) {
-                    body = new String(err.networkResponse.data, Charset.forName("UTF-8"));
-                    body = body.trim();
-                    if (body.length() > 300) body = body.substring(0, 300) + "...";
+                    body = new String(err.networkResponse.data, Charset.forName("UTF-8")).trim();
+                    if (body.length() > 300) {
+                        body = body.substring(0, 300) + "...";
+                    }
                 }
+
                 return "HTTP " + code + ": " + body;
             }
-        } catch (Exception ignored) { }
-
-        // SSLHandshakeException / NoConnectionError etc
-        if (err.getCause() != null) {
-            return "Network error: " + err.getCause().getClass().getSimpleName() + " - " + err.getCause().getMessage();
+        } catch (Exception ignored) {
         }
-        if (err.getMessage() != null) return "Network error: " + err.getMessage();
+
+        if (err.getCause() != null) {
+            return "Network error: "
+                    + err.getCause().getClass().getSimpleName()
+                    + " - "
+                    + err.getCause().getMessage();
+        }
+
+        if (err.getMessage() != null) {
+            return "Network error: " + err.getMessage();
+        }
 
         return "Network error";
     }
@@ -342,8 +384,13 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
         if (progress != null) {
             progress.setVisibility(show ? View.VISIBLE : View.GONE);
         }
+
         if (rv != null) {
             rv.setVisibility(show ? View.INVISIBLE : View.VISIBLE);
+        }
+
+        if (btnContinue != null && show) {
+            btnContinue.setEnabled(false);
         }
     }
 
@@ -351,62 +398,20 @@ public class LanguageSelection extends AppCompatActivity implements LanguageAdap
     public void onLanguageSelected(String[] lang) {
         selectedLanguage = lang;
 
-        if (!btnContinue.isEnabled()) {
-            btnContinue.setEnabled(true);
-            // subtle scale animation when first enabled
-            btnContinue.setScaleX(0.9f);
-            btnContinue.setScaleY(0.9f);
-            btnContinue.animate()
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(180L)
-                    .start();
-        }
+        btnContinue.setEnabled(true);
+
+        btnContinue.setScaleX(0.92f);
+        btnContinue.setScaleY(0.92f);
+        btnContinue.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(180L)
+                .start();
     }
 
     private void goNext() {
         startActivity(new Intent(this, UserInfoActivity.class));
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         finish();
-    }
-
-    /**
-     * RecyclerView grid spacing decoration for professional gap between language cards.
-     */
-    private static class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
-
-        private final int spanCount;
-        private final int spacing;
-        private final boolean includeEdge;
-
-        GridSpacingItemDecoration(int spanCount, int spacing, boolean includeEdge) {
-            this.spanCount = spanCount;
-            this.spacing = spacing;
-            this.includeEdge = includeEdge;
-        }
-
-        @Override
-        public void getItemOffsets(Rect outRect, View view,
-                                   RecyclerView parent,
-                                   RecyclerView.State state) {
-            int position = parent.getChildAdapterPosition(view); // item position
-            int column = position % spanCount;                   // item column
-
-            if (includeEdge) {
-                outRect.left = spacing - column * spacing / spanCount;
-                outRect.right = (column + 1) * spacing / spanCount;
-
-                if (position < spanCount) {
-                    outRect.top = spacing;
-                }
-                outRect.bottom = spacing;
-            } else {
-                outRect.left = column * spacing / spanCount;
-                outRect.right = spacing - (column + 1) * spacing / spanCount;
-                if (position >= spanCount) {
-                    outRect.top = spacing;
-                }
-            }
-        }
     }
 }
