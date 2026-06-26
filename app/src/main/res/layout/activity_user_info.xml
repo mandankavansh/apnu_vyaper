@@ -34,9 +34,11 @@
             android:fillViewport="true"
             android:clipToPadding="false"
             android:overScrollMode="ifContentScrolls"
-            android:paddingBottom="118dp">
+            android:scrollbars="none"
+            android:paddingBottom="0dp">
 
             <LinearLayout
+                android:id="@+id/userInfoContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -462,9 +464,16 @@
 
                                 <com.google.android.material.checkbox.MaterialCheckBox
                                     android:id="@+id/cbTerms"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:buttonTint="@color/colorPrimary" />
+                                    android:layout_width="48dp"
+                                    android:layout_height="48dp"
+                                    android:gravity="center"
+                                    android:button="@drawable/selector_terms_checkbox"
+                                    android:contentDescription="Agree to Terms and Conditions"
+                                    android:minWidth="48dp"
+                                    android:minHeight="48dp"
+                                    android:padding="10dp"
+                                    app:buttonTint="@null"
+                                    app:useMaterialThemeColors="false" />
 
                                 <TextView
                                     android:layout_width="0dp"
@@ -509,17 +518,20 @@
             app:cardCornerRadius="0dp"
             app:cardElevation="10dp"
             app:cardBackgroundColor="@color/colorSurface"
+            android:clipToPadding="false"
             app:strokeColor="@color/colorDivider"
             app:strokeWidth="1dp">
 
             <LinearLayout
+                android:id="@+id/bottomActionContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:clipToPadding="false"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
                 android:paddingTop="10dp"
-                android:paddingBottom="18dp">
+                android:paddingBottom="12dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnContinue"
@@ -552,6 +564,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

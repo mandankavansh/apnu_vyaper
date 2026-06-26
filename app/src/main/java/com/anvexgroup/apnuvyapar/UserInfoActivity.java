@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
@@ -81,7 +82,9 @@ public class UserInfoActivity extends AppCompatActivity {
     private MaterialButton btnContinue;
     private TextView tvLangBadge, tvLoginLink, tvTitle;
     private NestedScrollView scrollUserInfo;
+    private View userInfoContent;
     private View bottomActionBar;
+    private View bottomActionContent;
 
     // dynamic
     private final ArrayList<String> stateNames = new ArrayList<>();
@@ -121,6 +124,11 @@ public class UserInfoActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
 
         WindowInsetsControllerCompat controller =
                 new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
@@ -239,8 +247,18 @@ public class UserInfoActivity extends AppCompatActivity {
         etPlaceName.addTextChangedListener(watcher);
         etAddress.addTextChangedListener(watcher);
         etPincode.addTextChangedListener(watcher);
-        cbTerms.setOnCheckedChangeListener((b, c) ->
-                btnContinue.setEnabled(isFormBasicsValid() && !isSendingOtp));
+        cbTerms.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            buttonView.animate().cancel();
+            buttonView.setScaleX(0.84f);
+            buttonView.setScaleY(0.84f);
+            buttonView.animate()
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(160L)
+                    .start();
+
+            btnContinue.setEnabled(isFormBasicsValid() && !isSendingOtp);
+        });
 
         tvLoginLink.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
@@ -275,7 +293,9 @@ public class UserInfoActivity extends AppCompatActivity {
         tvLoginLink = findViewById(R.id.tvLoginLink);
         tvTitle = findViewById(R.id.tvTitle);
         scrollUserInfo = findViewById(R.id.scrollUserInfo);
+        userInfoContent = findViewById(R.id.userInfoContent);
         bottomActionBar = findViewById(R.id.bottomActionBar);
+        bottomActionContent = findViewById(R.id.bottomActionContent);
         etName = findViewById(R.id.etName);
         etSurname = findViewById(R.id.etSurname);
         etMobile = findViewById(R.id.etMobile);
@@ -293,53 +313,170 @@ public class UserInfoActivity extends AppCompatActivity {
     private void applySystemInsetsAndKeyboardFix() {
         final View root = findViewById(R.id.rootUserInfo);
 
-        if (root == null || scrollUserInfo == null) {
+        if (root == null
+                || scrollUserInfo == null
+                || userInfoContent == null
+                || bottomActionBar == null
+                || bottomActionContent == null) {
             return;
         }
 
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-            boolean keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+        final int rootBaseLeft = root.getPaddingLeft();
+        final int rootBaseTop = root.getPaddingTop();
+        final int rootBaseRight = root.getPaddingRight();
 
-            v.setPadding(
-                    v.getPaddingLeft(),
-                    systemBars.top,
-                    v.getPaddingRight(),
+        final int contentBaseTop = userInfoContent.getPaddingTop();
+        final int contentBaseBottom = userInfoContent.getPaddingBottom();
+
+        final int actionBaseTop = bottomActionContent.getPaddingTop();
+        final int actionBaseBottom = bottomActionContent.getPaddingBottom();
+
+        final int scrollBaseLeft = scrollUserInfo.getPaddingLeft();
+        final int scrollBaseTop = scrollUserInfo.getPaddingTop();
+        final int scrollBaseRight = scrollUserInfo.getPaddingRight();
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, insets) -> {
+            Insets systemBars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            | WindowInsetsCompat.Type.displayCutout()
+            );
+
+            Insets navigationBars = insets.getInsets(
+                    WindowInsetsCompat.Type.navigationBars()
+            );
+
+            Insets mandatoryGestures = insets.getInsets(
+                    WindowInsetsCompat.Type.mandatorySystemGestures()
+            );
+
+            Insets ime = insets.getInsets(
+                    WindowInsetsCompat.Type.ime()
+            );
+
+            boolean keyboardVisible = insets.isVisible(
+                    WindowInsetsCompat.Type.ime()
+            );
+
+            int safeBottom = Math.max(
+                    navigationBars.bottom,
+                    mandatoryGestures.bottom
+            );
+
+            /*
+             * Protect the whole page from the status bar, notches,
+             * display cutouts and landscape side system bars.
+             */
+            view.setPadding(
+                    rootBaseLeft + systemBars.left,
+                    rootBaseTop + systemBars.top,
+                    rootBaseRight + systemBars.right,
                     0
             );
 
-            if (bottomActionBar != null) {
-                bottomActionBar.setVisibility(keyboardVisible ? View.GONE : View.VISIBLE);
+            int availableWidth = view.getWidth()
+                    - view.getPaddingLeft()
+                    - view.getPaddingRight();
+
+            if (availableWidth <= 0) {
+                availableWidth = getResources().getDisplayMetrics().widthPixels
+                        - systemBars.left
+                        - systemBars.right;
             }
 
-            int bottomPadding;
+            int screenWidthDp = getResources()
+                    .getConfiguration()
+                    .screenWidthDp;
 
-            if (keyboardVisible) {
-                bottomPadding = ime.bottom + (int) dpToPx(28);
+            int minimumSidePadding;
+
+            if (screenWidthDp < 360) {
+                minimumSidePadding = Math.round(dpToPx(12));
+            } else if (screenWidthDp < 600) {
+                minimumSidePadding = Math.round(dpToPx(20));
             } else {
-                int bottomBarHeight = bottomActionBar == null ? (int) dpToPx(96) : bottomActionBar.getHeight();
-
-                if (bottomBarHeight <= 0) {
-                    bottomBarHeight = (int) dpToPx(96);
-                }
-
-                bottomPadding = bottomBarHeight + systemBars.bottom + (int) dpToPx(24);
+                minimumSidePadding = Math.round(dpToPx(24));
             }
 
-            scrollUserInfo.setClipToPadding(false);
-            scrollUserInfo.setPadding(
-                    scrollUserInfo.getPaddingLeft(),
-                    scrollUserInfo.getPaddingTop(),
-                    scrollUserInfo.getPaddingRight(),
-                    bottomPadding
+            /*
+             * The form is allowed to use the full width on phones,
+             * but is kept at a professional readable width on tablets,
+             * foldables, desktop mode and landscape devices.
+             */
+            int maximumContentWidth = Math.round(dpToPx(760));
+            int responsiveSidePadding = Math.max(
+                    minimumSidePadding,
+                    (availableWidth - maximumContentWidth) / 2
             );
 
-            if (keyboardVisible) {
-                keepFocusedInputAboveKeyboard();
-            }
+            userInfoContent.setPadding(
+                    responsiveSidePadding,
+                    contentBaseTop,
+                    responsiveSidePadding,
+                    contentBaseBottom
+            );
+
+            /*
+             * The navigation/gesture inset is applied inside the bottom
+             * action area. Therefore the Continue button always remains
+             * above gesture navigation and three-button navigation.
+             */
+            bottomActionContent.setPadding(
+                    responsiveSidePadding,
+                    actionBaseTop,
+                    responsiveSidePadding,
+                    actionBaseBottom + safeBottom
+            );
+
+            bottomActionBar.setVisibility(
+                    keyboardVisible ? View.GONE : View.VISIBLE
+            );
+
+            Runnable updateScrollPadding = () -> {
+                int bottomPadding;
+
+                if (keyboardVisible) {
+                    bottomPadding = Math.max(ime.bottom, safeBottom)
+                            + Math.round(dpToPx(24));
+                } else {
+                    int measuredBarHeight = bottomActionBar.getHeight();
+
+                    if (measuredBarHeight <= 0) {
+                        measuredBarHeight = Math.round(dpToPx(78))
+                                + safeBottom;
+                    }
+
+                    bottomPadding = measuredBarHeight
+                            + Math.round(dpToPx(16));
+                }
+
+                scrollUserInfo.setClipToPadding(false);
+                scrollUserInfo.setPadding(
+                        scrollBaseLeft,
+                        scrollBaseTop,
+                        scrollBaseRight,
+                        bottomPadding
+                );
+
+                if (keyboardVisible) {
+                    keepFocusedInputAboveKeyboard();
+                }
+            };
+
+            /* Wait for the bottom bar to include its new inset padding. */
+            bottomActionBar.post(updateScrollPadding);
 
             return insets;
+        });
+
+        /*
+         * Recalculate in multi-window, split-screen and foldable resize
+         * without relying only on Activity recreation.
+         */
+        root.addOnLayoutChangeListener((v, left, top, right, bottom,
+                                        oldLeft, oldTop, oldRight, oldBottom) -> {
+            if ((right - left) != (oldRight - oldLeft)) {
+                ViewCompat.requestApplyInsets(v);
+            }
         });
 
         ViewCompat.requestApplyInsets(root);
@@ -353,14 +490,19 @@ public class UserInfoActivity extends AppCompatActivity {
         }
 
         focused.postDelayed(() -> {
+            if (!focused.isShown()) {
+                return;
+            }
+
             Rect rect = new Rect(
                     0,
                     0,
                     focused.getWidth(),
-                    focused.getHeight() + (int) dpToPx(170)
+                    focused.getHeight() + Math.round(dpToPx(72))
             );
+
             focused.requestRectangleOnScreen(rect, true);
-        }, 180L);
+        }, 120L);
     }
 
     private float dpToPx(float dp) {

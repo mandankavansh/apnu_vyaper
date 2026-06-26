@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
@@ -21,8 +23,12 @@ import android.widget.Toast;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.core.widget.NestedScrollView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -50,6 +56,10 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText etMobile;
     private MaterialButton btnSendOtp;
     private TextView tvGoRegister, tvLangBadge, tvTitle;
+    private NestedScrollView scrollLogin;
+    private View loginContent;
+    private View bottomActionBar;
+    private View bottomActionContent;
 
     private BottomSheetDialog otpDialog;
     private CountDownTimer resendTimer;
@@ -74,10 +84,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         LanguageManager.enforceLtr(this);
 
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
-        getWindow().setStatusBarColor(Color.BLACK);
-        new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView())
-                .setAppearanceLightStatusBars(false);
+        setupEdgeToEdgeSystemBars();
 
         session = new SessionManager(this);
 
@@ -86,6 +93,12 @@ public class LoginActivity extends AppCompatActivity {
         tvGoRegister = findViewById(R.id.tvGoRegister);
         tvLangBadge = findViewById(R.id.tvLangBadge);
         tvTitle = findViewById(R.id.tvTitle);
+        scrollLogin = findViewById(R.id.scrollLogin);
+        loginContent = findViewById(R.id.loginContent);
+        bottomActionBar = findViewById(R.id.bottomActionBar);
+        bottomActionContent = findViewById(R.id.bottomActionContent);
+
+        applyResponsiveInsetsAndKeyboardHandling();
 
         I18n.prefetch(this, java.util.Arrays.asList(
                 "Language",
@@ -170,6 +183,228 @@ public class LoginActivity extends AppCompatActivity {
             }
             startActivity(intent);
         });
+    }
+
+    /**
+     * Enables proper edge-to-edge rendering. Real device insets are consumed
+     * in applyResponsiveInsetsAndKeyboardHandling() instead of fixed spacer views.
+     */
+    private void setupEdgeToEdgeSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+
+        WindowInsetsControllerCompat controller =
+                new WindowInsetsControllerCompat(
+                        getWindow(),
+                        getWindow().getDecorView()
+                );
+
+        controller.setAppearanceLightStatusBars(false);
+        controller.setAppearanceLightNavigationBars(false);
+    }
+
+    /**
+     * Handles:
+     * - status bars and display cutouts
+     * - gesture navigation and three-button navigation
+     * - the on-screen keyboard
+     * - small phones, landscape, tablets, foldables and split-screen resizing
+     */
+    private void applyResponsiveInsetsAndKeyboardHandling() {
+        final View root = findViewById(R.id.rootLogin);
+
+        if (root == null
+                || scrollLogin == null
+                || loginContent == null
+                || bottomActionBar == null
+                || bottomActionContent == null) {
+            return;
+        }
+
+        final int contentBaseTop = loginContent.getPaddingTop();
+        final int contentBaseBottom = loginContent.getPaddingBottom();
+
+        final int actionBaseTop = bottomActionContent.getPaddingTop();
+        final int actionBaseBottom = bottomActionContent.getPaddingBottom();
+
+        final int scrollBaseLeft = scrollLogin.getPaddingLeft();
+        final int scrollBaseTop = scrollLogin.getPaddingTop();
+        final int scrollBaseRight = scrollLogin.getPaddingRight();
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, insets) -> {
+            Insets systemBars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            | WindowInsetsCompat.Type.displayCutout()
+            );
+
+            Insets navigationBars = insets.getInsets(
+                    WindowInsetsCompat.Type.navigationBars()
+            );
+
+            Insets mandatoryGestures = insets.getInsets(
+                    WindowInsetsCompat.Type.mandatorySystemGestures()
+            );
+
+            Insets ime = insets.getInsets(
+                    WindowInsetsCompat.Type.ime()
+            );
+
+            boolean keyboardVisible = insets.isVisible(
+                    WindowInsetsCompat.Type.ime()
+            );
+
+            int safeNavigationBottom = Math.max(
+                    navigationBars.bottom,
+                    mandatoryGestures.bottom
+            );
+
+            /*
+             * Top/side padding protects the content from status bars,
+             * notches, display cutouts and landscape system bars.
+             *
+             * When the keyboard opens, its inset is applied to the root so
+             * the fixed Send OTP area moves above the keyboard.
+             */
+            view.setPadding(
+                    systemBars.left,
+                    systemBars.top,
+                    systemBars.right,
+                    keyboardVisible ? ime.bottom : 0
+            );
+
+            int availableWidth = view.getWidth()
+                    - systemBars.left
+                    - systemBars.right;
+
+            if (availableWidth <= 0) {
+                availableWidth = getResources()
+                        .getDisplayMetrics()
+                        .widthPixels
+                        - systemBars.left
+                        - systemBars.right;
+            }
+
+            int screenWidthDp = getResources()
+                    .getConfiguration()
+                    .screenWidthDp;
+
+            int minimumSidePadding;
+
+            if (screenWidthDp < 360) {
+                minimumSidePadding = Math.round(dpToPx(12));
+            } else if (screenWidthDp < 600) {
+                minimumSidePadding = Math.round(dpToPx(20));
+            } else {
+                minimumSidePadding = Math.round(dpToPx(28));
+            }
+
+            /*
+             * Phones use the available width. Wider screens keep the form
+             * centered at a readable maximum width.
+             */
+            int maximumContentWidth = Math.round(dpToPx(680));
+
+            int responsiveSidePadding = Math.max(
+                    minimumSidePadding,
+                    (availableWidth - maximumContentWidth) / 2
+            );
+
+            loginContent.setPadding(
+                    responsiveSidePadding,
+                    contentBaseTop,
+                    responsiveSidePadding,
+                    contentBaseBottom
+            );
+
+            /*
+             * On keyboard close, the real gesture/three-button inset is
+             * included inside the bottom action area. The button therefore
+             * cannot be covered by the navigation system.
+             *
+             * The IME inset is already applied to the root while typing, so
+             * it must not be added here again.
+             */
+            bottomActionContent.setPadding(
+                    responsiveSidePadding,
+                    actionBaseTop,
+                    responsiveSidePadding,
+                    actionBaseBottom
+                            + (keyboardVisible ? 0 : safeNavigationBottom)
+            );
+
+            Runnable updateScrollPadding = () -> {
+                int measuredActionHeight = bottomActionBar.getHeight();
+
+                if (measuredActionHeight <= 0) {
+                    measuredActionHeight = Math.round(dpToPx(78))
+                            + (keyboardVisible ? 0 : safeNavigationBottom);
+                }
+
+                scrollLogin.setClipToPadding(false);
+                scrollLogin.setPadding(
+                        scrollBaseLeft,
+                        scrollBaseTop,
+                        scrollBaseRight,
+                        measuredActionHeight + Math.round(dpToPx(16))
+                );
+
+                if (keyboardVisible) {
+                    keepMobileFieldVisible();
+                }
+            };
+
+            bottomActionBar.post(updateScrollPadding);
+
+            return insets;
+        });
+
+        /*
+         * Recalculate padding after split-screen, rotation, fold/unfold or
+         * desktop-window resizing without relying only on Activity recreation.
+         */
+        root.addOnLayoutChangeListener(
+                (v, left, top, right, bottom,
+                 oldLeft, oldTop, oldRight, oldBottom) -> {
+
+                    if ((right - left) != (oldRight - oldLeft)) {
+                        ViewCompat.requestApplyInsets(v);
+                    }
+                }
+        );
+
+        ViewCompat.requestApplyInsets(root);
+    }
+
+    private void keepMobileFieldVisible() {
+        if (etMobile == null || scrollLogin == null) {
+            return;
+        }
+
+        etMobile.postDelayed(() -> {
+            if (!etMobile.isShown()) {
+                return;
+            }
+
+            Rect rectangle = new Rect(
+                    0,
+                    0,
+                    etMobile.getWidth(),
+                    etMobile.getHeight() + Math.round(dpToPx(72))
+            );
+
+            etMobile.requestRectangleOnScreen(rectangle, true);
+        }, 120L);
+    }
+
+    private float dpToPx(float dp) {
+        return dp * getResources().getDisplayMetrics().density;
     }
 
     private void setSending(boolean sending) {
