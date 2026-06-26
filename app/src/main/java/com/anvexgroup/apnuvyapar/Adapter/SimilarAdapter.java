@@ -3,6 +3,8 @@ package com.anvexgroup.apnuvyapar.Adapter;
 import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,84 +15,236 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.google.android.material.card.MaterialCardView;
 import com.anvexgroup.apnuvyapar.ProductDetail;
 import com.anvexgroup.apnuvyapar.R;
-import com.anvexgroup.apnuvyapar.utils.WaveImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-/**
- * Adapter for Similar Listings in ProductDetail.
- * Displays a horizontal list of related products with image, title, and price.
- */
-public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.VH> {
+public class SimilarAdapter
+        extends RecyclerView.Adapter<SimilarAdapter.SimilarViewHolder> {
 
-    private final List<Map<String, Object>> items = new ArrayList<>();
+    private static final int MIN_CARD_WIDTH_DP = 156;
+    private static final int MAX_CARD_WIDTH_DP = 220;
+    private static final float IMAGE_RATIO = 0.64f;
+
     private final Context context;
+    private final List<Map<String, Object>> items = new ArrayList<>();
 
-    public SimilarAdapter(Context context) {
+    public SimilarAdapter(@NonNull Context context) {
         this.context = context;
+        setHasStableIds(true);
     }
 
-    /**
-     * Update the adapter with new data
-     */
     public void setItems(List<Map<String, Object>> newItems) {
         items.clear();
+
         if (newItems != null) {
             items.addAll(newItems);
         }
+
         notifyDataSetChanged();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        if (position < 0 || position >= items.size()) {
+            return RecyclerView.NO_ID;
+        }
+
+        return readInt(items.get(position), "id", position);
     }
 
     @NonNull
     @Override
-    public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_similar, parent, false);
-        return new VH(v);
+    public SimilarViewHolder onCreateViewHolder(
+            @NonNull ViewGroup parent,
+            int viewType
+    ) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_similar, parent, false);
+
+        applyResponsiveCardSize(view, parent);
+
+        return new SimilarViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull VH h, int position) {
+    public void onBindViewHolder(
+            @NonNull SimilarViewHolder holder,
+            int position
+    ) {
         Map<String, Object> item = items.get(position);
 
-        // Get data from map
-        String title = getString(item, "title", "");
-        String price = getString(item, "price", "");
-        String imageUrl = getString(item, "image_url", "");
-        String city = getString(item, "city", "Location");
-        int listingId = getInt(item, "id", 0);
+        int listingId = readInt(item, "id", 0);
+        String title = readString(item, "title");
+        String price = readString(item, "price");
+        String city = readString(item, "city");
+        String imageUrl = readString(item, "image_url");
 
-        // Bind text
-        h.title.setText(title);
-        h.price.setText(price);
-        if (h.category != null) {
-            h.category.setText(I18n.t(context, "LISTING"));
-        }
-        if (h.location != null) {
-            h.location.setText(city);
-        }
+        String category = firstNonEmpty(
+                readString(item, "subcategory_name"),
+                readString(item, "category_name"),
+                "Listing"
+        );
 
-        // Load image with Glide
-        if (!TextUtils.isEmpty(imageUrl)) {
-            WaveImageLoader.loadCenterCropCrossFade(h.image, imageUrl, R.drawable.ic_placeholder_circle);
-        } else {
-            h.image.setImageResource(R.drawable.ic_placeholder_circle);
-        }
+        holder.simCategory.setText(category.toUpperCase(Locale.getDefault()));
+        holder.simTitle.setText(
+                TextUtils.isEmpty(title) ? "Untitled listing" : title
+        );
+        holder.simPrice.setText(
+                TextUtils.isEmpty(price) ? "Price not available" : price
+        );
+        holder.simLocation.setText(
+                TextUtils.isEmpty(city) ? "Location not available" : city
+        );
 
-        // Click to open ProductDetail
-        h.itemView.setOnClickListener(v -> {
-            if (listingId > 0) {
-                Intent intent = new Intent(context, ProductDetail.class);
-                intent.putExtra("listing_id", listingId);
-                intent.putExtra("title", title);
-                intent.putExtra("price", price);
-                context.startActivity(intent);
+        Glide.with(holder.simImage)
+                .load(imageUrl)
+                .centerCrop()
+                .placeholder(R.drawable.image1)
+                .error(R.drawable.image1)
+                .into(holder.simImage);
+
+        holder.itemView.setContentDescription(
+                holder.simTitle.getText()
+                        + ", "
+                        + holder.simPrice.getText()
+                        + ", "
+                        + holder.simLocation.getText()
+        );
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listingId <= 0) {
+                return;
             }
+
+            Intent intent = new Intent(context, ProductDetail.class);
+            intent.putExtra("listing_id", listingId);
+            intent.putExtra("title", title);
+            intent.putExtra("price", price);
+            intent.putExtra("city", city);
+
+            context.startActivity(intent);
         });
+    }
+
+    /**
+     * Gives approximately two cards on a normal phone, slightly fewer on very
+     * small phones, and more cards on tablets/landscape without making cards
+     * excessively wide.
+     */
+    private void applyResponsiveCardSize(
+            @NonNull View itemView,
+            @NonNull ViewGroup parent
+    ) {
+        int parentWidth = parent.getMeasuredWidth();
+
+        if (parentWidth <= 0) {
+            DisplayMetrics metrics =
+                    parent.getResources().getDisplayMetrics();
+            parentWidth = metrics.widthPixels;
+        }
+
+        int availableWidth = parentWidth
+                - parent.getPaddingLeft()
+                - parent.getPaddingRight();
+
+        int gap = dp(parent, 10);
+        int minimumWidth = dp(parent, MIN_CARD_WIDTH_DP);
+        int maximumWidth = dp(parent, MAX_CARD_WIDTH_DP);
+
+        /*
+         * Two complete cards are preferred on standard phones.
+         * On a narrow device the minimum width keeps title/price readable and
+         * the horizontal list naturally shows part of the next card.
+         */
+        int calculatedWidth = (availableWidth - gap) / 2;
+        int cardWidth = Math.max(
+                minimumWidth,
+                Math.min(maximumWidth, calculatedWidth)
+        );
+
+        ViewGroup.LayoutParams itemParams = itemView.getLayoutParams();
+        itemParams.width = cardWidth;
+        itemParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        itemView.setLayoutParams(itemParams);
+
+        ImageView image = itemView.findViewById(R.id.simImage);
+
+        if (image != null) {
+            ViewGroup.LayoutParams imageParams = image.getLayoutParams();
+
+            int minimumImageHeight = dp(parent, 108);
+            int maximumImageHeight = dp(parent, 142);
+            int calculatedImageHeight =
+                    Math.round(cardWidth * IMAGE_RATIO);
+
+            imageParams.height = Math.max(
+                    minimumImageHeight,
+                    Math.min(maximumImageHeight, calculatedImageHeight)
+            );
+
+            image.setLayoutParams(imageParams);
+        }
+    }
+
+    private static int dp(@NonNull View view, int value) {
+        return Math.round(
+                TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP,
+                        value,
+                        view.getResources().getDisplayMetrics()
+                )
+        );
+    }
+
+    private static String readString(
+            @NonNull Map<String, Object> item,
+            @NonNull String key
+    ) {
+        Object value = item.get(key);
+        return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private static int readInt(
+            @NonNull Map<String, Object> item,
+            @NonNull String key,
+            int fallback
+    ) {
+        Object value = item.get(key);
+
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+
+        if (value != null) {
+            try {
+                return Integer.parseInt(
+                        String.valueOf(value).trim()
+                );
+            } catch (Exception ignored) {
+            }
+        }
+
+        return fallback;
+    }
+
+    private static String firstNonEmpty(String... values) {
+        if (values == null) {
+            return "";
+        }
+
+        for (String value : values) {
+            if (!TextUtils.isEmpty(value)) {
+                return value;
+            }
+        }
+
+        return "";
     }
 
     @Override
@@ -98,45 +252,31 @@ public class SimilarAdapter extends RecyclerView.Adapter<SimilarAdapter.VH> {
         return items.size();
     }
 
-    static class VH extends RecyclerView.ViewHolder {
-        final ImageView image;
-        final TextView title;
-        final TextView price;
-        final TextView category;
-        final TextView location;
+    static final class SimilarViewHolder
+            extends RecyclerView.ViewHolder {
 
-        VH(@NonNull View itemView) {
+        final MaterialCardView similarCard;
+        final ImageView simImage;
+        final TextView simCategory;
+        final TextView simTitle;
+        final TextView simPrice;
+        final TextView simLocation;
+
+        SimilarViewHolder(@NonNull View itemView) {
             super(itemView);
-            image = itemView.findViewById(R.id.simImage);
-            title = itemView.findViewById(R.id.simTitle);
-            price = itemView.findViewById(R.id.simPrice);
-            category = itemView.findViewById(R.id.simCategory);
-            location = itemView.findViewById(R.id.simLocation);
+
+            similarCard =
+                    itemView.findViewById(R.id.similarCard);
+            simImage =
+                    itemView.findViewById(R.id.simImage);
+            simCategory =
+                    itemView.findViewById(R.id.simCategory);
+            simTitle =
+                    itemView.findViewById(R.id.simTitle);
+            simPrice =
+                    itemView.findViewById(R.id.simPrice);
+            simLocation =
+                    itemView.findViewById(R.id.simLocation);
         }
-    }
-
-    /* ===================== Helpers ===================== */
-
-    private static String getString(Map<String, Object> m, String key, String def) {
-        if (m == null)
-            return def;
-        Object o = m.get(key);
-        if (o == null)
-            return def;
-        String s = String.valueOf(o);
-        return TextUtils.isEmpty(s) ? def : s;
-    }
-
-    private static int getInt(Map<String, Object> m, String key, int def) {
-        if (m == null)
-            return def;
-        Object o = m.get(key);
-        if (o instanceof Integer)
-            return (Integer) o;
-        try {
-            return Integer.parseInt(String.valueOf(o));
-        } catch (Exception ignore) {
-        }
-        return def;
     }
 }

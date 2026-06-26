@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,6 +56,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -343,7 +345,15 @@ public class ProductDetail extends AppCompatActivity {
             autoSlideRunnable = null;
         }
     }
+    private static class DetailItem {
+        final String label;
+        final String value;
 
+        DetailItem(String label, String value) {
+            this.label = label;
+            this.value = value;
+        }
+    }
     private void setupClicks() {
         pdpBack.setOnClickListener(v -> onBackPressed());
 
@@ -479,9 +489,9 @@ public class ProductDetail extends AppCompatActivity {
                         }
                         setGallery(srcs);
 
-                        pdpChips.removeAllViews();
+                        List<DetailItem> detailItems = new ArrayList<>();
+
                         JSONArray attrs = d.optJSONArray("attributes");
-                        int detailsAdded = 0;
                         if (attrs != null && attrs.length() > 0) {
                             for (int i = 0; i < attrs.length(); i++) {
                                 JSONObject a = attrs.optJSONObject(i);
@@ -494,14 +504,16 @@ public class ProductDetail extends AppCompatActivity {
                                 String unit = cleanDisplayText(a.optString("unit", ""));
 
                                 if (!label.isEmpty() && !val.isEmpty()) {
-                                    addDetailCard(label, formatAttributeValue(val, unit));
-                                    detailsAdded++;
+                                    detailItems.add(new DetailItem(label, formatAttributeValue(val, unit)));
                                 }
                             }
                         }
-                        if (detailsAdded == 0) {
-                            addDetailCard("Status", I18n.t(this, "Verified Listing"));
+
+                        if (detailItems.isEmpty()) {
+                            detailItems.add(new DetailItem("Status", I18n.t(this, "Verified Listing")));
                         }
+
+                        bindDetailCards(detailItems);
 
                         fetchSimilarListings(listingId, categoryId);
 
@@ -542,18 +554,88 @@ public class ProductDetail extends AppCompatActivity {
         return cleanValue + " " + cleanUnit;
     }
 
-    private void addDetailCard(String label, String value) {
-        View card = LayoutInflater.from(this).inflate(R.layout.item_listing_detail, pdpChips, false);
-        TextView tvLabel = card.findViewById(R.id.tvDetailLabel);
-        TextView tvVal = card.findViewById(R.id.tvDetailValue);
-        tvLabel.setText(I18n.t(this, label).toUpperCase());
-        tvVal.setText(value);
-
-        if ("availability".equalsIgnoreCase(label) || "Available".equalsIgnoreCase(value)) {
-            tvVal.setTextColor(Color.parseColor("#16B381"));
+    /**
+     * Displays listing attributes in two balanced columns.
+     * If the number of items is odd, the last card spans both columns.
+     */
+    private void bindDetailCards(List<DetailItem> items) {
+        if (pdpChips == null) {
+            return;
         }
 
-        pdpChips.addView(card);
+        pdpChips.removeAllViews();
+        pdpChips.setColumnCount(2);
+        pdpChips.setAlignmentMode(GridLayout.ALIGN_MARGINS);
+        pdpChips.setUseDefaultMargins(false);
+
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+
+        final int total = items.size();
+        final int cardMargin = dp(5);
+        final int minimumCardHeight = dp(86);
+
+        for (int position = 0; position < total; position++) {
+            DetailItem item = items.get(position);
+
+            View card = LayoutInflater.from(this)
+                    .inflate(R.layout.item_listing_detail, pdpChips, false);
+
+            TextView tvLabel = card.findViewById(R.id.tvDetailLabel);
+            TextView tvValue = card.findViewById(R.id.tvDetailValue);
+
+            String translatedLabel = I18n.t(this, item.label);
+
+            tvLabel.setText(
+                    translatedLabel == null
+                            ? ""
+                            : translatedLabel.toUpperCase(Locale.getDefault())
+            );
+
+            tvValue.setText(item.value);
+
+            if ("availability".equalsIgnoreCase(item.label)
+                    || "available".equalsIgnoreCase(item.value)) {
+                tvValue.setTextColor(Color.parseColor("#168A6B"));
+            } else {
+                tvValue.setTextColor(
+                        ContextCompat.getColor(this, R.color.colorTextPrimary)
+                );
+            }
+
+            card.setMinimumHeight(minimumCardHeight);
+
+            boolean spanFullWidth =
+                    total % 2 != 0 && position == total - 1;
+
+            int row = position / 2;
+            int column = spanFullWidth ? 0 : position % 2;
+            int columnSpan = spanFullWidth ? 2 : 1;
+
+            GridLayout.LayoutParams layoutParams =
+                    new GridLayout.LayoutParams();
+
+            layoutParams.width = 0;
+            layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+
+            layoutParams.setMargins(
+                    cardMargin,
+                    cardMargin,
+                    cardMargin,
+                    cardMargin
+            );
+
+            layoutParams.rowSpec = GridLayout.spec(row, 1);
+            layoutParams.columnSpec =
+                    GridLayout.spec(column, columnSpan, 1f);
+            layoutParams.setGravity(Gravity.FILL);
+
+            card.setLayoutParams(layoutParams);
+            pdpChips.addView(card);
+        }
+
+        pdpChips.post(pdpChips::requestLayout);
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -586,10 +668,26 @@ public class ProductDetail extends AppCompatActivity {
     }
 
     private void bindFeatureChips(String[] chips) {
-        pdpChips.removeAllViews();
-        for (String s : chips) {
-            addDetailCard("Feature", s);
+        List<DetailItem> detailItems = new ArrayList<>();
+
+        if (chips != null) {
+            for (String value : chips) {
+                if (!TextUtils.isEmpty(value)) {
+                    detailItems.add(new DetailItem("Feature", value));
+                }
+            }
         }
+
+        if (detailItems.isEmpty()) {
+            detailItems.add(
+                    new DetailItem(
+                            "Status",
+                            I18n.t(this, "Verified Listing")
+                    )
+            );
+        }
+
+        bindDetailCards(detailItems);
     }
 
     private void applyHeaderStyle(boolean collapsed) {
@@ -653,17 +751,34 @@ public class ProductDetail extends AppCompatActivity {
     }
 
     private void setupSimilarListings() {
-        if (pdpSimilarRv == null) return;
+        if (pdpSimilarRv == null) {
+            return;
+        }
 
-        pdpSimilarRv.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+        LinearLayoutManager layoutManager =
+                new LinearLayoutManager(
+                        this,
+                        RecyclerView.HORIZONTAL,
+                        false
+                );
+
+        pdpSimilarRv.setLayoutManager(layoutManager);
+        pdpSimilarRv.setHasFixedSize(true);
+        pdpSimilarRv.setNestedScrollingEnabled(false);
+        pdpSimilarRv.setClipToPadding(false);
+        pdpSimilarRv.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        pdpSimilarRv.setItemViewCacheSize(6);
+
         similarAdapter = new SimilarAdapter(this);
         pdpSimilarRv.setAdapter(similarAdapter);
 
         if (labelSimilar != null) {
             labelSimilar.setVisibility(View.GONE);
         }
+
         pdpSimilarRv.setVisibility(View.GONE);
     }
+
 
     private void fetchSimilarListings(int listingId, int catId) {
         if (listingId <= 0) return;
@@ -700,6 +815,8 @@ public class ProductDetail extends AppCompatActivity {
                             m.put("price", o.optString("price", ""));
                             m.put("city", o.optString("city", ""));
                             m.put("image_url", o.optString("image_url", ""));
+                            m.put("category_name", o.optString("category_name", "Listing"));
+                            m.put("subcategory_name", o.optString("subcategory_name", ""));
                             items.add(m);
                         }
 
